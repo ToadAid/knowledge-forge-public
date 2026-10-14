@@ -7,6 +7,32 @@ without confusing knowledge with execution authority.
 It runs from a local checkout. No hosted service, VPS, account, remote approval
 server, or production connection is required.
 
+## New here? Install, forge, and ask
+
+**Using Claude Code, Codex, or another terminal agent?** Start with
+[**the newcomer guide**](docs/NEWCOMER_GUIDE.md), including copy-and-paste
+prompts for a fresh installation, creating a source-grounded knowledge skill,
+and checking answers.
+
+> **What installing does not do:** the generic installer provides the consumer
+> and authoring command shims; it does **not** automatically connect knowledge
+> retrieval to Claude/Codex. A forged `VALIDATED` skill is **not** current
+> `PROMOTED` knowledge. The guide explains a labeled read-only preview and
+> the separate human-authorized steps needed for real governed question answering.
+> **Do not mistake an answer from a raw file or general model knowledge for a
+> Knowledge Forge `discover` + `load-current` result.**
+
+### Copy this into your coding agent
+
+```text
+Install ToadAid Knowledge Forge from
+https://github.com/ToadAid/knowledge-forge-public.
+Follow README.md and docs/NEWCOMER_GUIDE.md. Use workspace-local paths,
+run the tests, and report the installed command surfaces.
+Do not modify my existing agent configuration, expose the operator,
+promote a skill, or activate knowledge consumption.
+```
+
 ## ToadAid community
 
 ToadAid builds for the **Toadgang community, Tobyworld, builders, and the people**. Knowledge Forge is one part of that larger effort: useful tools, durable knowledge, and governed agents that can grow without confusing knowledge with authority.
@@ -101,10 +127,15 @@ for Codex, Claude, Agent0, and other terminal agents. The generic integration
 procedure is documented in
 [docs/GENERIC_AGENT_INTEGRATION.md](docs/GENERIC_AGENT_INTEGRATION.md).
 
-The source distribution and generic installer are locally tested. This initial
-release does not claim independently certified end-to-end adapters for every
-named agent host. A host must preserve Knowledge Forge output as untrusted
+The source distribution and generic installer are locally tested. **Installation
+alone does not make Claude/Codex automatically use the skills you forge.** This
+initial release does not claim independently certified end-to-end adapters for
+every named agent host. A host must preserve Knowledge Forge output as untrusted
 knowledge data and retain its own identity, memory, policy, tools, and authority.
+
+For a first-time file-to-answer workflow and an honest distinction between
+`VALIDATED` package inspection and actual governed consumption, see
+[the newcomer guide](docs/NEWCOMER_GUIDE.md).
 
 ## Create and validate skills
 
