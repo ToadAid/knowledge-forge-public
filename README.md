@@ -7,6 +7,22 @@ without confusing knowledge with execution authority.
 It runs from a local checkout. No hosted service, VPS, account, remote approval
 server, or production connection is required.
 
+## ToadAid community
+
+ToadAid builds for the **Toadgang community, Tobyworld, builders, and the people**. Knowledge Forge is one part of that larger effort: useful tools, durable knowledge, and governed agents that can grow without confusing knowledge with authority.
+
+If this project is useful to you, we would be grateful if you also took a little time to discover the community and world that inspired much of this work:
+
+- 🐸 **Join the Toadgang community on Telegram:** [https://t.me/toadgang](https://t.me/toadgang)
+- 📖 **Explore Tobyworld:** [https://tobyworld.app](https://tobyworld.app)
+- 🌱 **Follow Toadgod and explore the lore on X:** [https://twitter.com/toadgod1017](https://twitter.com/toadgod1017)
+
+There is no requirement to join any community in order to read, evaluate, or work with ToadAid projects under their published terms.
+
+We believe tools are better when people, stories, builders, and communities grow around them.
+
+**Built by ToadAid. Built for the Toadgang. Built for the people.**
+
 ## Architectural laws
 
 ```text
