@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://toadaid.org/knowledge-forge/compiler-request.schema.json",
+  "title": "Knowledge Forge CompilerRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "knowledge_id",
+    "skill",
+    "compiler_profile",
+    "sources",
+    "authority"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "0.2"
+    },
+    "knowledge_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._:-]{0,255}$"
+    },
+    "skill": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slug",
+        "purpose"
+      ],
+      "properties": {
+        "slug": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^/\\\\]+$"
+        },
+        "purpose": {
+          "enum": [
+            "reference",
+            "study"
+          ]
+        }
+      }
+    },
+    "compiler_profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "compiler_profile_id",
+        "compiler_digest",
+        "compiler_version",
+        "model_identity",
+        "prompt_template_hash",
+        "parameters"
+      ],
+      "properties": {
+        "compiler_profile_id": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "compiler_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "compiler_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model_identity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "prompt_template_hash": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "parameters": {
+          "type": "object"
+        }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source_id",
+          "sections"
+        ],
+        "properties": {
+          "source_id": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          },
+          "sections": {
+            "type": "array"
+          }
+        }
+      }
+    },
+    "authority": {
+      "const": "KNOWLEDGE_ONLY"
+    }
+  }
+}

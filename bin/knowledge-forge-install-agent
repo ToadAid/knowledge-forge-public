@@ -1,0 +1,306 @@
+#!/usr/bin/env bash
+set -uo pipefail
+umask 077
+
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+REPO_ROOT="$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)"
+PYTHON_BIN="${PYTHON_BIN:-python3}"
+
+PREFIX="${HOME:-}/.local"
+STATE_ROOT="${XDG_STATE_HOME:-${HOME:-}/.local/state}/knowledge-forge"
+MANIFEST_PATH=""
+CHECK_ONLY=false
+
+usage() {
+  cat <<'TXT'
+Usage: bin/knowledge-forge-install-agent [options]
+
+Bootstrap a checked-out Knowledge Forge repository for a generic agent host.
+
+Options:
+  --prefix PATH       command-shim prefix (default: ~/.local)
+  --state-root PATH   host-owned integration state root
+  --manifest PATH     integration manifest path
+  --check-only        verify checkout/runtime prerequisites without writing
+  -h, --help          show this help
+
+Security boundary:
+  Installs only knowledge-forge and knowledge-forge-authoring shims.
+  knowledge-forge-operator is deliberately NOT installed into the generic
+  agent prefix. Promotion remains an external authenticated human-host action.
+TXT
+}
+
+fail() {
+  printf 'knowledge-forge-install-agent: %s\n' "$1" >&2
+  return 2
+}
+
+abs_path() {
+  "$PYTHON_BIN" - "$1" <<'PY'
+import os
+import sys
+print(os.path.abspath(os.path.expanduser(sys.argv[1])))
+PY
+}
+
+write_exact() {
+  target="$1"
+  mode="$2"
+  source="$3"
+
+  if [[ -L "$target" ]]; then
+    fail "refusing symlink target: $target"
+    return 2
+  fi
+  if [[ -e "$target" ]]; then
+    if [[ ! -f "$target" ]]; then
+      fail "refusing non-regular existing target: $target"
+      return 2
+    fi
+    if ! cmp -s "$source" "$target"; then
+      fail "refusing to overwrite different existing file: $target"
+      return 2
+    fi
+    chmod "$mode" "$target" || {
+      fail "cannot set mode on existing target: $target"
+      return 2
+    }
+    rm -f "$source"
+    return 0
+  fi
+
+  mv "$source" "$target" || {
+    fail "cannot install target: $target"
+    return 2
+  }
+  chmod "$mode" "$target" || {
+    fail "cannot set mode on target: $target"
+    return 2
+  }
+}
+
+main() {
+  if [[ -z "${HOME:-}" ]]; then
+    fail "HOME must be set"
+    return 2
+  fi
+
+  while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+      --prefix)
+        [[ "$#" -ge 2 ]] || { fail "--prefix requires a value"; return 2; }
+        PREFIX="$2"; shift 2 ;;
+      --state-root)
+        [[ "$#" -ge 2 ]] || { fail "--state-root requires a value"; return 2; }
+        STATE_ROOT="$2"; shift 2 ;;
+      --manifest)
+        [[ "$#" -ge 2 ]] || { fail "--manifest requires a value"; return 2; }
+        MANIFEST_PATH="$2"; shift 2 ;;
+      --check-only)
+        CHECK_ONLY=true; shift ;;
+      -h|--help)
+        usage; return 0 ;;
+      *)
+        fail "unknown argument: $1"; return 2 ;;
+    esac
+  done
+
+  if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
+    fail "python3-compatible interpreter not found: $PYTHON_BIN"
+    return 2
+  fi
+
+  "$PYTHON_BIN" - <<'PY' >/dev/null
+import sys
+if sys.version_info < (3, 10):
+    raise SystemExit(2)
+PY
+  PY_RC=$?
+  if [[ "$PY_RC" -ne 0 ]]; then
+    fail "Python 3.10 or newer is required"
+    return 2
+  fi
+
+  for source in \
+    "$REPO_ROOT/bin/knowledge-forge" \
+    "$REPO_ROOT/bin/knowledge-forge-authoring" \
+    "$REPO_ROOT/bin/knowledge-forge-operator"
+  do
+    if [[ ! -f "$source" || -L "$source" ]]; then
+      fail "required checkout executable must be a real file: $source"
+      return 2
+    fi
+  done
+
+  "$REPO_ROOT/bin/knowledge-forge" --help >/dev/null 2>&1
+  CLI_RC=$?
+  "$REPO_ROOT/bin/knowledge-forge-authoring" --help >/dev/null 2>&1
+  AUTHORING_RC=$?
+  "$REPO_ROOT/bin/knowledge-forge-operator" --help >/dev/null 2>&1
+  OPERATOR_RC=$?
+  if [[ "$CLI_RC" -ne 0 || "$AUTHORING_RC" -ne 0 || "$OPERATOR_RC" -ne 0 ]]; then
+    fail "checkout CLI doctor failed (consumer=$CLI_RC authoring=$AUTHORING_RC operator=$OPERATOR_RC)"
+    return 2
+  fi
+
+  PREFIX="$(abs_path "$PREFIX")" || return 2
+  STATE_ROOT="$(abs_path "$STATE_ROOT")" || return 2
+  if [[ -z "$MANIFEST_PATH" ]]; then
+    MANIFEST_PATH="$STATE_ROOT/agent-integration.json"
+  fi
+  MANIFEST_PATH="$(abs_path "$MANIFEST_PATH")" || return 2
+
+  BIN_DIR="$PREFIX/bin"
+  CONSUMER_TARGET="$BIN_DIR/knowledge-forge"
+  AUTHORING_TARGET="$BIN_DIR/knowledge-forge-authoring"
+  OPERATOR_TARGET="$BIN_DIR/knowledge-forge-operator"
+
+  if [[ "$CHECK_ONLY" == true ]]; then
+    "$PYTHON_BIN" - "$REPO_ROOT" "$PREFIX" "$STATE_ROOT" "$MANIFEST_PATH" <<'PY'
+import json
+import sys
+print(json.dumps({
+    "schema_version": "0.1",
+    "status": "CHECK_OK",
+    "distribution": "CHECKOUT_LOCAL",
+    "checkout_root": sys.argv[1],
+    "prefix": sys.argv[2],
+    "state_root": sys.argv[3],
+    "manifest_path": sys.argv[4],
+    "consumer_cli_installed": False,
+    "authoring_cli_installed": False,
+    "operator_cli_installed": False,
+    "promotion_authority": "EXTERNAL_AUTHENTICATED_HUMAN_HOST_ONLY",
+}, indent=2, sort_keys=True))
+PY
+    return 0
+  fi
+
+  mkdir -p "$BIN_DIR" "$STATE_ROOT" "$(dirname -- "$MANIFEST_PATH")" || {
+    fail "cannot create installation directories"; return 2;
+  }
+
+  for real_dir in "$BIN_DIR" "$STATE_ROOT" "$(dirname -- "$MANIFEST_PATH")"; do
+    if [[ -L "$real_dir" || ! -d "$real_dir" ]]; then
+      fail "installation directory must be a real directory: $real_dir"
+      return 2
+    fi
+  done
+
+  if [[ -e "$OPERATOR_TARGET" || -L "$OPERATOR_TARGET" ]]; then
+    fail "refusing prefix that already exposes knowledge-forge-operator: $OPERATOR_TARGET"
+    return 2
+  fi
+
+  TMP_CONSUMER="$(mktemp "$BIN_DIR/.knowledge-forge.XXXXXX")" || return 2
+  TMP_AUTHORING="$(mktemp "$BIN_DIR/.knowledge-forge-authoring.XXXXXX")" || {
+    rm -f "$TMP_CONSUMER"; return 2;
+  }
+  TMP_MANIFEST="$(mktemp "$(dirname -- "$MANIFEST_PATH")/.agent-integration.XXXXXX")" || {
+    rm -f "$TMP_CONSUMER" "$TMP_AUTHORING"; return 2;
+  }
+
+  "$PYTHON_BIN" - "$REPO_ROOT" "$TMP_CONSUMER" "$TMP_AUTHORING" <<'PY'
+from pathlib import Path
+import shlex
+import sys
+
+repo = Path(sys.argv[1])
+consumer = Path(sys.argv[2])
+authoring = Path(sys.argv[3])
+
+def wrapper(target: Path) -> str:
+    return (
+        "#!/usr/bin/env bash\n"
+        "set -uo pipefail\n"
+        f"exec {shlex.quote(str(target))} \"$@\"\n"
+    )
+
+consumer.write_text(wrapper(repo / "bin" / "knowledge-forge"), encoding="utf-8")
+authoring.write_text(wrapper(repo / "bin" / "knowledge-forge-authoring"), encoding="utf-8")
+PY
+  GEN_RC=$?
+  if [[ "$GEN_RC" -ne 0 ]]; then
+    rm -f "$TMP_CONSUMER" "$TMP_AUTHORING" "$TMP_MANIFEST"
+    fail "cannot generate command shims"
+    return 2
+  fi
+
+  "$PYTHON_BIN" - "$REPO_ROOT" "$PREFIX" "$STATE_ROOT" "$MANIFEST_PATH" \
+    "$CONSUMER_TARGET" "$AUTHORING_TARGET" > "$TMP_MANIFEST" <<'PY'
+import json
+import sys
+
+payload = {
+    "schema_version": "0.1",
+    "distribution": "CHECKOUT_LOCAL",
+    "checkout_root": sys.argv[1],
+    "prefix": sys.argv[2],
+    "state_root": sys.argv[3],
+    "manifest_path": sys.argv[4],
+    "consumer_cli": sys.argv[5],
+    "authoring_cli": sys.argv[6],
+    "operator_cli_installed": False,
+    "operator_surface": "HOST_OWNED_NOT_INSTALLED",
+    "promotion_authority": "EXTERNAL_AUTHENTICATED_HUMAN_HOST_ONLY",
+    "trust_class": "UNTRUSTED_KNOWLEDGE_DATA",
+    "authority": "KNOWLEDGE_ONLY",
+    "instruction_authority": "NONE",
+    "execution_authority": "NONE",
+    "executable": False,
+}
+print(json.dumps(payload, indent=2, sort_keys=True))
+PY
+  MANIFEST_RC=$?
+  if [[ "$MANIFEST_RC" -ne 0 ]]; then
+    rm -f "$TMP_CONSUMER" "$TMP_AUTHORING" "$TMP_MANIFEST"
+    fail "cannot generate integration manifest"
+    return 2
+  fi
+
+  write_exact "$CONSUMER_TARGET" 0755 "$TMP_CONSUMER" || {
+    rm -f "$TMP_CONSUMER" "$TMP_AUTHORING" "$TMP_MANIFEST"; return 2;
+  }
+  write_exact "$AUTHORING_TARGET" 0755 "$TMP_AUTHORING" || {
+    rm -f "$TMP_AUTHORING" "$TMP_MANIFEST"; return 2;
+  }
+  write_exact "$MANIFEST_PATH" 0600 "$TMP_MANIFEST" || {
+    rm -f "$TMP_MANIFEST"; return 2;
+  }
+
+  "$CONSUMER_TARGET" --help >/dev/null 2>&1
+  INSTALLED_CONSUMER_RC=$?
+  "$AUTHORING_TARGET" --help >/dev/null 2>&1
+  INSTALLED_AUTHORING_RC=$?
+  if [[ "$INSTALLED_CONSUMER_RC" -ne 0 || "$INSTALLED_AUTHORING_RC" -ne 0 ]]; then
+    fail "installed shim doctor failed (consumer=$INSTALLED_CONSUMER_RC authoring=$INSTALLED_AUTHORING_RC)"
+    return 2
+  fi
+
+  "$PYTHON_BIN" - "$REPO_ROOT" "$PREFIX" "$STATE_ROOT" "$MANIFEST_PATH" \
+    "$CONSUMER_TARGET" "$AUTHORING_TARGET" <<'PY'
+import json
+import sys
+print(json.dumps({
+    "schema_version": "0.1",
+    "status": "READY",
+    "distribution": "CHECKOUT_LOCAL",
+    "checkout_root": sys.argv[1],
+    "prefix": sys.argv[2],
+    "state_root": sys.argv[3],
+    "manifest_path": sys.argv[4],
+    "consumer_cli": sys.argv[5],
+    "authoring_cli": sys.argv[6],
+    "consumer_cli_installed": True,
+    "authoring_cli_installed": True,
+    "operator_cli_installed": False,
+    "promotion_authority": "EXTERNAL_AUTHENTICATED_HUMAN_HOST_ONLY",
+}, indent=2, sort_keys=True))
+PY
+  return 0
+}
+
+main "$@"
+RC=$?
+exit "$RC"

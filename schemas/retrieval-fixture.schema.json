@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://toadaid.org/knowledge-forge/retrieval-fixture.schema.json",
+  "title": "Knowledge Forge Retrieval Fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["question", "allowed_unit_ids", "forbidden_unit_ids", "max_units", "must_refuse"],
+  "properties": {
+    "question": {"type": "string", "minLength": 1},
+    "allowed_unit_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^claim-[0-9a-f]{64}$"}},
+    "forbidden_unit_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^claim-[0-9a-f]{64}$"}},
+    "max_units": {"type": "integer", "minimum": 1, "maximum": 3},
+    "must_refuse": {"type": "boolean"}
+  }
+}

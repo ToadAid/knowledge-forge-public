@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://toadaid.org/knowledge-forge/claim-index.schema.json",
+  "title": "Knowledge Forge ClaimIndex",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "skill_id",
+    "skill_version",
+    "knowledge_id",
+    "candidate_sha256",
+    "compiler_profile_id",
+    "source_ids",
+    "claims"
+  ],
+  "$defs": {
+    "sha256Ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "stableId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._:-]{0,255}$"
+    },
+    "claimId": {
+      "type": "string",
+      "pattern": "^claim-[0-9a-f]{64}$"
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "claim_key",
+        "subject",
+        "predicate",
+        "value",
+        "qualifiers",
+        "scope",
+        "validity",
+        "executable"
+      ],
+      "properties": {
+        "claim_key": {"$ref": "#/$defs/stableId"},
+        "subject": {"$ref": "#/$defs/stableId"},
+        "predicate": {"$ref": "#/$defs/stableId"},
+        "value": {},
+        "qualifiers": {"type": "object"},
+        "scope": {"type": "object"},
+        "validity": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "valid_from": {"type": ["string", "null"]},
+            "valid_until": {"type": ["string", "null"]},
+            "as_of_source": {"type": ["string", "null"]}
+          }
+        },
+        "executable": {"const": false}
+      }
+    },
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_id", "section_ids"],
+      "properties": {
+        "source_id": {"$ref": "#/$defs/sha256Ref"},
+        "section_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  },
+  "properties": {
+    "schema_version": {"const": "0.1"},
+    "skill_id": {"type": "string", "minLength": 1},
+    "skill_version": {"type": "integer", "minimum": 1},
+    "knowledge_id": {"$ref": "#/$defs/stableId"},
+    "candidate_sha256": {"$ref": "#/$defs/sha256Ref"},
+    "compiler_profile_id": {"$ref": "#/$defs/sha256Ref"},
+    "source_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/sha256Ref"}
+    },
+    "claims": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "claim_ref",
+          "unit_id",
+          "claim_key",
+          "kind",
+          "claim_sha256",
+          "claim",
+          "source_bindings"
+        ],
+        "properties": {
+          "claim_ref": {"type": "string", "minLength": 1},
+          "unit_id": {"$ref": "#/$defs/claimId"},
+          "claim_key": {"$ref": "#/$defs/stableId"},
+          "kind": {"type": "string", "minLength": 1},
+          "claim_sha256": {"$ref": "#/$defs/sha256Ref"},
+          "claim": {"$ref": "#/$defs/claim"},
+          "source_bindings": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"$ref": "#/$defs/binding"}
+          }
+        }
+      }
+    }
+  }
+}

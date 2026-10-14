@@ -1,0 +1,177 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://toadaid.org/knowledge-forge/conflict-set.schema.json",
+  "title": "Knowledge Forge ConflictSet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "conflict_set_id",
+    "subject",
+    "predicate",
+    "state",
+    "members",
+    "relations",
+    "resolution"
+  ],
+  "$defs": {
+    "sha256Ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "claimId": {
+      "type": "string",
+      "pattern": "^claim-[0-9a-f]{64}$"
+    },
+    "stableId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._:-]{0,255}$"
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "claim_key",
+        "subject",
+        "predicate",
+        "value",
+        "qualifiers",
+        "scope",
+        "validity",
+        "executable"
+      ],
+      "properties": {
+        "claim_key": {"$ref": "#/$defs/stableId"},
+        "subject": {"$ref": "#/$defs/stableId"},
+        "predicate": {"$ref": "#/$defs/stableId"},
+        "value": {},
+        "qualifiers": {"type": "object"},
+        "scope": {"type": "object"},
+        "validity": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "valid_from": {"type": ["string", "null"]},
+            "valid_until": {"type": ["string", "null"]},
+            "as_of_source": {"type": ["string", "null"]}
+          }
+        },
+        "executable": {"const": false}
+      }
+    },
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_id", "section_ids"],
+      "properties": {
+        "source_id": {"$ref": "#/$defs/sha256Ref"},
+        "section_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "member": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "claim_ref",
+        "skill_id",
+        "knowledge_id",
+        "compiler_profile_id",
+        "unit_id",
+        "claim_key",
+        "claim_sha256",
+        "claim",
+        "source_bindings"
+      ],
+      "properties": {
+        "claim_ref": {"type": "string", "minLength": 1},
+        "skill_id": {"type": "string", "minLength": 1},
+        "knowledge_id": {"$ref": "#/$defs/stableId"},
+        "compiler_profile_id": {"$ref": "#/$defs/sha256Ref"},
+        "unit_id": {"$ref": "#/$defs/claimId"},
+        "claim_key": {"$ref": "#/$defs/stableId"},
+        "claim_sha256": {"$ref": "#/$defs/sha256Ref"},
+        "claim": {"$ref": "#/$defs/claim"},
+        "source_bindings": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/binding"}
+        }
+      }
+    },
+    "relation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "left_claim_ref",
+        "right_claim_ref",
+        "classification",
+        "variance_dimensions"
+      ],
+      "properties": {
+        "left_claim_ref": {"type": "string", "minLength": 1},
+        "right_claim_ref": {"type": "string", "minLength": 1},
+        "classification": {
+          "enum": ["CONTRADICTION", "VARIANCE"]
+        },
+        "variance_dimensions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": ["scope", "qualifiers", "validity"]
+          }
+        }
+      }
+    }
+  },
+  "properties": {
+    "schema_version": {"const": "0.1"},
+    "conflict_set_id": {
+      "type": "string",
+      "pattern": "^conflict-[0-9a-f]{64}$"
+    },
+    "subject": {"$ref": "#/$defs/stableId"},
+    "predicate": {"$ref": "#/$defs/stableId"},
+    "state": {"enum": ["OPEN", "RESOLVED"]},
+    "members": {
+      "type": "array",
+      "minItems": 2,
+      "items": {"$ref": "#/$defs/member"}
+    },
+    "relations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/relation"}
+    },
+    "resolution": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "applicable_claim_refs",
+            "reason",
+            "resolved_at",
+            "resolver_ref"
+          ],
+          "properties": {
+            "applicable_claim_refs": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {"type": "string", "minLength": 1}
+            },
+            "reason": {"type": "string", "minLength": 1},
+            "resolved_at": {"type": "string", "minLength": 1},
+            "resolver_ref": {"type": "string", "minLength": 1}
+          }
+        }
+      ]
+    }
+  }
+}

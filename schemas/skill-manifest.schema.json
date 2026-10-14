@@ -1,0 +1,248 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://toadaid.org/knowledge-forge/skill-manifest.schema.json",
+  "title": "Knowledge Forge SkillManifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "skill_id",
+    "skill_version",
+    "state",
+    "authority",
+    "knowledge_id",
+    "candidate_sha256",
+    "title",
+    "purpose",
+    "source_ids",
+    "compiler",
+    "compiled_at",
+    "units",
+    "retrieval_index",
+    "claim_index"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.6"
+    },
+    "skill_id": {
+      "type": "string",
+      "pattern": "^knowledge-forge:"
+    },
+    "skill_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "state": {
+      "const": "COMPILED_CANDIDATE"
+    },
+    "authority": {
+      "const": "KNOWLEDGE_ONLY"
+    },
+    "knowledge_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._:-]{0,255}$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "purpose": {
+      "enum": [
+        "reference",
+        "study"
+      ]
+    },
+    "source_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^sha256:[0-9a-f]{64}$"
+      }
+    },
+    "compiler": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract_version",
+        "adapter_id",
+        "compiler_profile_id",
+        "compiler_digest",
+        "compiler_version",
+        "model_identity",
+        "prompt_template_hash",
+        "parameters"
+      ],
+      "properties": {
+        "contract_version": {
+          "const": "0.2"
+        },
+        "adapter_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "compiler_profile_id": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "compiler_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "compiler_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model_identity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "prompt_template_hash": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "parameters": {
+          "type": "object"
+        }
+      }
+    },
+    "compiled_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "units": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "unit_id",
+          "claim_key",
+          "kind",
+          "executable",
+          "path",
+          "support"
+        ],
+        "properties": {
+          "unit_id": {
+            "type": "string",
+            "pattern": "^claim-[0-9a-f]{64}$"
+          },
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^units/[^/]+\\.md$"
+          },
+          "claim_key": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._:-]{0,255}$"
+          },
+          "executable": {
+            "const": false
+          },
+          "support": {
+            "type": "array",
+            "minItems": 0,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "source_id",
+                "section_id",
+                "section_sha256",
+                "coordinate_space",
+                "start_byte",
+                "end_byte",
+                "span_sha256"
+              ],
+              "properties": {
+                "source_id": {
+                  "type": "string",
+                  "pattern": "^sha256:[0-9a-f]{64}$"
+                },
+                "section_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "section_sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "coordinate_space": {
+                  "const": "normalized_section_utf8_bytes"
+                },
+                "start_byte": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "end_byte": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "span_sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "retrieval_index": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "schema_version",
+        "max_units_per_turn"
+      ],
+      "properties": {
+        "path": {
+          "const": "retrieval-index.json"
+        },
+        "schema_version": {
+          "const": "0.1"
+        },
+        "max_units_per_turn": {
+          "const": 3
+        }
+      }
+    },
+    "candidate_sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "claim_index": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "schema_version",
+        "sha256",
+        "claim_count"
+      ],
+      "properties": {
+        "path": {
+          "const": "claim-index.json"
+        },
+        "schema_version": {
+          "const": "0.1"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "claim_count": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

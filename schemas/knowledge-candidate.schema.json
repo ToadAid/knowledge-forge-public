@@ -1,0 +1,294 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://toadaid.org/knowledge-forge/knowledge-candidate.schema.json",
+  "title": "Knowledge Forge KnowledgeCandidate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "state",
+    "authority",
+    "knowledge_id",
+    "skill",
+    "compiler",
+    "source_ids",
+    "units"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.3"
+    },
+    "state": {
+      "const": "COMPILED_CANDIDATE"
+    },
+    "authority": {
+      "const": "KNOWLEDGE_ONLY"
+    },
+    "knowledge_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._:-]{0,255}$"
+    },
+    "skill": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slug",
+        "title",
+        "purpose"
+      ],
+      "properties": {
+        "slug": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "purpose": {
+          "enum": [
+            "reference",
+            "study"
+          ]
+        }
+      }
+    },
+    "compiler": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract_version",
+        "adapter_id",
+        "compiler_profile_id",
+        "compiler_digest",
+        "compiler_version",
+        "model_identity",
+        "prompt_template_hash",
+        "parameters"
+      ],
+      "properties": {
+        "contract_version": {
+          "const": "0.2"
+        },
+        "adapter_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "compiler_profile_id": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "compiler_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "compiler_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model_identity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "prompt_template_hash": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "parameters": {
+          "type": "object"
+        }
+      }
+    },
+    "source_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^sha256:[0-9a-f]{64}$"
+      }
+    },
+    "units": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "unit_id",
+          "kind",
+          "title",
+          "body",
+          "claim",
+          "source_bindings"
+        ],
+        "properties": {
+          "unit_id": {
+            "type": "string",
+            "pattern": "^claim-[0-9a-f]{64}$"
+          },
+          "kind": {
+            "enum": [
+              "CONCEPT",
+              "FRAMEWORK",
+              "PROCEDURE",
+              "DECISION_RULE",
+              "TRADEOFF",
+              "ANTI_PATTERN",
+              "DEFINITION",
+              "EXAMPLE"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "body": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_bindings": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "source_id",
+                "section_ids"
+              ],
+              "properties": {
+                "source_id": {
+                  "type": "string",
+                  "pattern": "^sha256:[0-9a-f]{64}$"
+                },
+                "section_ids": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          },
+          "conflicts_with": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^claim-[0-9a-f]{64}$"
+            }
+          },
+          "claim": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "claim_key",
+              "subject",
+              "predicate",
+              "value",
+              "qualifiers",
+              "scope",
+              "validity",
+              "executable"
+            ],
+            "properties": {
+              "claim_key": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9._:-]{0,255}$"
+              },
+              "subject": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9._:-]{0,255}$"
+              },
+              "predicate": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9._:-]{0,255}$"
+              },
+              "value": {},
+              "qualifiers": {
+                "type": "object"
+              },
+              "scope": {
+                "type": "object"
+              },
+              "validity": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "valid_from": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "valid_until": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "as_of_source": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              "executable": {
+                "const": false
+              }
+            }
+          },
+          "support": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "source_id",
+                "section_id",
+                "section_sha256",
+                "coordinate_space",
+                "start_byte",
+                "end_byte",
+                "span_sha256"
+              ],
+              "properties": {
+                "source_id": {
+                  "type": "string",
+                  "pattern": "^sha256:[0-9a-f]{64}$"
+                },
+                "section_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "section_sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "coordinate_space": {
+                  "const": "normalized_section_utf8_bytes"
+                },
+                "start_byte": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "end_byte": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "span_sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              }
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

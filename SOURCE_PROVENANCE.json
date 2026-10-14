@@ -1,0 +1,1451 @@
+{
+  "candidate_root": ".",
+  "entries": [
+    {
+      "candidate_path": ".gitignore",
+      "exported_sha256": "sha256:ad83471bbcacb7e0509e83317bba9e1983463daadb899ba8d9d6e59df4d11c0c",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": ".gitignore",
+      "source_sha256": "sha256:ad83471bbcacb7e0509e83317bba9e1983463daadb899ba8d9d6e59df4d11c0c"
+    },
+    {
+      "candidate_path": "SOURCE_PROVENANCE.json",
+      "exported_sha256": null,
+      "included": true,
+      "inclusion_classification": "GENERATED_MANIFEST",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "The manifest cannot include its own content hash; verify it with an external release checksum when publishing.",
+      "source_path": "<P1A-R2-generated-manifest>",
+      "source_sha256": null
+    },
+    {
+      "candidate_path": "CHANGELOG.md",
+      "exported_sha256": "sha256:690d051a9dd758cbc8afed2516ebe27c16f7828a9e12b40fa01c3dd28479eaae",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Document prepared only in the private P1A-R2 staging candidate.",
+      "source_path": "<P1A-R2-release-specific>",
+      "source_sha256": null
+    },
+    {
+      "candidate_path": "CONTRIBUTING.md",
+      "exported_sha256": "sha256:f57bf0996e2206d3da2197fecb27791e41da3918d0ef2a19d2614647f5e66576",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Document prepared only in the private P1A-R2 staging candidate.",
+      "source_path": "<P1A-R2-release-specific>",
+      "source_sha256": null
+    },
+    {
+      "candidate_path": "INSTALL.md",
+      "exported_sha256": "sha256:c75d34729d197d8ee762c12d132d7416e18a3cf73bb3b2b31f9c73a21908386f",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Document prepared only in the private P1A-R2 staging candidate.",
+      "source_path": "<P1A-R2-release-specific>",
+      "source_sha256": null
+    },
+    {
+      "candidate_path": "LICENSE",
+      "exported_sha256": "sha256:cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "STANDARD_APACHE_2_0_LICENSE_TEXT",
+      "reason": "Document prepared only in the private P1A-R2 staging candidate.",
+      "source_path": "<P1A-R2-release-specific>",
+      "source_sha256": null
+    },
+    {
+      "candidate_path": "NOTICE",
+      "exported_sha256": "sha256:78a2566f138f3a3af07886046bf6fc63148d4148406796d86b5db2a030efab9d",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Document prepared only in the private P1A-R2 staging candidate.",
+      "source_path": "<P1A-R2-release-specific>",
+      "source_sha256": null
+    },
+    {
+      "candidate_path": "README.md",
+      "exported_sha256": "sha256:5dd4264946401aed7ffeb56d3fbb8a355361f5beb2eb529ae8989b6258c0c893",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Document prepared only in the private P1A-R2 staging candidate.",
+      "source_path": "<P1A-R2-release-specific>",
+      "source_sha256": null
+    },
+    {
+      "candidate_path": "SECURITY.md",
+      "exported_sha256": "sha256:879d9421a7ed42bac04f00673462b0fbe03756765e122cc2513cb656718409e5",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Document prepared only in the private P1A-R2 staging candidate.",
+      "source_path": "<P1A-R2-release-specific>",
+      "source_sha256": null
+    },
+    {
+      "candidate_path": "docs/PUBLIC_SOURCE_INVENTORY.md",
+      "exported_sha256": "sha256:300dd9f7daccc655b4274996a9198a5139856bf21df7b3b37bd84f89972b1c6d",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Document prepared only in the private P1A-R2 staging candidate.",
+      "source_path": "<P1A-R2-release-specific>",
+      "source_sha256": null
+    },
+    {
+      "candidate_path": "BLUEPRINT.md",
+      "exported_sha256": "sha256:5a5dc1058198b7be47dda3e8f4d1667a67604c95f26281c87d347ec9bba822dd",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "BLUEPRINT.md",
+      "source_sha256": "sha256:5a5dc1058198b7be47dda3e8f4d1667a67604c95f26281c87d347ec9bba822dd"
+    },
+    {
+      "candidate_path": null,
+      "exported_sha256": null,
+      "included": false,
+      "inclusion_classification": "PRIVATE_EXCLUDE",
+      "license_classification": "NOT_APPLICABLE_EXCLUDED",
+      "reason": "Internal roadmap and cross-project planning; not required by the distribution.",
+      "source_path": "BUILD_LIST.md",
+      "source_sha256": "sha256:03224a96d217f0dea388d9ee0ef5a323d4cc94ddafc2befc37e36eaafa020f60"
+    },
+    {
+      "candidate_path": "DOCTRINE.md",
+      "exported_sha256": "sha256:dc453421c4fd9a663ca25a2b6e58e3a1d7ca69195ae47ac7d2e928f9fd365acd",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "DOCTRINE.md",
+      "source_sha256": "sha256:dc453421c4fd9a663ca25a2b6e58e3a1d7ca69195ae47ac7d2e928f9fd365acd"
+    },
+    {
+      "candidate_path": "FEATURES.md",
+      "exported_sha256": "sha256:de68e7d21ea8e20d8db365ceabdc2fe0fb136f9b166f00f16df12b23b4cf4484",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE_RELEASE_SANITIZED",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Updated obsolete Base WETH9 pilot prose to describe the merged PondReference implementation; no runtime behavior changed.",
+      "source_path": "FEATURES.md",
+      "source_sha256": "sha256:7749eb8e16a739b997c245b9e86a7ca5759b15a5d8cb4a9abbbf2cc5ace02ef1"
+    },
+    {
+      "candidate_path": "INSTALL_AGENT.md",
+      "exported_sha256": "sha256:2ce2208d1ed5eabcefcc09defdef9bef6851848de1efe188137d3f1be45791db",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "INSTALL_AGENT.md",
+      "source_sha256": "sha256:2ce2208d1ed5eabcefcc09defdef9bef6851848de1efe188137d3f1be45791db"
+    },
+    {
+      "candidate_path": null,
+      "exported_sha256": null,
+      "included": false,
+      "inclusion_classification": "PRIVATE_EXCLUDE",
+      "license_classification": "NOT_APPLICABLE_EXCLUDED",
+      "reason": "Private-project README replaced by the audited local-first public README.",
+      "source_path": "README.md",
+      "source_sha256": "sha256:b7ad11820158fc5e75107b16c7e914963f0b6d0f415db754438f9b095e8a9a4d"
+    },
+    {
+      "candidate_path": null,
+      "exported_sha256": null,
+      "included": false,
+      "inclusion_classification": "PRIVATE_EXCLUDE",
+      "license_classification": "NOT_APPLICABLE_EXCLUDED",
+      "reason": "Private development-seal evidence; not required by the distribution.",
+      "source_path": "SEALED_BASELINE.md",
+      "source_sha256": "sha256:b09ecfcbf4a613cba00ea811723cd23e629346f2da5f550a201abb67f3ea9d41"
+    },
+    {
+      "candidate_path": null,
+      "exported_sha256": null,
+      "included": false,
+      "inclusion_classification": "PRIVATE_EXCLUDE",
+      "license_classification": "NOT_APPLICABLE_EXCLUDED",
+      "reason": "Private historical proof record; not required by the distribution.",
+      "source_path": "STAGE1_PROOF.md",
+      "source_sha256": "sha256:5f155fcdc85a0127a229e8f79b656f7a85aa49a27798923a6a985f66d8d1c3f3"
+    },
+    {
+      "candidate_path": "bin/knowledge-forge",
+      "exported_sha256": "sha256:0434cd6ae3fcf1a096ea73b5b8efff1af1015673398583c489a3d8ad824adca4",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "bin/knowledge-forge",
+      "source_sha256": "sha256:0434cd6ae3fcf1a096ea73b5b8efff1af1015673398583c489a3d8ad824adca4"
+    },
+    {
+      "candidate_path": "bin/knowledge-forge-authoring",
+      "exported_sha256": "sha256:451b957d02635947074a52f7fc35cc9996bc57d6ad9e28775746d2b55c2267f2",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "bin/knowledge-forge-authoring",
+      "source_sha256": "sha256:451b957d02635947074a52f7fc35cc9996bc57d6ad9e28775746d2b55c2267f2"
+    },
+    {
+      "candidate_path": "bin/knowledge-forge-install-agent",
+      "exported_sha256": "sha256:73dc08ed3756f438fb47640b5f12008e7fd20f3f0f26ca8468a1cd5a07e2e6f0",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "bin/knowledge-forge-install-agent",
+      "source_sha256": "sha256:73dc08ed3756f438fb47640b5f12008e7fd20f3f0f26ca8468a1cd5a07e2e6f0"
+    },
+    {
+      "candidate_path": "bin/knowledge-forge-operator",
+      "exported_sha256": "sha256:a4d37df290c7c37de490e9c1703cfe6c7aff24179a553f69f4a9643fc5e7729e",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "bin/knowledge-forge-operator",
+      "source_sha256": "sha256:a4d37df290c7c37de490e9c1703cfe6c7aff24179a553f69f4a9643fc5e7729e"
+    },
+    {
+      "candidate_path": "bin/knowledge-forge-review",
+      "exported_sha256": "sha256:0de0f2ad67fc5f21e8df153104c7940aa8373223701be61680094fcfdd5d433b",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "bin/knowledge-forge-review",
+      "source_sha256": "sha256:0de0f2ad67fc5f21e8df153104c7940aa8373223701be61680094fcfdd5d433b"
+    },
+    {
+      "candidate_path": "docs/AGENT_INSTALL_PROMPT.md",
+      "exported_sha256": "sha256:af41f8b655f0f1b4086304cb63e2ea546b898533d51f0a430239af0f465402c3",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "docs/AGENT_INSTALL_PROMPT.md",
+      "source_sha256": "sha256:af41f8b655f0f1b4086304cb63e2ea546b898533d51f0a430239af0f465402c3"
+    },
+    {
+      "candidate_path": "docs/CONSUMER_CAPSULE_P10B_R2A.md",
+      "exported_sha256": "sha256:5f7981fc243c9089856b5dfbbdd4eee83fb61fefa31df57444e98a6a7b1e28d1",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "docs/CONSUMER_CAPSULE_P10B_R2A.md",
+      "source_sha256": "sha256:5f7981fc243c9089856b5dfbbdd4eee83fb61fefa31df57444e98a6a7b1e28d1"
+    },
+    {
+      "candidate_path": "docs/GENERIC_AGENT_INTEGRATION.md",
+      "exported_sha256": "sha256:91293ec271d9f6c9ad7378d0c67df390edea10b2093eaf79e9e2ffcf8b0e8fd2",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "docs/GENERIC_AGENT_INTEGRATION.md",
+      "source_sha256": "sha256:91293ec271d9f6c9ad7378d0c67df390edea10b2093eaf79e9e2ffcf8b0e8fd2"
+    },
+    {
+      "candidate_path": "docs/GENERIC_APPROVAL_TUI.md",
+      "exported_sha256": "sha256:33731de1ecdd6f55cfb4a3f6f78b85f3579b8d80fa719e1d3774bff44c381ab5",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "docs/GENERIC_APPROVAL_TUI.md",
+      "source_sha256": "sha256:33731de1ecdd6f55cfb4a3f6f78b85f3579b8d80fa719e1d3774bff44c381ab5"
+    },
+    {
+      "candidate_path": "docs/POND_REFERENCE_FIXTURE.md",
+      "exported_sha256": "sha256:3ac0503756292934a58b4f8d8c900adc8a4987e2cb7ee31b7e809e27694d8d90",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "docs/POND_REFERENCE_FIXTURE.md",
+      "source_sha256": "sha256:3ac0503756292934a58b4f8d8c900adc8a4987e2cb7ee31b7e809e27694d8d90"
+    },
+    {
+      "candidate_path": "fixtures/contracts/pond-reference/abi.json",
+      "exported_sha256": "sha256:6aa9b87880b7a10d4c4bd33bcad27d45ba5f58e3ac1e754db5eebedfa49720cf",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "fixtures/contracts/pond-reference/abi.json",
+      "source_sha256": "sha256:6aa9b87880b7a10d4c4bd33bcad27d45ba5f58e3ac1e754db5eebedfa49720cf"
+    },
+    {
+      "candidate_path": "fixtures/contracts/pond-reference/contract-pin.json",
+      "exported_sha256": "sha256:cdb4cb4cbb51bb0fd8488b57090b33c983124a1b197706d2dd90b56133274434",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "fixtures/contracts/pond-reference/contract-pin.json",
+      "source_sha256": "sha256:cdb4cb4cbb51bb0fd8488b57090b33c983124a1b197706d2dd90b56133274434"
+    },
+    {
+      "candidate_path": "fixtures/contracts/pond-reference/runtime-code.hex",
+      "exported_sha256": "sha256:1fbb36fe9ec217f94808faa7a182fb52fcda968b5c12b9372a9b6a7cf3eacd49",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "fixtures/contracts/pond-reference/runtime-code.hex",
+      "source_sha256": "sha256:1fbb36fe9ec217f94808faa7a182fb52fcda968b5c12b9372a9b6a7cf3eacd49"
+    },
+    {
+      "candidate_path": "packaging/consumer_capsule/entrypoint.py",
+      "exported_sha256": "sha256:1e02a0f0f2b30bdf420c1dd503579612b61c816ce00eccdea689603bf81c4783",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "packaging/consumer_capsule/entrypoint.py",
+      "source_sha256": "sha256:1e02a0f0f2b30bdf420c1dd503579612b61c816ce00eccdea689603bf81c4783"
+    },
+    {
+      "candidate_path": "schemas/claim-index.schema.json",
+      "exported_sha256": "sha256:72391128d8df2ec5aacef3f71e3901c896d2699dd10c1d7c6e47b8c7ca2a0db5",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "schemas/claim-index.schema.json",
+      "source_sha256": "sha256:72391128d8df2ec5aacef3f71e3901c896d2699dd10c1d7c6e47b8c7ca2a0db5"
+    },
+    {
+      "candidate_path": "schemas/compiler-request.schema.json",
+      "exported_sha256": "sha256:5886a1c8c9e576c5d2a397f1e784d0fa323fef04b322b2a8b21ace09d9dad0e3",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "schemas/compiler-request.schema.json",
+      "source_sha256": "sha256:5886a1c8c9e576c5d2a397f1e784d0fa323fef04b322b2a8b21ace09d9dad0e3"
+    },
+    {
+      "candidate_path": "schemas/conflict-set.schema.json",
+      "exported_sha256": "sha256:00b417ff70f4707d14cf6461e57bf1f2fc9fcd3a12af55f87dc103c600797397",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "schemas/conflict-set.schema.json",
+      "source_sha256": "sha256:00b417ff70f4707d14cf6461e57bf1f2fc9fcd3a12af55f87dc103c600797397"
+    },
+    {
+      "candidate_path": "schemas/faithfulness-report.schema.json",
+      "exported_sha256": "sha256:11bd51051393ab825be1e8e499f9fde67318e9cb326b7e385d26a422d8280c97",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "schemas/faithfulness-report.schema.json",
+      "source_sha256": "sha256:11bd51051393ab825be1e8e499f9fde67318e9cb326b7e385d26a422d8280c97"
+    },
+    {
+      "candidate_path": "schemas/knowledge-candidate.schema.json",
+      "exported_sha256": "sha256:1c2e50eee67d5b8818c8f082ad246f584004644b656fb1e66e571bf8926c0083",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "schemas/knowledge-candidate.schema.json",
+      "source_sha256": "sha256:1c2e50eee67d5b8818c8f082ad246f584004644b656fb1e66e571bf8926c0083"
+    },
+    {
+      "candidate_path": "schemas/knowledge-diff.schema.json",
+      "exported_sha256": "sha256:145f9e3b7f835e667efc694db0514240fd2ebb03911ae2f3be5ba2fd9cd311f2",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "schemas/knowledge-diff.schema.json",
+      "source_sha256": "sha256:145f9e3b7f835e667efc694db0514240fd2ebb03911ae2f3be5ba2fd9cd311f2"
+    },
+    {
+      "candidate_path": "schemas/lifecycle-record.schema.json",
+      "exported_sha256": "sha256:4a7eac5c1002efae2c9629dd03d0f6078f24963ee78fd48f6edeeb0173201ade",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "schemas/lifecycle-record.schema.json",
+      "source_sha256": "sha256:4a7eac5c1002efae2c9629dd03d0f6078f24963ee78fd48f6edeeb0173201ade"
+    },
+    {
+      "candidate_path": "schemas/normalized-source.schema.json",
+      "exported_sha256": "sha256:75f54245a946e78ab164da38351a7d486bb3e70b588a044c96a60beadde81714",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "schemas/normalized-source.schema.json",
+      "source_sha256": "sha256:75f54245a946e78ab164da38351a7d486bb3e70b588a044c96a60beadde81714"
+    },
+    {
+      "candidate_path": "schemas/provenance-receipt.schema.json",
+      "exported_sha256": "sha256:c190a31f40170e05ff28293949f5294c067dbfabb3ba498cf798508a9f57484f",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "schemas/provenance-receipt.schema.json",
+      "source_sha256": "sha256:c190a31f40170e05ff28293949f5294c067dbfabb3ba498cf798508a9f57484f"
+    },
+    {
+      "candidate_path": "schemas/retrieval-fixture.schema.json",
+      "exported_sha256": "sha256:8aa87a818403c4781166882b11a4aca108d51bf0ae345d25cae952a82d91c589",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "schemas/retrieval-fixture.schema.json",
+      "source_sha256": "sha256:8aa87a818403c4781166882b11a4aca108d51bf0ae345d25cae952a82d91c589"
+    },
+    {
+      "candidate_path": "schemas/retrieval-index.schema.json",
+      "exported_sha256": "sha256:247947d813313618099c26ed113080c5e471e33e5b5451086681b5e8ae4dd572",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "schemas/retrieval-index.schema.json",
+      "source_sha256": "sha256:247947d813313618099c26ed113080c5e471e33e5b5451086681b5e8ae4dd572"
+    },
+    {
+      "candidate_path": "schemas/skill-manifest.schema.json",
+      "exported_sha256": "sha256:a0acd78baf09918c5453389c9b5debe2b5f04e231ca57a1dff5b182576b02d06",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "schemas/skill-manifest.schema.json",
+      "source_sha256": "sha256:a0acd78baf09918c5453389c9b5debe2b5f04e231ca57a1dff5b182576b02d06"
+    },
+    {
+      "candidate_path": "schemas/skill-registry.schema.json",
+      "exported_sha256": "sha256:53c073d93a1d3e95182e72693342d1c5cc932c9484ec25ead167abca49d634f4",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "schemas/skill-registry.schema.json",
+      "source_sha256": "sha256:53c073d93a1d3e95182e72693342d1c5cc932c9484ec25ead167abca49d634f4"
+    },
+    {
+      "candidate_path": "schemas/source-manifest.schema.json",
+      "exported_sha256": "sha256:04f699e77c4d031336d3041f451c39443dc90c6069e70792d03c2c93ad1f6580",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "schemas/source-manifest.schema.json",
+      "source_sha256": "sha256:04f699e77c4d031336d3041f451c39443dc90c6069e70792d03c2c93ad1f6580"
+    },
+    {
+      "candidate_path": "scripts/build_consumer_capsule.py",
+      "exported_sha256": "sha256:66dde21e269d2d360369500887660b155a4c6aa0bdad8cbcc97845de47a6b202",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "scripts/build_consumer_capsule.py",
+      "source_sha256": "sha256:66dde21e269d2d360369500887660b155a4c6aa0bdad8cbcc97845de47a6b202"
+    },
+    {
+      "candidate_path": "scripts/generate_pond_reference_fixture.py",
+      "exported_sha256": "sha256:2d7263832c2e0e00a4d7bf13cc7fb4262fecea51b67e2adf3da0c2c05c8e65aa",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "scripts/generate_pond_reference_fixture.py",
+      "source_sha256": "sha256:2d7263832c2e0e00a4d7bf13cc7fb4262fecea51b67e2adf3da0c2c05c8e65aa"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/__init__.py",
+      "exported_sha256": "sha256:9631f336e13678be535726296a10f7ecf3213f784451061aac7216d8cc647dc5",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/__init__.py",
+      "source_sha256": "sha256:9631f336e13678be535726296a10f7ecf3213f784451061aac7216d8cc647dc5"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/__main__.py",
+      "exported_sha256": "sha256:3d2438ae92f4746e9ffaa1f837b1fe803f6281091d1f31f8c95643716f257d9a",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/__main__.py",
+      "source_sha256": "sha256:3d2438ae92f4746e9ffaa1f837b1fe803f6281091d1f31f8c95643716f257d9a"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/agent0_discovery.py",
+      "exported_sha256": "sha256:462730c61d400373beeb8434f4a3c337808b624b03aed1be771f2acd718b76ce",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/agent0_discovery.py",
+      "source_sha256": "sha256:462730c61d400373beeb8434f4a3c337808b624b03aed1be771f2acd718b76ce"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/agent1_discovery.py",
+      "exported_sha256": "sha256:23f4b6f75c82f502ea283dce6997276de25bac9f27ff2e63bf5c6fd262578d8e",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/agent1_discovery.py",
+      "source_sha256": "sha256:23f4b6f75c82f502ea283dce6997276de25bac9f27ff2e63bf5c6fd262578d8e"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/agent_authoring.py",
+      "exported_sha256": "sha256:bb38dad7c160b06de570fb191f0ac1a7f5a98081c5c61a89f0778ad0ae4cd03c",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/agent_authoring.py",
+      "source_sha256": "sha256:bb38dad7c160b06de570fb191f0ac1a7f5a98081c5c61a89f0778ad0ae4cd03c"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/approval.py",
+      "exported_sha256": "sha256:939f1f2bf086c63edcc82ac4db7eb0d9f44126d1ba5ed8c17b980aeaec0ee970",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/approval.py",
+      "source_sha256": "sha256:939f1f2bf086c63edcc82ac4db7eb0d9f44126d1ba5ed8c17b980aeaec0ee970"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/approval_tui.py",
+      "exported_sha256": "sha256:c41423bd74e427f4dc14bccc1e067bf6a72e5da5b3f3f9edaf32da8928581c25",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/approval_tui.py",
+      "source_sha256": "sha256:c41423bd74e427f4dc14bccc1e067bf6a72e5da5b3f3f9edaf32da8928581c25"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/authoring_cli.py",
+      "exported_sha256": "sha256:a927048e7bc48409e942f3f9acdcda0f240574e9b8cf3b05eec0bc9b7f9f5edf",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/authoring_cli.py",
+      "source_sha256": "sha256:a927048e7bc48409e942f3f9acdcda0f240574e9b8cf3b05eec0bc9b7f9f5edf"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/canonical_boundary.py",
+      "exported_sha256": "sha256:cf5204aeb4da739abd2c513a29a3eb2b3c5191ecda64ecbdd79dc1a1c4bfb902",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/canonical_boundary.py",
+      "source_sha256": "sha256:cf5204aeb4da739abd2c513a29a3eb2b3c5191ecda64ecbdd79dc1a1c4bfb902"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/claim_index.py",
+      "exported_sha256": "sha256:9cadee5fb57309cc6f76fa85fd3f20c3ba4b10c16f5437e69ce955d237ed94e0",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/claim_index.py",
+      "source_sha256": "sha256:9cadee5fb57309cc6f76fa85fd3f20c3ba4b10c16f5437e69ce955d237ed94e0"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/claims.py",
+      "exported_sha256": "sha256:6a90845508aa7475566bc86e9843cee45d3783ea67070475e8619488cacd69d1",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/claims.py",
+      "source_sha256": "sha256:6a90845508aa7475566bc86e9843cee45d3783ea67070475e8619488cacd69d1"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/cli.py",
+      "exported_sha256": "sha256:ac7693fc60aa50fb6135ce83ea6da765d3af4f5a4176f2fa6472c7e41c5810af",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/cli.py",
+      "source_sha256": "sha256:ac7693fc60aa50fb6135ce83ea6da765d3af4f5a4176f2fa6472c7e41c5810af"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/compiler.py",
+      "exported_sha256": "sha256:e409c33d68c1d428e2afd07b4de8753d279e3a40bf62aa342573131ee50aac13",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/compiler.py",
+      "source_sha256": "sha256:e409c33d68c1d428e2afd07b4de8753d279e3a40bf62aa342573131ee50aac13"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/conflicts.py",
+      "exported_sha256": "sha256:569f0ac34ff3f1f6444617337fe1f953f5f6100082f7ca11dcd6567f46d1166e",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/conflicts.py",
+      "source_sha256": "sha256:569f0ac34ff3f1f6444617337fe1f953f5f6100082f7ca11dcd6567f46d1166e"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/consumer.py",
+      "exported_sha256": "sha256:ed9996a0b6cf88c0f31e0922fea82df674eed74eac9d0b9e57c095f3cd1aaa2d",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/consumer.py",
+      "source_sha256": "sha256:ed9996a0b6cf88c0f31e0922fea82df674eed74eac9d0b9e57c095f3cd1aaa2d"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/consumer_discovery.py",
+      "exported_sha256": "sha256:7c52f1b7afa880eccb7cf2768b89e32f30ef0f0999ab6fde2c98e35c026c63de",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/consumer_discovery.py",
+      "source_sha256": "sha256:7c52f1b7afa880eccb7cf2768b89e32f30ef0f0999ab6fde2c98e35c026c63de"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/consumption.py",
+      "exported_sha256": "sha256:36d59df5995477c1944c56a155d05919853d0e59715dee0692db5534debd163a",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/consumption.py",
+      "source_sha256": "sha256:36d59df5995477c1944c56a155d05919853d0e59715dee0692db5534debd163a"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/contract_pilot.py",
+      "exported_sha256": "sha256:23c9ae0d1dcf61d8ec46d7ac6fd382eb465a05c3d0ca33f5199e80bc73379bdd",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/contract_pilot.py",
+      "source_sha256": "sha256:23c9ae0d1dcf61d8ec46d7ac6fd382eb465a05c3d0ca33f5199e80bc73379bdd"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/diffing.py",
+      "exported_sha256": "sha256:3cdc4358170c012a8e21ae2e873ae2a301955efede22a2815567983f7d4b0008",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/diffing.py",
+      "source_sha256": "sha256:3cdc4358170c012a8e21ae2e873ae2a301955efede22a2815567983f7d4b0008"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/document_set.py",
+      "exported_sha256": "sha256:bc2d2d69f5c058a9088ec22ad228e1cf57563d491f5ba3a8ee8ea2ffb0e76f72",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/document_set.py",
+      "source_sha256": "sha256:bc2d2d69f5c058a9088ec22ad228e1cf57563d491f5ba3a8ee8ea2ffb0e76f72"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/docx_extract.py",
+      "exported_sha256": "sha256:bf83860e7a113bd31e85ec5c4145967911cc08bd655dcfe283664c4c5ada9ec0",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/docx_extract.py",
+      "source_sha256": "sha256:bf83860e7a113bd31e85ec5c4145967911cc08bd655dcfe283664c4c5ada9ec0"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/emit.py",
+      "exported_sha256": "sha256:16de77380b18756dcc4ecddbd2d7f023e851c6de33c554b403da4234db76bdf6",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/emit.py",
+      "source_sha256": "sha256:16de77380b18756dcc4ecddbd2d7f023e851c6de33c554b403da4234db76bdf6"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/epub_extract.py",
+      "exported_sha256": "sha256:436dff6cb9393b6de17cabb792ca470941b45aa5c8e236ac6c3ca35573aeaf32",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/epub_extract.py",
+      "source_sha256": "sha256:436dff6cb9393b6de17cabb792ca470941b45aa5c8e236ac6c3ca35573aeaf32"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/faithfulness.py",
+      "exported_sha256": "sha256:65210fbbbfb1268b8aab5a76806f48bb139c037f002d583327c82804984e945b",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/faithfulness.py",
+      "source_sha256": "sha256:65210fbbbfb1268b8aab5a76806f48bb139c037f002d583327c82804984e945b"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/ingest.py",
+      "exported_sha256": "sha256:815dec789e291f5eb2fe8b4d59920756ee5f7722ee12bf86393bb12d0b01a923",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/ingest.py",
+      "source_sha256": "sha256:815dec789e291f5eb2fe8b4d59920756ee5f7722ee12bf86393bb12d0b01a923"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/knowledge.py",
+      "exported_sha256": "sha256:5ce15a591c1ac067e29ee52833276ba29575cf11a3f581b9eabfcd3b12b9fea1",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/knowledge.py",
+      "source_sha256": "sha256:5ce15a591c1ac067e29ee52833276ba29575cf11a3f581b9eabfcd3b12b9fea1"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/lifecycle.py",
+      "exported_sha256": "sha256:08fffa13774075ebb6cbd6bfba6baacdbb7cce7cb6062c08ce2a382da88faa5e",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/lifecycle.py",
+      "source_sha256": "sha256:08fffa13774075ebb6cbd6bfba6baacdbb7cce7cb6062c08ce2a382da88faa5e"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/memory_boundary.py",
+      "exported_sha256": "sha256:c5bfb19a34134fab7b9f42d9e414b35e5a811c795f64953168908295795061a1",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/memory_boundary.py",
+      "source_sha256": "sha256:c5bfb19a34134fab7b9f42d9e414b35e5a811c795f64953168908295795061a1"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/normalize.py",
+      "exported_sha256": "sha256:498ed1fdc4ead29e617803f4cf12eba046627eee8598670bcddd25107241b57a",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/normalize.py",
+      "source_sha256": "sha256:498ed1fdc4ead29e617803f4cf12eba046627eee8598670bcddd25107241b57a"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/ocr_extract.py",
+      "exported_sha256": "sha256:5a96646ff2727952249e10fc41c7d1e001b23c66656fdc919cc514faf9956d85",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/ocr_extract.py",
+      "source_sha256": "sha256:5a96646ff2727952249e10fc41c7d1e001b23c66656fdc919cc514faf9956d85"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/ocr_normalize.py",
+      "exported_sha256": "sha256:8d1dd0ceb7e471a176532c90e50e662a62cef3a967daad949929ba004cc8c5d0",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/ocr_normalize.py",
+      "source_sha256": "sha256:8d1dd0ceb7e471a176532c90e50e662a62cef3a967daad949929ba004cc8c5d0"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/operator_cli.py",
+      "exported_sha256": "sha256:496e5c647316c8e4779a3207e04523a14806b37a9d9795828844fa8f3ed8e91d",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/operator_cli.py",
+      "source_sha256": "sha256:496e5c647316c8e4779a3207e04523a14806b37a9d9795828844fa8f3ed8e91d"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/operator_drop.py",
+      "exported_sha256": "sha256:948c78138cf0cb405a6001a404e1036f3898b4464f0d40240f0cd4fd6d654476",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/operator_drop.py",
+      "source_sha256": "sha256:948c78138cf0cb405a6001a404e1036f3898b4464f0d40240f0cd4fd6d654476"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/operator_promotion.py",
+      "exported_sha256": "sha256:7e3bfe87f333f1fef33517b2833e9734d5180c1ceb6c7717780074f5656af661",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/operator_promotion.py",
+      "source_sha256": "sha256:7e3bfe87f333f1fef33517b2833e9734d5180c1ceb6c7717780074f5656af661"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/pdf_extract.py",
+      "exported_sha256": "sha256:0813a55eaa7aa18d2f217127dfe4cf984121cfbac0d98beeea7b41dac340bdd1",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/pdf_extract.py",
+      "source_sha256": "sha256:0813a55eaa7aa18d2f217127dfe4cf984121cfbac0d98beeea7b41dac340bdd1"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/procedure_boundary.py",
+      "exported_sha256": "sha256:466da16ce86428715f8fec4278a7d8af800c8b8c38360eb244336df9a172a8ac",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/procedure_boundary.py",
+      "source_sha256": "sha256:466da16ce86428715f8fec4278a7d8af800c8b8c38360eb244336df9a172a8ac"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/provenance.py",
+      "exported_sha256": "sha256:b4b636d2a20704de716808bc0c82de26e57e27a1388a3c550a0de363a3fd0079",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/provenance.py",
+      "source_sha256": "sha256:b4b636d2a20704de716808bc0c82de26e57e27a1388a3c550a0de363a3fd0079"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/registry.py",
+      "exported_sha256": "sha256:0c69ea0413ed7b085c9b82efffce3bfd3478f4225993e25c06552c51c4640648",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/registry.py",
+      "source_sha256": "sha256:0c69ea0413ed7b085c9b82efffce3bfd3478f4225993e25c06552c51c4640648"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/repository.py",
+      "exported_sha256": "sha256:b09b8e04378e9608951981835d83b969c80d5007afd8e1d611c733cad66fdd93",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/repository.py",
+      "source_sha256": "sha256:b09b8e04378e9608951981835d83b969c80d5007afd8e1d611c733cad66fdd93"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/retrieval.py",
+      "exported_sha256": "sha256:f41b2e7f41a50d7d34b826cc26e25cb936f6223afaf5e1eedd78bf2481e7ab28",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/retrieval.py",
+      "source_sha256": "sha256:f41b2e7f41a50d7d34b826cc26e25cb936f6223afaf5e1eedd78bf2481e7ab28"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/skill_index.py",
+      "exported_sha256": "sha256:f8095e08e2e2cf19bd73052e9b481c6ca3785cd2875d7e47f07c6a7f2b8c1ffa",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/skill_index.py",
+      "source_sha256": "sha256:f8095e08e2e2cf19bd73052e9b481c6ca3785cd2875d7e47f07c6a7f2b8c1ffa"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/stability.py",
+      "exported_sha256": "sha256:266154c6fcbba313e5edd785cac9adfd8bb033bfc3932b8f67ca66df3ed9485a",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/stability.py",
+      "source_sha256": "sha256:266154c6fcbba313e5edd785cac9adfd8bb033bfc3932b8f67ca66df3ed9485a"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/staleness.py",
+      "exported_sha256": "sha256:83943e7d97291d2721faaf3a635a894566edf8439a9c5f5154564b978d3baf6a",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/staleness.py",
+      "source_sha256": "sha256:83943e7d97291d2721faaf3a635a894566edf8439a9c5f5154564b978d3baf6a"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/technical_extract.py",
+      "exported_sha256": "sha256:aecf1cbc66d38183032541375d4170774f21398fb53cb376b83cb2022465f388",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/technical_extract.py",
+      "source_sha256": "sha256:aecf1cbc66d38183032541375d4170774f21398fb53cb376b83cb2022465f388"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/temporal_integration.py",
+      "exported_sha256": "sha256:41a02c2670fab325a0efdf670063088d5de5e89616be0a23ce68443343295196",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/temporal_integration.py",
+      "source_sha256": "sha256:41a02c2670fab325a0efdf670063088d5de5e89616be0a23ce68443343295196"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/trust_wall.py",
+      "exported_sha256": "sha256:aabef392677d800b213c74a675d75f823b15ea3cbc579623c3fe0fd73c71a01b",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/trust_wall.py",
+      "source_sha256": "sha256:aabef392677d800b213c74a675d75f823b15ea3cbc579623c3fe0fd73c71a01b"
+    },
+    {
+      "candidate_path": "src/knowledge_forge/validate.py",
+      "exported_sha256": "sha256:70123cd9e16dd7b66c4275dab40c460ff4fc75addcfca4cd2246e3b87e4ba1d6",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "src/knowledge_forge/validate.py",
+      "source_sha256": "sha256:70123cd9e16dd7b66c4275dab40c460ff4fc75addcfca4cd2246e3b87e4ba1d6"
+    },
+    {
+      "candidate_path": "tests/test_agent0_discovery.py",
+      "exported_sha256": "sha256:b63f091bdfe31851c21b630ad246ea2808b3f7f2aa45a2eb29ae2ad468e3ef4b",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_agent0_discovery.py",
+      "source_sha256": "sha256:b63f091bdfe31851c21b630ad246ea2808b3f7f2aa45a2eb29ae2ad468e3ef4b"
+    },
+    {
+      "candidate_path": "tests/test_agent1_discovery.py",
+      "exported_sha256": "sha256:8500ce2c36f52be22d1d90df877fc80e02f49f742f1681cf09b8138086d0b15a",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_agent1_discovery.py",
+      "source_sha256": "sha256:8500ce2c36f52be22d1d90df877fc80e02f49f742f1681cf09b8138086d0b15a"
+    },
+    {
+      "candidate_path": "tests/test_agent_authoring.py",
+      "exported_sha256": "sha256:0ff3b33fad88fe80bba5a08eb7b9190e3c4f81fa628058d7f38bc0d2ab277782",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_agent_authoring.py",
+      "source_sha256": "sha256:0ff3b33fad88fe80bba5a08eb7b9190e3c4f81fa628058d7f38bc0d2ab277782"
+    },
+    {
+      "candidate_path": "tests/test_agent_installer.py",
+      "exported_sha256": "sha256:b0479a1145b3654b30fe18d4cb940ff2153dcfb07c38f8ee67d43e46f67111a0",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_agent_installer.py",
+      "source_sha256": "sha256:b0479a1145b3654b30fe18d4cb940ff2153dcfb07c38f8ee67d43e46f67111a0"
+    },
+    {
+      "candidate_path": "tests/test_approval.py",
+      "exported_sha256": "sha256:795d5ae1a34e89282e971740a650279292a548e748d7789b7bf7d86dd10c8a74",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_approval.py",
+      "source_sha256": "sha256:795d5ae1a34e89282e971740a650279292a548e748d7789b7bf7d86dd10c8a74"
+    },
+    {
+      "candidate_path": "tests/test_approval_tui.py",
+      "exported_sha256": "sha256:21972fe51ea793712f155d0d4ff35fab0735dd71b54296e67cc9b42909ad8173",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE_RELEASE_SANITIZED",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Replaced a deliberately fake personal-looking home path with /home/synthetic for public hygiene.",
+      "source_path": "tests/test_approval_tui.py",
+      "source_sha256": "sha256:49cdf08123b78c8b983a6718e7efb43942fa1a3830a94de2e8a422970a081e75"
+    },
+    {
+      "candidate_path": "tests/test_canonical_boundary.py",
+      "exported_sha256": "sha256:15773cf9ef3625574ca4209555e42afc694bef6b6aaa2cef70cb91544063650e",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_canonical_boundary.py",
+      "source_sha256": "sha256:15773cf9ef3625574ca4209555e42afc694bef6b6aaa2cef70cb91544063650e"
+    },
+    {
+      "candidate_path": "tests/test_claim_index.py",
+      "exported_sha256": "sha256:d532ff6bad24acc898cbe68efeabed489be0a8e0e77d115061371dce751b737e",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_claim_index.py",
+      "source_sha256": "sha256:d532ff6bad24acc898cbe68efeabed489be0a8e0e77d115061371dce751b737e"
+    },
+    {
+      "candidate_path": "tests/test_claims.py",
+      "exported_sha256": "sha256:d2da407400598397b34a7a116646536a446ff240e073d354f0bde3c70da9f43b",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_claims.py",
+      "source_sha256": "sha256:d2da407400598397b34a7a116646536a446ff240e073d354f0bde3c70da9f43b"
+    },
+    {
+      "candidate_path": "tests/test_cli.py",
+      "exported_sha256": "sha256:a287694232b388fd851b707f692fe47683ed7a15376c1d9250f3fb6b0e69ef34",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_cli.py",
+      "source_sha256": "sha256:a287694232b388fd851b707f692fe47683ed7a15376c1d9250f3fb6b0e69ef34"
+    },
+    {
+      "candidate_path": "tests/test_compiler.py",
+      "exported_sha256": "sha256:7bfb7fe9021d0e61b3e35155b2b543ba77bf8912bb00dc83bfcbdc279a0afb7f",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_compiler.py",
+      "source_sha256": "sha256:7bfb7fe9021d0e61b3e35155b2b543ba77bf8912bb00dc83bfcbdc279a0afb7f"
+    },
+    {
+      "candidate_path": "tests/test_conflicts.py",
+      "exported_sha256": "sha256:abee588f8ca4f25d7efd2fd191bffc48d121214a4c1562aac4af90012aaed97a",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_conflicts.py",
+      "source_sha256": "sha256:abee588f8ca4f25d7efd2fd191bffc48d121214a4c1562aac4af90012aaed97a"
+    },
+    {
+      "candidate_path": "tests/test_consumer.py",
+      "exported_sha256": "sha256:1e889da7164d087ba0127cf903b7aa71ccb01bae41a3db56ba66d20f1aaa434d",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_consumer.py",
+      "source_sha256": "sha256:1e889da7164d087ba0127cf903b7aa71ccb01bae41a3db56ba66d20f1aaa434d"
+    },
+    {
+      "candidate_path": "tests/test_consumer_capsule.py",
+      "exported_sha256": "sha256:694124167c1e25818a6dd70665aa1fc1222e005bf4bb47069484448a829ece34",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_consumer_capsule.py",
+      "source_sha256": "sha256:694124167c1e25818a6dd70665aa1fc1222e005bf4bb47069484448a829ece34"
+    },
+    {
+      "candidate_path": "tests/test_consumer_discovery.py",
+      "exported_sha256": "sha256:5bec20ae6fe22d1a5746dfb0c81a8e2e76e4960cf1585f47190179cda989df1a",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_consumer_discovery.py",
+      "source_sha256": "sha256:5bec20ae6fe22d1a5746dfb0c81a8e2e76e4960cf1585f47190179cda989df1a"
+    },
+    {
+      "candidate_path": "tests/test_consumption.py",
+      "exported_sha256": "sha256:273d7e2a79dce463db95f8275a82a439facd9d5144727075636fc9fcefa37d9d",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_consumption.py",
+      "source_sha256": "sha256:273d7e2a79dce463db95f8275a82a439facd9d5144727075636fc9fcefa37d9d"
+    },
+    {
+      "candidate_path": "tests/test_contract_pilot.py",
+      "exported_sha256": "sha256:a02218635c171019a5594d1152542e3872de7b3dd44f309c8a0c6161f66931f9",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_contract_pilot.py",
+      "source_sha256": "sha256:a02218635c171019a5594d1152542e3872de7b3dd44f309c8a0c6161f66931f9"
+    },
+    {
+      "candidate_path": "tests/test_diffing.py",
+      "exported_sha256": "sha256:712e74008caec4e2536dbcde5c86ab5f8a2b7df0a6a127ad559be19a396eef9f",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_diffing.py",
+      "source_sha256": "sha256:712e74008caec4e2536dbcde5c86ab5f8a2b7df0a6a127ad559be19a396eef9f"
+    },
+    {
+      "candidate_path": "tests/test_document_set.py",
+      "exported_sha256": "sha256:110c593067f0f436a6730a27ce42e86f281743d2ca469a920233a4a213545178",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_document_set.py",
+      "source_sha256": "sha256:110c593067f0f436a6730a27ce42e86f281743d2ca469a920233a4a213545178"
+    },
+    {
+      "candidate_path": "tests/test_docx_extract.py",
+      "exported_sha256": "sha256:6b41ba1a1d4146aab824b309e9de52a8e00e1a373928c74211905b99395832cb",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_docx_extract.py",
+      "source_sha256": "sha256:6b41ba1a1d4146aab824b309e9de52a8e00e1a373928c74211905b99395832cb"
+    },
+    {
+      "candidate_path": "tests/test_emit.py",
+      "exported_sha256": "sha256:b8f7a391fc4ea838ae6f6bbf478a2d00fe3e2c97ac15ce03bae857df85334896",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_emit.py",
+      "source_sha256": "sha256:b8f7a391fc4ea838ae6f6bbf478a2d00fe3e2c97ac15ce03bae857df85334896"
+    },
+    {
+      "candidate_path": "tests/test_epub_extract.py",
+      "exported_sha256": "sha256:afa176f3f19bcb70ca1e621d1637012e40b25846748c61bb834b72ae90c26de1",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_epub_extract.py",
+      "source_sha256": "sha256:afa176f3f19bcb70ca1e621d1637012e40b25846748c61bb834b72ae90c26de1"
+    },
+    {
+      "candidate_path": "tests/test_faithfulness.py",
+      "exported_sha256": "sha256:dc462730750a7483854ed740d669a9ec5909b900a4dc755d4df0f5fd30296e75",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_faithfulness.py",
+      "source_sha256": "sha256:dc462730750a7483854ed740d669a9ec5909b900a4dc755d4df0f5fd30296e75"
+    },
+    {
+      "candidate_path": "tests/test_ingest.py",
+      "exported_sha256": "sha256:83bdd9c111dced918dff815a03a1d693f1fee8418c29da4d11fce18ee744cf1a",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_ingest.py",
+      "source_sha256": "sha256:83bdd9c111dced918dff815a03a1d693f1fee8418c29da4d11fce18ee744cf1a"
+    },
+    {
+      "candidate_path": "tests/test_knowledge.py",
+      "exported_sha256": "sha256:efc45265e276774a9caa6e38f085917431b0493104fb9632b6136e7e9484d65f",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_knowledge.py",
+      "source_sha256": "sha256:efc45265e276774a9caa6e38f085917431b0493104fb9632b6136e7e9484d65f"
+    },
+    {
+      "candidate_path": "tests/test_lifecycle.py",
+      "exported_sha256": "sha256:42184f87b1a41e74f6662f10264a8ca830e25db08e453d6432ff1484beecf40d",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_lifecycle.py",
+      "source_sha256": "sha256:42184f87b1a41e74f6662f10264a8ca830e25db08e453d6432ff1484beecf40d"
+    },
+    {
+      "candidate_path": "tests/test_memory_boundary.py",
+      "exported_sha256": "sha256:c1259d5bf9e9d11b933f3ce324f1b5fdd059ca85ba3eed02375b43ae70d1806c",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_memory_boundary.py",
+      "source_sha256": "sha256:c1259d5bf9e9d11b933f3ce324f1b5fdd059ca85ba3eed02375b43ae70d1806c"
+    },
+    {
+      "candidate_path": "tests/test_normalize.py",
+      "exported_sha256": "sha256:5de8dd39a66c0d158fc310a71556c77608e81e3d7afb6c2163b8ed10dcdb6342",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_normalize.py",
+      "source_sha256": "sha256:5de8dd39a66c0d158fc310a71556c77608e81e3d7afb6c2163b8ed10dcdb6342"
+    },
+    {
+      "candidate_path": "tests/test_ocr.py",
+      "exported_sha256": "sha256:2ec8ecedefe83826e0f556b405f35a9b6d19ff85c4b699bbd2f9e5cb98795a13",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_ocr.py",
+      "source_sha256": "sha256:2ec8ecedefe83826e0f556b405f35a9b6d19ff85c4b699bbd2f9e5cb98795a13"
+    },
+    {
+      "candidate_path": "tests/test_operator_cli.py",
+      "exported_sha256": "sha256:bf2f96ba56605072d4d73874629a394a8a7aac696d89b931f1dd242723d066af",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_operator_cli.py",
+      "source_sha256": "sha256:bf2f96ba56605072d4d73874629a394a8a7aac696d89b931f1dd242723d066af"
+    },
+    {
+      "candidate_path": "tests/test_operator_drop.py",
+      "exported_sha256": "sha256:9083680d7b8a521308c1519f2171169865fd422f5f9b7649153d31555eba8ce1",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_operator_drop.py",
+      "source_sha256": "sha256:9083680d7b8a521308c1519f2171169865fd422f5f9b7649153d31555eba8ce1"
+    },
+    {
+      "candidate_path": "tests/test_operator_promotion.py",
+      "exported_sha256": "sha256:176f6ac8309d6d951eba72a252d6d3a1670b4f8aae0656037eddeaf964869819",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_operator_promotion.py",
+      "source_sha256": "sha256:176f6ac8309d6d951eba72a252d6d3a1670b4f8aae0656037eddeaf964869819"
+    },
+    {
+      "candidate_path": "tests/test_pdf_extract.py",
+      "exported_sha256": "sha256:5e41449d3c9d988524f3ec7d8dbb9e35dc04dc43593f33c935a0519435574ddc",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_pdf_extract.py",
+      "source_sha256": "sha256:5e41449d3c9d988524f3ec7d8dbb9e35dc04dc43593f33c935a0519435574ddc"
+    },
+    {
+      "candidate_path": "tests/test_procedure_boundary.py",
+      "exported_sha256": "sha256:820259b8ef0d764d4fb6cfec2a86661eafe0ddf56e48728f9830f85390afd908",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_procedure_boundary.py",
+      "source_sha256": "sha256:820259b8ef0d764d4fb6cfec2a86661eafe0ddf56e48728f9830f85390afd908"
+    },
+    {
+      "candidate_path": "tests/test_provenance.py",
+      "exported_sha256": "sha256:e82af8e01896b9359b5629b7bb3f2cbe6d6f042ba5e78950c82bc298c33d16ea",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_provenance.py",
+      "source_sha256": "sha256:e82af8e01896b9359b5629b7bb3f2cbe6d6f042ba5e78950c82bc298c33d16ea"
+    },
+    {
+      "candidate_path": "tests/test_registry.py",
+      "exported_sha256": "sha256:33f80d44de79bdc64941130615c63ca4159b0d5441f165a7edef35b562256017",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_registry.py",
+      "source_sha256": "sha256:33f80d44de79bdc64941130615c63ca4159b0d5441f165a7edef35b562256017"
+    },
+    {
+      "candidate_path": "tests/test_registry_conflicts.py",
+      "exported_sha256": "sha256:d3c1921527d746b16f0ef855e3c7fec229ba28adb23c6d4268bf8fab0e90eefd",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_registry_conflicts.py",
+      "source_sha256": "sha256:d3c1921527d746b16f0ef855e3c7fec229ba28adb23c6d4268bf8fab0e90eefd"
+    },
+    {
+      "candidate_path": "tests/test_registry_incidents.py",
+      "exported_sha256": "sha256:50ce9247cc0f7fd559dc0f4a3a175f885f0b0d02990e7ac8179fbe395313e48b",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_registry_incidents.py",
+      "source_sha256": "sha256:50ce9247cc0f7fd559dc0f4a3a175f885f0b0d02990e7ac8179fbe395313e48b"
+    },
+    {
+      "candidate_path": "tests/test_repository.py",
+      "exported_sha256": "sha256:966e54f024680667a46c4a343722f5095c3514b0ad2c6c2897318c251f60d88c",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_repository.py",
+      "source_sha256": "sha256:966e54f024680667a46c4a343722f5095c3514b0ad2c6c2897318c251f60d88c"
+    },
+    {
+      "candidate_path": "tests/test_retrieval.py",
+      "exported_sha256": "sha256:d09889181d42835f5b80b9651c2dfbf5ae603f6e1942e17b61eecde3eaa58ec9",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_retrieval.py",
+      "source_sha256": "sha256:d09889181d42835f5b80b9651c2dfbf5ae603f6e1942e17b61eecde3eaa58ec9"
+    },
+    {
+      "candidate_path": "tests/test_retrieval_integration.py",
+      "exported_sha256": "sha256:7aa53aa5fca7a95d8490b3e5480ccdd6a45f95e3b6fc2212b458f8f50d1eab5f",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_retrieval_integration.py",
+      "source_sha256": "sha256:7aa53aa5fca7a95d8490b3e5480ccdd6a45f95e3b6fc2212b458f8f50d1eab5f"
+    },
+    {
+      "candidate_path": "tests/test_skill_index.py",
+      "exported_sha256": "sha256:9c2659e6d414ffc736a60cddadc586e8dc028ae181a1aded9b688e0da250d1e3",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_skill_index.py",
+      "source_sha256": "sha256:9c2659e6d414ffc736a60cddadc586e8dc028ae181a1aded9b688e0da250d1e3"
+    },
+    {
+      "candidate_path": "tests/test_stability.py",
+      "exported_sha256": "sha256:415678ca5bc9d4b008f703cdd847693008aef6b15d4aaf0096a4db4fdedc28c4",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_stability.py",
+      "source_sha256": "sha256:415678ca5bc9d4b008f703cdd847693008aef6b15d4aaf0096a4db4fdedc28c4"
+    },
+    {
+      "candidate_path": "tests/test_staleness.py",
+      "exported_sha256": "sha256:5fea11e32849c33526953e86fadbeeee3a5774913608eebc69813c85ca44a3d7",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_staleness.py",
+      "source_sha256": "sha256:5fea11e32849c33526953e86fadbeeee3a5774913608eebc69813c85ca44a3d7"
+    },
+    {
+      "candidate_path": "tests/test_technical_extract.py",
+      "exported_sha256": "sha256:d3774b535c29648961b408977ac6a30928dd5c389fc5815069b03e1db37f6c58",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_technical_extract.py",
+      "source_sha256": "sha256:d3774b535c29648961b408977ac6a30928dd5c389fc5815069b03e1db37f6c58"
+    },
+    {
+      "candidate_path": "tests/test_temporal_integration.py",
+      "exported_sha256": "sha256:9f5532e563220ceced8138fdacedd2f96098370f23ed8f915d1b400d366931b3",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_temporal_integration.py",
+      "source_sha256": "sha256:9f5532e563220ceced8138fdacedd2f96098370f23ed8f915d1b400d366931b3"
+    },
+    {
+      "candidate_path": "tests/test_trust_wall.py",
+      "exported_sha256": "sha256:3a304aa04a6ee021854a452e57035683b0ca731a941c4622557b1c174e7974a5",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_trust_wall.py",
+      "source_sha256": "sha256:3a304aa04a6ee021854a452e57035683b0ca731a941c4622557b1c174e7974a5"
+    },
+    {
+      "candidate_path": "tests/test_validate.py",
+      "exported_sha256": "sha256:287f5e2aa38e5c97a91da1e5f8c95b07a214233791d701a002f8d4cc2d64634d",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_validate.py",
+      "source_sha256": "sha256:287f5e2aa38e5c97a91da1e5f8c95b07a214233791d701a002f8d4cc2d64634d"
+    },
+    {
+      "candidate_path": "tests/test_versioning.py",
+      "exported_sha256": "sha256:ea328da01db4988fbb9f73f4275121ee92fc57584cb73992c405c52c3243ca4f",
+      "included": true,
+      "inclusion_classification": "PUBLIC_SAFE",
+      "license_classification": "LICENSE_CLEAR_APACHE_2_0",
+      "reason": "Exact audited source snapshot.",
+      "source_path": "tests/test_versioning.py",
+      "source_sha256": "sha256:ea328da01db4988fbb9f73f4275121ee92fc57584cb73992c405c52c3243ca4f"
+    }
+  ],
+  "export_timestamp": "2026-10-14T03:03:32.603855Z",
+  "git_metadata_exported": false,
+  "history_exported": false,
+  "manifest_self_hash": "OMITTED_SELF_REFERENTIAL",
+  "private_source_commit": "1666de142e783c4a22142e2a8d146e5068b3c718",
+  "schema_version": "1.0"
+}

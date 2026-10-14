@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://toadaid.org/knowledge-forge/faithfulness-report.schema.json",
+  "title": "Knowledge Forge Faithfulness Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "state",
+    "valid",
+    "candidate_sha256",
+    "knowledge_id",
+    "source_ids",
+    "judge_id",
+    "unit_results",
+    "errors"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.1"
+    },
+    "state": {
+      "enum": [
+        "VALIDATED",
+        "FAILED_VALIDATION"
+      ]
+    },
+    "valid": {
+      "type": "boolean"
+    },
+    "candidate_sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "knowledge_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._:-]{0,255}$"
+    },
+    "source_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^sha256:[0-9a-f]{64}$"
+      }
+    },
+    "judge_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "unit_results": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "unit_id",
+          "claim_sha256",
+          "entailment",
+          "qualifiers_preserved",
+          "support"
+        ],
+        "properties": {
+          "unit_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "entailment": {
+            "enum": [
+              "SUPPORTED",
+              "UNSUPPORTED",
+              "UNCERTAIN"
+            ]
+          },
+          "qualifiers_preserved": {
+            "type": "boolean"
+          },
+          "support": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "source_id",
+                "section_id",
+                "section_sha256",
+                "start_byte",
+                "end_byte",
+                "span_sha256"
+              ],
+              "properties": {
+                "source_id": {
+                  "type": "string",
+                  "pattern": "^sha256:[0-9a-f]{64}$"
+                },
+                "section_id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "section_sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "start_byte": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "end_byte": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "span_sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              }
+            }
+          },
+          "claim_sha256": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

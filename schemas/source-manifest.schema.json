@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://toadaid.org/knowledge-forge/source-manifest.schema.json",
+  "title": "Knowledge Forge SourceManifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "source_id",
+    "name",
+    "media_type",
+    "byte_sha256",
+    "byte_length",
+    "ingested_at",
+    "published_at",
+    "license_hint",
+    "origin"
+  ],
+  "properties": {
+    "schema_version": {"const": "0.1"},
+    "source_id": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "name": {"type": "string", "minLength": 1},
+    "media_type": {"enum": ["text/markdown", "text/plain"]},
+    "byte_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "byte_length": {"type": "integer", "minimum": 0},
+    "ingested_at": {"type": "string", "format": "date-time"},
+    "published_at": {"type": ["string", "null"], "format": "date-time"},
+    "license_hint": {"type": ["string", "null"]},
+    "origin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "locator"],
+      "properties": {
+        "kind": {"const": "local_file"},
+        "locator": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://toadaid.org/knowledge-forge/lifecycle-record.schema.json",
+  "title": "Knowledge Forge LifecycleRecord",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "skill_id",
+    "skill_version",
+    "package_receipt_sha256",
+    "state",
+    "events"
+  ],
+  "properties": {
+    "schema_version": {"const": "0.1"},
+    "skill_id": {"type": "string", "minLength": 1},
+    "skill_version": {"type": "integer", "minimum": 1},
+    "package_receipt_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "state": {
+      "enum": ["COMPILED_CANDIDATE", "VALIDATED", "PROMOTED", "SUPERSEDED"]
+    },
+    "events": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sequence",
+          "from_state",
+          "to_state",
+          "occurred_at",
+          "actor",
+          "evidence",
+          "previous_event_sha256",
+          "event_sha256"
+        ],
+        "properties": {
+          "sequence": {"type": "integer", "minimum": 0},
+          "from_state": {
+            "oneOf": [
+              {"type": "null"},
+              {"enum": ["COMPILED_CANDIDATE", "VALIDATED", "PROMOTED", "SUPERSEDED"]}
+            ]
+          },
+          "to_state": {
+            "enum": ["COMPILED_CANDIDATE", "VALIDATED", "PROMOTED", "SUPERSEDED"]
+          },
+          "occurred_at": {"type": "string", "minLength": 1},
+          "actor": {"type": "string", "minLength": 1},
+          "evidence": {"type": "object"},
+          "previous_event_sha256": {
+            "oneOf": [
+              {"type": "null"},
+              {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+            ]
+          },
+          "event_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "abi": {
+    "path": "abi.json",
+    "sha256": "6aa9b87880b7a10d4c4bd33bcad27d45ba5f58e3ac1e754db5eebedfa49720cf"
+  },
+  "authority": {
+    "knowledge": "KNOWLEDGE_ONLY",
+    "read_only": true,
+    "send_transaction": false,
+    "sign": false,
+    "write": false
+  },
+  "chain": {
+    "chain_id": 31337,
+    "name": "Synthetic Pond Chain"
+  },
+  "contract": {
+    "address": "0x000000000000000000000000000000000000f00d",
+    "name": "PondReference",
+    "proxied": false
+  },
+  "identity_reads": {
+    "decimals": 18,
+    "name": "Pond Reference",
+    "symbol": "POND"
+  },
+  "pilot_id": "pond-reference",
+  "read_plans": [
+    {
+      "function": "name",
+      "id": "name",
+      "inputs": [],
+      "output": "string",
+      "selector": "0x06fdde03"
+    },
+    {
+      "function": "symbol",
+      "id": "symbol",
+      "inputs": [],
+      "output": "string",
+      "selector": "0x95d89b41"
+    },
+    {
+      "function": "decimals",
+      "id": "decimals",
+      "inputs": [],
+      "output": "uint256",
+      "selector": "0x313ce567"
+    },
+    {
+      "function": "totalSupply",
+      "id": "total_supply",
+      "inputs": [],
+      "output": "uint256",
+      "selector": "0x18160ddd"
+    },
+    {
+      "function": "balanceOf",
+      "id": "balance_of",
+      "inputs": [
+        "address"
+      ],
+      "output": "uint256",
+      "selector": "0x70a08231"
+    },
+    {
+      "function": "allowance",
+      "id": "allowance",
+      "inputs": [
+        "address",
+        "address"
+      ],
+      "output": "uint256",
+      "selector": "0xdd62ed3e"
+    }
+  ],
+  "runtime_code": {
+    "byte_length": 255,
+    "evidence": "Synthetic ToadAid-owned deterministic EVM fixture; NOT deployed",
+    "hash_algorithm": "sha256",
+    "path": "runtime-code.hex",
+    "sha256": "33c7e2e6d1b2a61a8f5dd3402d2cd91f02df96959f794ca889fe039a7e4006d1"
+  },
+  "schema_version": "0.1",
+  "source_pin": {
+    "compiler_version": "ToadAid EVM assembler v1",
+    "official_spec_contract": "PondReference",
+    "official_spec_proxied": false,
+    "optimizer_enabled": false,
+    "optimizer_runs": 0,
+    "source_document": "scripts/generate_pond_reference_fixture.py",
+    "verification_provider": "Local Deterministic Build",
+    "verification_status": "SYNTHETIC_NOT_DEPLOYED"
+  }
+}

@@ -1,0 +1,213 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://toadaid.org/knowledge-forge/knowledge-diff.schema.json",
+  "title": "Knowledge Forge KnowledgeDiff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "knowledge_id",
+    "old_candidate_sha256",
+    "new_candidate_sha256",
+    "compiler_profile_changed",
+    "old_compiler_profile_id",
+    "new_compiler_profile_id",
+    "source_ids_changed",
+    "summary",
+    "changes"
+  ],
+  "$defs": {
+    "sha256Ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "claimKey": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._:-]{0,255}$"
+    },
+    "unitId": {
+      "type": "string",
+      "pattern": "^claim-[0-9a-f]{64}$"
+    },
+    "hashMap": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {"$ref": "#/$defs/sha256Ref"}
+    }
+  },
+  "properties": {
+    "schema_version": {"const": "0.1"},
+    "knowledge_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._:-]{0,255}$"
+    },
+    "old_candidate_sha256": {"$ref": "#/$defs/sha256Ref"},
+    "new_candidate_sha256": {"$ref": "#/$defs/sha256Ref"},
+    "compiler_profile_changed": {"type": "boolean"},
+    "old_compiler_profile_id": {
+      "oneOf": [
+        {"$ref": "#/$defs/sha256Ref"},
+        {"type": "null"}
+      ]
+    },
+    "new_compiler_profile_id": {
+      "oneOf": [
+        {"$ref": "#/$defs/sha256Ref"},
+        {"type": "null"}
+      ]
+    },
+    "source_ids_changed": {"type": "boolean"},
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ADDED", "REMOVED", "CHANGED", "UNCHANGED", "SPLIT", "MERGED"],
+      "properties": {
+        "ADDED": {"type": "integer", "minimum": 0},
+        "REMOVED": {"type": "integer", "minimum": 0},
+        "CHANGED": {"type": "integer", "minimum": 0},
+        "UNCHANGED": {"type": "integer", "minimum": 0},
+        "SPLIT": {"type": "integer", "minimum": 0},
+        "MERGED": {"type": "integer", "minimum": 0}
+      }
+    },
+    "changes": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "claim_key", "unit_id", "semantic_sha256"],
+            "properties": {
+              "kind": {"const": "UNCHANGED"},
+              "claim_key": {"$ref": "#/$defs/claimKey"},
+              "unit_id": {"$ref": "#/$defs/unitId"},
+              "semantic_sha256": {"$ref": "#/$defs/sha256Ref"}
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "claim_key",
+              "unit_id",
+              "old_semantic_sha256",
+              "new_semantic_sha256",
+              "changed_fields"
+            ],
+            "properties": {
+              "kind": {"const": "CHANGED"},
+              "claim_key": {"$ref": "#/$defs/claimKey"},
+              "unit_id": {"$ref": "#/$defs/unitId"},
+              "old_semantic_sha256": {"$ref": "#/$defs/sha256Ref"},
+              "new_semantic_sha256": {"$ref": "#/$defs/sha256Ref"},
+              "changed_fields": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "enum": [
+                    "kind",
+                    "claim.subject",
+                    "claim.predicate",
+                    "claim.value",
+                    "claim.qualifiers",
+                    "claim.scope",
+                    "claim.validity",
+                    "claim.executable",
+                    "conflicts_with"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "claim_key", "unit_id", "old_semantic_sha256"],
+            "properties": {
+              "kind": {"const": "REMOVED"},
+              "claim_key": {"$ref": "#/$defs/claimKey"},
+              "unit_id": {"$ref": "#/$defs/unitId"},
+              "old_semantic_sha256": {"$ref": "#/$defs/sha256Ref"}
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "claim_key", "unit_id", "new_semantic_sha256"],
+            "properties": {
+              "kind": {"const": "ADDED"},
+              "claim_key": {"$ref": "#/$defs/claimKey"},
+              "unit_id": {"$ref": "#/$defs/unitId"},
+              "new_semantic_sha256": {"$ref": "#/$defs/sha256Ref"}
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "from_claim_keys",
+              "to_claim_keys",
+              "reason",
+              "old_semantic_sha256",
+              "new_semantic_sha256"
+            ],
+            "properties": {
+              "kind": {"const": "SPLIT"},
+              "from_claim_keys": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1,
+                "uniqueItems": true,
+                "items": {"$ref": "#/$defs/claimKey"}
+              },
+              "to_claim_keys": {
+                "type": "array",
+                "minItems": 2,
+                "uniqueItems": true,
+                "items": {"$ref": "#/$defs/claimKey"}
+              },
+              "reason": {"type": "string", "minLength": 1},
+              "old_semantic_sha256": {"$ref": "#/$defs/hashMap"},
+              "new_semantic_sha256": {"$ref": "#/$defs/hashMap"}
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "from_claim_keys",
+              "to_claim_keys",
+              "reason",
+              "old_semantic_sha256",
+              "new_semantic_sha256"
+            ],
+            "properties": {
+              "kind": {"const": "MERGED"},
+              "from_claim_keys": {
+                "type": "array",
+                "minItems": 2,
+                "uniqueItems": true,
+                "items": {"$ref": "#/$defs/claimKey"}
+              },
+              "to_claim_keys": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1,
+                "uniqueItems": true,
+                "items": {"$ref": "#/$defs/claimKey"}
+              },
+              "reason": {"type": "string", "minLength": 1},
+              "old_semantic_sha256": {"$ref": "#/$defs/hashMap"},
+              "new_semantic_sha256": {"$ref": "#/$defs/hashMap"}
+            }
+          }
+        ]
+      }
+    }
+  }
+}

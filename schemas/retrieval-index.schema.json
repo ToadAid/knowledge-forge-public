@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://toadaid.org/knowledge-forge/retrieval-index.schema.json",
+  "title": "Knowledge Forge Retrieval Index",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "knowledge_id", "max_units_per_turn", "units"],
+  "properties": {
+    "schema_version": {"const": "0.1"},
+    "knowledge_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._:-]{0,255}$"},
+    "max_units_per_turn": {"const": 3},
+    "units": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["unit_id", "claim_key", "kind", "title", "path", "aliases", "terms", "source_bindings", "executable"],
+        "properties": {
+          "unit_id": {"type": "string", "pattern": "^claim-[0-9a-f]{64}$"},
+          "claim_key": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._:-]{0,255}$"},
+          "kind": {"type": "string", "minLength": 1},
+          "title": {"type": "string", "minLength": 1},
+          "path": {"type": "string", "pattern": "^units/claim-[0-9a-f]{64}\\.md$"},
+          "aliases": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+          "terms": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "source_bindings": {"type": "array", "minItems": 1},
+          "executable": {"const": false}
+        }
+      }
+    }
+  }
+}
