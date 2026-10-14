@@ -8,6 +8,7 @@ import importlib.util
 import json
 from pathlib import Path
 import shutil
+import sys
 import tempfile
 import unittest
 import zipfile
@@ -35,6 +36,10 @@ FORBIDDEN_SYMBOLS = {
 }
 
 
+@unittest.skipUnless(
+    sys.implementation.name == "cpython" and sys.version_info[:2] == (3, 12),
+    "consumer capsule builder is supported only on CPython 3.12",
+)
 class ConsumerCapsuleTests(unittest.TestCase):
     def _source_copy(self, parent: Path, name: str) -> Path:
         target = parent / name

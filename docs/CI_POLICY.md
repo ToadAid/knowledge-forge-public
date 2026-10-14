@@ -8,8 +8,12 @@ operator invocation, and no remote deployment or promotion.
 The `regression` matrix tests the advertised Python 3.10+ standard-library
 baseline on Python 3.10, 3.11, 3.12, and 3.13. Each entry runs the installer
 `--check-only` preflight, read-only command-surface smoke tests, and the full
-`python -m unittest discover -s tests` suite. Optional PDF/OCR executables are
-not installed; their explicit boundaries are tested with synthetic fixtures.
+`python -m unittest discover -s tests` suite. GitHub runners install `poppler-utils` as a PDF text extraction test
+prerequisite; OCR/Tesseract remains optional and is not installed. The
+consumer-capsule builder is explicitly CPython 3.12-only: its dedicated tests
+run in the 3.12 matrix entry and report explicit skips on 3.10, 3.11, and
+3.13. The other tests still run in every matrix entry. A green 3.10/3.11/3.13
+matrix job does not imply that a 3.12-only capsule can build on that ABI.
 
 The aggregate job **`Knowledge Forge CI / required`** only succeeds if every
 matrix entry succeeds. It has a stable name so a human administrator can later

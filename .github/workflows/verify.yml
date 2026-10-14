@@ -39,6 +39,11 @@ jobs:
           bin/knowledge-forge --help >/dev/null
           bin/knowledge-forge-authoring --help >/dev/null
           bin/knowledge-forge-review synthetic-projections >/dev/null
+      - name: Install Poppler PDF text extraction test prerequisite
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends poppler-utils
+          command -v pdftotext
       - name: Run complete Python standard-library regression suite
         env:
           PYTHONDONTWRITEBYTECODE: '1'

@@ -40,6 +40,16 @@ class CiContractTests(unittest.TestCase):
         self.assertIn('bin/knowledge-forge-install-agent --check-only', source)
         self.assertIn('bin/knowledge-forge-review synthetic-projections', source)
 
+    def test_pdf_extractor_is_present_for_full_regression(self):
+        self.assertIn('sudo apt-get install -y --no-install-recommends poppler-utils', self.source)
+        self.assertIn('command -v pdftotext', self.source)
+
+    def test_capsule_tests_are_explicitly_abi_gated(self):
+        capsule = (REPO / 'tests' / 'test_consumer_capsule.py').read_text(encoding='utf-8')
+        self.assertIn('sys.version_info[:2] == (3, 12)', capsule)
+        self.assertIn('"consumer capsule builder is supported only on CPython 3.12"', capsule)
+        self.assertIn('@unittest.skipUnless(', capsule)
+
     def test_stable_fail_closed_aggregate_gate(self):
         source = self.source
         self.assertIn('name: Knowledge Forge CI / required', source)

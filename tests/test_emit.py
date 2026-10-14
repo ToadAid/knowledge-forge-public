@@ -55,7 +55,7 @@ class SkillPackageTests(unittest.TestCase):
         files = build_skill_package(candidate(), compiled_at="2026-09-23T00:00:00Z")
         self.assertEqual(
             set(files),
-            {"SKILL.md", "manifest.json", "SOURCE_RECEIPT.json", "retrieval-index.json", "claim-index.json", f"units/{unit_id_for("topic:bounded-context", "retrieval.context.bounded")}.md"},
+            {"SKILL.md", "manifest.json", "SOURCE_RECEIPT.json", "retrieval-index.json", "claim-index.json", f"units/{unit_id_for('topic:bounded-context', 'retrieval.context.bounded')}.md"},
         )
         self.assertIn(b"Authority: KNOWLEDGE_ONLY", files["SKILL.md"])
 
@@ -103,7 +103,7 @@ class SkillPackageTests(unittest.TestCase):
         receipt = json.loads(files["SOURCE_RECEIPT.json"])
         self.assertEqual(
             set(receipt["artifact_hashes"]),
-            {"SKILL.md", "manifest.json", "retrieval-index.json", "claim-index.json", f"units/{unit_id_for("topic:bounded-context", "retrieval.context.bounded")}.md"},
+            {"SKILL.md", "manifest.json", "retrieval-index.json", "claim-index.json", f"units/{unit_id_for('topic:bounded-context', 'retrieval.context.bounded')}.md"},
         )
 
     def test_build_is_deterministic_for_same_candidate_and_time(self):

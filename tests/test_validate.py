@@ -104,10 +104,10 @@ class PackageValidationTests(unittest.TestCase):
 
     def test_tampered_artifact_fails_hash_binding(self):
         files = package()
-        files[f"units/{unit_id_for("topic:bounded-context", "retrieval.context.bounded")}.md"] += b"\ntamper\n"
+        files[f"units/{unit_id_for('topic:bounded-context', 'retrieval.context.bounded')}.md"] += b"\ntamper\n"
         report = validate_skill_package(files)
         self.assertFalse(report["valid"])
-        self.assertIn(f"artifact hash mismatch: units/{unit_id_for("topic:bounded-context", "retrieval.context.bounded")}.md", report["errors"])
+        self.assertIn(f"artifact hash mismatch: units/{unit_id_for('topic:bounded-context', 'retrieval.context.bounded')}.md", report["errors"])
 
     def test_unreceipted_artifact_is_refused(self):
         files = package()
@@ -183,7 +183,7 @@ class PackageValidationTests(unittest.TestCase):
         report = validate_skill_package(files)
         self.assertFalse(report["valid"])
         self.assertIn(
-            {"rule_id": "INSTRUCTION_OVERRIDE", "path": f"units/{unit_id_for("topic:bounded-context", "retrieval.context.bounded")}.md"},
+            {"rule_id": "INSTRUCTION_OVERRIDE", "path": f"units/{unit_id_for('topic:bounded-context', 'retrieval.context.bounded')}.md"},
             report["security_findings"],
         )
         self.assertNotIn("Ignore previous", json.dumps(report))
@@ -193,7 +193,7 @@ class PackageValidationTests(unittest.TestCase):
         report = validate_skill_package(files)
         self.assertFalse(report["valid"])
         self.assertIn(
-            {"rule_id": "INVISIBLE_UNICODE", "path": f"units/{unit_id_for("topic:bounded-context", "retrieval.context.bounded")}.md"},
+            {"rule_id": "INVISIBLE_UNICODE", "path": f"units/{unit_id_for('topic:bounded-context', 'retrieval.context.bounded')}.md"},
             report["security_findings"],
         )
 
