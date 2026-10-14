@@ -16,12 +16,15 @@ from knowledge_forge.provision_review import (
 
 class ProvisionReviewTests(unittest.TestCase):
     def model(self, *, hostname="TNG", accounts=(), account_override=None,
-              present_paths=(), path_override=None, ancestor_override=None):
+              present_paths=(), path_override=None, ancestor_override=None,
+              admin_uid=1000):
         stack = ExitStack()
         self.addCleanup(stack.close)
         stack.enter_context(patch("knowledge_forge.provision_review.socket.gethostname", return_value=hostname))
         uidmap = {"kf-agent": 2001, "kf-operator": 2002}
         def fake_account(name):
+            if name == "tommy":
+                return SimpleNamespace(pw_uid=admin_uid)
             if name not in accounts:
                 raise KeyError(name)
             settings = (account_override or {}).get(name, {})
@@ -100,6 +103,29 @@ class ProvisionReviewTests(unittest.TestCase):
         self.assertEqual(o["observed_accounts"][0]["status"], "EXISTS_REQUIRES_INDEPENDENT_ATTESTATION")
         self.assertTrue(o["missing_resources_observed"])
         self.assertFalse(o["account_creation_authorized"])
+
+    def test_agent_uid_collides_with_tommy_is_flagged(self):
+        self.model(accounts=("kf-agent",), account_override={"kf-agent": {"uid": 1000}})
+        result = inspect_tng_provisioning_plan()
+        self.assertIn("COLLIDES_WITH_TOMMY_UID", result["observed_accounts"][0]["findings"])
+        self.assertTrue(result["unexpected_layout_observed"])
+        self.assertFalse(result["account_creation_authorized"])
+
+    def test_operator_uid_collides_with_tommy_is_flagged(self):
+        self.model(accounts=("kf-operator",), account_override={"kf-operator": {"uid": 1000}})
+        result = inspect_tng_provisioning_plan()
+        self.assertIn("COLLIDES_WITH_TOMMY_UID", result["observed_accounts"][1]["findings"])
+        self.assertTrue(result["unexpected_layout_observed"])
+        self.assertFalse(result["operator_activation_authorized"])
+
+    def test_missing_or_root_tommy_account_refused(self):
+        self.model(admin_uid=0)
+        with self.assertRaisesRegex(ProvisionReviewError, "root UID"):
+            inspect_tng_provisioning_plan()
+        self.model()
+        with patch("knowledge_forge.provision_review.pwd.getpwnam", side_effect=KeyError("tommy")):
+            with self.assertRaisesRegex(ProvisionReviewError, "administrator account missing"):
+                inspect_tng_provisioning_plan()
 
     def test_root_account_refused(self):
         self.model(accounts=("kf-agent",), account_override={"kf-agent":{"uid":0}})

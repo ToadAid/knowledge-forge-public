@@ -19,7 +19,10 @@ launch an operator, create credentials, or promote knowledge.
 | `/opt/toadaid-kf-operator` | `root` | `0755` | Reviewed, pinned code; NEVER deploy from agent-writable checkout |
 | `/var/lib/toadaid-kf-operator` | `kf-operator` | `0700` | Operator private state; no agent access |
 
-The operator UID must be distinct from `kf-agent` and `tommy`. Account creation
+Both the `kf-agent` and `kf-operator` UIDs must be distinct from `tommy`,
+and from one another. The review diagnostic explicitly reports a collision
+with `tommy` as `COLLIDES_WITH_TOMMY_UID`; this is a refusal finding, never
+a safe or independently authenticated host state. Account creation
 must not grant `sudo`, Docker, extra groups, login passwords, `sudoers` rules,
 or model-accessible sockets. `kf-agent` must not inherit `tommy`'s SSH/GitHub,
 cloud, Docker, or other privileged credentials. Linux UID separation alone

@@ -112,7 +112,16 @@ def inspect_tng_provisioning_plan() -> dict[str, Any]:
     """
     if socket.gethostname().split(".")[0] != EXPECTED_HOST:
         raise ProvisionReviewError("TNG only: host identity mismatch")
+    try:
+        human_admin_uid = pwd.getpwnam("tommy").pw_uid
+    except KeyError as exc:
+        raise ProvisionReviewError("required TNG human administrator account missing") from exc
+    if human_admin_uid == 0:
+        raise ProvisionReviewError("TNG human administrator unexpectedly has root UID")
     accounts = {name: _account(name, home) for name, home in USERS}
+    for account in accounts.values():
+        if account["uid"] is not None and account["uid"] == human_admin_uid:
+            account["findings"].append("COLLIDES_WITH_TOMMY_UID")
     ids = [v["uid"] for v in accounts.values() if v["uid"] is not None]
     if len(ids) != len(set(ids)):
         raise ProvisionReviewError("account UID collision")
