@@ -82,6 +82,14 @@ memory, or execution authority.
   interface;
 - deterministic schemas, synthetic fixtures, and the complete regression suite.
 
+## Continuous integration
+
+Public pull requests and merges are checked by a read-only GitHub Actions
+Python 3.10–3.13 regression matrix with a stable aggregate status check.
+See [the CI policy](docs/CI_POLICY.md) for the security boundary and the
+separate human step to require the check in the `main` ruleset. A passing
+build never authorizes promotion.
+
 ## Requirements
 
 - Python 3.10 or newer

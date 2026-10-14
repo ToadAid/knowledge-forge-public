@@ -1,0 +1,59 @@
+name: Knowledge Forge CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Forked PRs receive no production secrets or privileged credentials.
+permissions:
+  contents: read
+
+concurrency:
+  group: knowledge-forge-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  regression:
+    name: Regression / Python ${{ matrix.python }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.10', '3.11', '3.12', '3.13']
+    steps:
+      - name: Check out public source without persisting credentials
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4, immutable commit pin
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5, immutable commit pin
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Validate read-only installer prerequisites
+        run: bin/knowledge-forge-install-agent --check-only
+      - name: Check ordinary CLI and review-only CLI surfaces
+        run: |
+          bin/knowledge-forge --help >/dev/null
+          bin/knowledge-forge-authoring --help >/dev/null
+          bin/knowledge-forge-review synthetic-projections >/dev/null
+      - name: Run complete Python standard-library regression suite
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+          PYTHONPATH: src
+        run: python -m unittest discover -s tests
+
+  required:
+    # Stable check name for the later human-managed main ruleset.
+    name: Knowledge Forge CI / required
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    needs: [regression]
+    if: always()
+    steps:
+      - name: Refuse if any regression matrix entry failed or was skipped
+        env:
+          REGRESSION_RESULT: ${{ needs.regression.result }}
+        run: test "$REGRESSION_RESULT" = 'success'
