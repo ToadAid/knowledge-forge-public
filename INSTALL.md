@@ -15,6 +15,18 @@ Optional adapters:
 - Poppler for PDF text extraction
 - Poppler plus Tesseract for explicitly requested OCR
 
+## Installing for Claude Code or Codex?
+
+See [the newcomer guide](docs/NEWCOMER_GUIDE.md) for a copy-and-paste
+installation prompt and a file-to-knowledge example.
+
+**This installation creates CLIs, not automatic question-answer routing.**
+A `VALIDATED` skill is not `PROMOTED` and cannot be consumed through governed
+`discover` / `load-current` until a separately authenticated human/operator
+host promotes it and a host-owned adapter is tested and enabled. Reading a
+package file manually is only an explicitly labeled preview, not a governed
+consumer integration.
+
 ## Verify the checkout
 
 ```bash
