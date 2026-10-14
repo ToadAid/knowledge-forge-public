@@ -146,6 +146,26 @@ requesting agent/principal as the reviewer fail closed. These checks prevent a
 model from relabeling review output as authenticated, but they do not claim to
 identify the person at the keyboard.
 
+## P3A: read-only preview of a real VALIDATED package
+
+The preview below validates an exact package snapshot and VALIDATED lifecycle,
+checks their bindings, and shows bounded identity, claim coverage, and hashed
+evidence before review. It neither creates an approval request nor records a
+decision. The review contract projection in JSON output is an in-memory demo,
+**not** current authenticated host truth or a live approval request.
+
+```bash
+bin/knowledge-forge-review preview-validated --package-root /path/to/packages/package --validated-lifecycle /path/to/packages/lifecycle.validated.json
+```
+
+Add `--format json` to inspect the bounded review-contract projection.
+No operator, registry, approval receipt, or host activation is touched.
+The preview reports only the units and claims included in this package. It
+cannot know whether those are every entry in the original source corpus.
+It must not describe a partial source selection as a fully forged archive.
+`VALIDATED != PROMOTED`, and previewing a package does not establish semantic
+truth, independent authentication, or entitlement to promote.
+
 ## Terminal interaction
 
 Run the synthetic review demonstration from a local or SSH terminal:

@@ -313,6 +313,13 @@ def build_parser() -> argparse.ArgumentParser:
         description="Review-only local TUI. It never creates operator authorization or runs promotion.",
     )
     commands = parser.add_subparsers(dest="command", required=True)
+    preview = commands.add_parser(
+        "preview-validated",
+        help="read-only, bounded VALIDATED candidate evidence preview; never approves",
+    )
+    preview.add_argument("--format", choices=("text", "json"), default="text")
+    preview.add_argument("--package-root", required=True)
+    preview.add_argument("--validated-lifecycle", required=True)
     review = commands.add_parser("review")
     review.add_argument("--request", required=True)
     review.add_argument("--evidence", required=True)
@@ -328,6 +335,34 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
+        if args.command == "preview-validated":
+            from .candidate_preview import preview_validated_paths
+
+            value = preview_validated_paths(
+                args.package_root,
+                args.validated_lifecycle,
+                observed_at=_now(),
+            )
+            if args.format == "json":
+                sys.stdout.write(json.dumps(value, sort_keys=True, indent=2) + "\n")
+            else:
+                rows = [
+                    "KNOWLEDGE FORGE — VALIDATED CANDIDATE (READ ONLY)",
+                    f"Skill: {value['skill_id']}",
+                    f"Knowledge: {value['knowledge_id']}",
+                    f"Version: {value['skill_version']}",
+                    f"Units: {value['unit_count']} | Claims: {value['claim_count']} | Sources: {value['source_count']}",
+                    "Coverage: UNKNOWN beyond this package; do not infer complete source coverage.",
+                    "Claim keys (up to 10):",
+                    *(f"  - {key}" for key in value["claim_keys_first_10"]),
+                    f"Package receipt: {value['package_receipt_sha256']}",
+                    f"Validated lifecycle: {value['validated_lifecycle_head_sha256']}",
+                    "REVIEW ONLY: no review request or receipt created.",
+                    "NOT authenticated, NOT authorized, NOT promoted.",
+                    "Existing approval cards and operator boundary remain separate.",
+                ]
+                sys.stdout.write("\n".join(rows) + "\n")
+            return 0
         if args.command == "synthetic-projections":
             request, evidence, _binding, synthetic_now = _synthetic()
             as_of = args.as_of or synthetic_now

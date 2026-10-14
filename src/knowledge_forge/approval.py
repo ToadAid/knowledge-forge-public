@@ -55,6 +55,7 @@ _DECISION_STATE = {
 }
 _SHA256_REF = re.compile(r"^sha256:[0-9a-f]{64}$")
 _IDENTIFIER = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$")
+_CANONICAL_SKILL_ID = re.compile(r"^knowledge-forge:[a-z0-9][a-z0-9._:-]{0,255}@sha256:[0-9a-f]{64}$")
 _EVIDENCE_LABEL = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
 
 _REQUEST_FIELDS = frozenset({
@@ -187,6 +188,16 @@ def _identifier(value: Any, label: str) -> str:
     return text
 
 
+def _skill_identifier(value: Any, label: str) -> str:
+    # Preserve synthetic IDs and support canonical Forge IDs with @sha256.
+    identifier = _text(value, label, maximum=350)
+    if _CANONICAL_SKILL_ID.fullmatch(identifier):
+        return identifier
+    if '@' in identifier:
+        raise ApprovalContractError(f"{label} must be a canonical Forge skill identity")
+    return _identifier(identifier, label)
+
+
 def _sha256_ref(value: Any, label: str) -> str:
     if not isinstance(value, str) or not _SHA256_REF.fullmatch(value):
         raise ApprovalContractError(f"{label} must be a sha256 reference")
@@ -240,7 +251,7 @@ def build_approval_evidence(
     body = {
         "schema_version": APPROVAL_EVIDENCE_SCHEMA_VERSION,
         "request_id": _identifier(request_id, "request_id"),
-        "target_skill_id": _identifier(target_skill_id, "target_skill_id"),
+        "target_skill_id": _skill_identifier(target_skill_id, "target_skill_id"),
         "target_skill_version": _version(target_skill_version, "target_skill_version"),
         "package_receipt_sha256": _sha256_ref(package_receipt_sha256, "package_receipt_sha256"),
         "validated_lifecycle_head_sha256": _sha256_ref(validated_lifecycle_head_sha256, "validated_lifecycle_head_sha256"),
@@ -291,7 +302,7 @@ def build_approval_request(
         "request_type": REQUEST_TYPE,
         "requesting_agent": _text(requesting_agent, "requesting_agent", maximum=80),
         "requesting_principal": _text(requesting_principal, "requesting_principal", maximum=128),
-        "target_skill_id": _identifier(target_skill_id, "target_skill_id"),
+        "target_skill_id": _skill_identifier(target_skill_id, "target_skill_id"),
         "target_skill_version": _version(target_skill_version, "target_skill_version"),
         "package_receipt_sha256": _sha256_ref(package_receipt_sha256, "package_receipt_sha256"),
         "validated_lifecycle_head_sha256": _sha256_ref(validated_lifecycle_head_sha256, "validated_lifecycle_head_sha256"),
@@ -371,7 +382,7 @@ def validate_current_candidate_binding(value: Any) -> dict[str, Any]:
     _exact_fields(binding, _BINDING_FIELDS, "current candidate binding")
     if binding.get("schema_version") != CURRENT_BINDING_SCHEMA_VERSION:
         raise ApprovalContractError("unsupported current binding schema_version")
-    _identifier(binding.get("target_skill_id"), "target_skill_id")
+    _skill_identifier(binding.get("target_skill_id"), "target_skill_id")
     _version(binding.get("target_skill_version"), "target_skill_version")
     _sha256_ref(binding.get("package_receipt_sha256"), "package_receipt_sha256")
     _sha256_ref(binding.get("validated_lifecycle_head_sha256"), "validated_lifecycle_head_sha256")
