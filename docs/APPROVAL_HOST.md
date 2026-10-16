@@ -4,6 +4,13 @@
 TRUSTED HOST. Until that host exists, every path reports the exact missing
 dependency instead of approving anything.**
 
+**Ordinary-user cut:** the human's own terminal is already a trusted host —
+`bin/approve` (`docs/APPROVE_TUI.md`) wraps this same contract into one
+interactive word: card → typed `APPROVE <token>` → real promotion. The
+host-key/CLI contract below remains the deployment shape for hosted heads
+(ToadAid-app and friends); both drive the identical signing, single-use
+ledger and unchanged engine.
+
 ## What this solves
 
 Users could forge and validate a skill, but completing promotion required a

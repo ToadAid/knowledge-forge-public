@@ -394,14 +394,14 @@ class ApprovalHostChainTests(unittest.TestCase):
             loose = root / "loose.bin"
             loose.write_bytes(b"k" * 32)
             os.chmod(loose, 0o644)
-            from knowledge_forge.approval_host_cli import _read_host_key, ApprovalHostCliError
-            with self.assertRaisesRegex(ApprovalHostCliError, "0600"):
-                _read_host_key(loose)
+            from knowledge_forge.approval_host import read_host_key_file, ApprovalHostError
+            with self.assertRaisesRegex(ApprovalHostError, "0600"):
+                read_host_key_file(loose)
             empty = root / "empty.bin"
             empty.write_bytes(b"")
             os.chmod(empty, 0o600)
-            with self.assertRaisesRegex(ApprovalHostCliError, "1..4096 bytes"):
-                _read_host_key(empty)
+            with self.assertRaisesRegex(ApprovalHostError, "1..4096 bytes"):
+                read_host_key_file(empty)
         finally:
             shutil.rmtree(root, ignore_errors=True)
 

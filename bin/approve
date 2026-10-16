@@ -1,0 +1,5 @@
+#!/bin/sh
+# One-word interactive promotion approval (the trusted host in a terminal).
+# Run it from your own terminal, never from an agent process.
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+exec /usr/bin/env PYTHONPATH="$REPO_ROOT/src" python3 -m knowledge_forge.approve_tui "$@"

@@ -19,8 +19,6 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
-import stat
-import sys
 from typing import Any, Mapping
 
 from .lifecycle import evidence_sha256
@@ -40,6 +38,7 @@ from .approval_host import (
     ApprovalHostError,
     authorize_from_host_decision,
     decision_sha256,
+    read_host_key_file,
 )
 from .registry import SkillRegistryError, load_skill_registry
 from .trust_wall import MAX_PACKAGE_BYTES, MAX_PACKAGE_FILES
@@ -51,7 +50,6 @@ _APPROVE_FROM_DIR_FILES = (
     "current-candidate.json",
     "approval-host-decision.json",
 )
-_MAX_HOST_KEY_BYTES = 4096
 
 
 class ApprovalHostCliError(ValueError):
@@ -77,39 +75,7 @@ def _read_json_object(path: Path, label: str) -> dict[str, Any]:
 
 
 def _read_host_key(path: Path) -> bytes:
-    resolved = Path(os.path.abspath(path))
-    for parent in resolved.parents:
-        if parent.is_symlink():
-            raise ApprovalHostCliError(
-                "host key path contains a symlink component; the host key must "
-                "be a plain 0600 file owned by this process account"
-            )
-    try:
-        key_stat = os.stat(resolved, follow_symlinks=False)
-    except OSError as exc:
-        raise ApprovalHostCliError(f"host key file is missing: {path}") from exc
-    if not stat.S_ISREG(key_stat.st_mode):
-        raise ApprovalHostCliError("host key file must be a regular file")
-    if sys.platform != "win32":
-        if key_stat.st_mode & 0o077:
-            raise ApprovalHostCliError(
-                "host key file is readable by group or others; refusing (mode "
-                "must be 0600 and the file owned by this process account)"
-            )
-        if key_stat.st_uid != os.geteuid():
-            raise ApprovalHostCliError(
-                "host key file is not owned by this process account; the "
-                "trusted host alone may hold and use its own key"
-            )
-    try:
-        key = resolved.read_bytes()
-    except OSError as exc:
-        raise ApprovalHostCliError(f"host key file is unreadable: {path}") from exc
-    if not key or len(key) > _MAX_HOST_KEY_BYTES:
-        raise ApprovalHostCliError(
-            "host key file must be 1..4096 bytes of secret material"
-        )
-    return key
+    return read_host_key_file(path)
 
 
 def _snapshot_package(root: Path) -> dict[str, bytes]:

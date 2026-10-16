@@ -121,6 +121,16 @@ When the user requests "promote", "send for approval", or similar:
    model cannot approve its own candidate, use an ordinary agent PATH to
    invoke `knowledge-forge-operator`, or turn chat instructions into
    `OperatorAuthorization`.
+7. Where the human operates a terminal, point them at the **one-word host
+   flow**: `approve <request-dir>` (`docs/APPROVE_TUI.md`). Stage the
+   request artifacts plus the validated bundle (`<request-dir>/` and
+   `<request-dir>/promotion-bundle/`), then tell the user: "*Ready — type
+   `approve` and confirm in your terminal.*" **The agent never runs
+   `approve` itself and never needs to be in the loop after staging**;
+   the card, the typed `APPROVE <token>` phrase and the real promotion
+   all happen in the user's own TTY. When no terminal host is available,
+   the answer stays the exact missing dependency — never a paraphrased
+   success.
 
 If an actual authenticated promotion host and transport have not been built
 and tested, this workflow **ends at a validated candidate with a review
