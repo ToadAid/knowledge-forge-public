@@ -14,7 +14,11 @@
   The full chain (request → review → authenticated approval → promotion →
   registry verification) is covered end-to-end in `tests/test_approval_host.py`.
   No host key, no promotion; the exact missing dependency is reported rather
-  than simulated.
+  than simulated. Fixed the module entrypoint so
+  `python3 -m knowledge_forge.approval_host_cli` (what
+  `bin/knowledge-forge-approve` executes) actually runs instead of importing
+  silently and exiting 0 without doing anything; regression test invokes the
+  module as a script.
 - Added Unicode-aware deterministic retrieval matching (Personal Forge P1.1):
   questions route to knowledge units through four ranked tiers — exact alias
   phrase, compound form (a naturally spaced phrase like "Clair de Lune" now

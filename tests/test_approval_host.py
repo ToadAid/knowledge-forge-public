@@ -18,6 +18,8 @@ import os
 from pathlib import Path
 import secrets
 import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -40,6 +42,7 @@ from knowledge_forge.approval_host import (
     build_host_decision,
     decision_sha256,
 )
+import knowledge_forge.approval_host_cli
 from knowledge_forge.approval_host_cli import main
 from knowledge_forge.operator_promotion import (
     OperatorPromotionError,
@@ -464,6 +467,33 @@ class ApprovalHostCliTests(unittest.TestCase):
         self.assertFalse(payload["ok"])
         self.assertFalse(payload["promoted"])
         self.assertIn("host key", payload["error"])
+
+    def test_module_entrypoint_actually_executes(self):
+        # The trusted host invokes the CLI as
+        # `python3 -m knowledge_forge.approval_host_cli <args>` through
+        # bin/knowledge-forge-approve. A module without a __main__
+        # guard would import, exit 0, print nothing, and promote
+        # nothing — a silent no-op that looks like success.
+        src_dir = Path(
+            knowledge_forge.approval_host_cli.__file__
+        ).resolve().parents[1]
+        env = dict(os.environ)
+        env["PYTHONPATH"] = str(src_dir) + os.pathsep + env.get("PYTHONPATH", "")
+        for args, expect_rc in (
+            (["--help"], 0),
+            ([], 2),  # argparse missing-required-arguments failure, not silence
+        ):
+            with self.subTest(args=args):
+                proc = subprocess.run(
+                    [sys.executable, "-m", "knowledge_forge.approval_host_cli", *args],
+                    capture_output=True, text=True, env=env, timeout=60,
+                )
+                self.assertEqual(proc.returncode, expect_rc)
+                self.assertNotEqual(
+                    proc.stdout + proc.stderr,
+                    "",
+                    "module ran as a silent no-op",
+                )
 
 
 if __name__ == "__main__":
