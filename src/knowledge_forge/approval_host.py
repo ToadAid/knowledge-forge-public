@@ -31,6 +31,8 @@ import os
 from pathlib import Path
 import re
 import sqlite3
+import stat
+import sys
 from typing import Any, Mapping
 
 from .approval import (
@@ -39,6 +41,11 @@ from .approval import (
     validate_approval_request,
 )
 from .operator_promotion import OperatorAuthorization
+from .secure_io import (
+    SecureIOError,
+    prepare_private_regular_file,
+    read_bounded_bytes,
+)
 
 APPROVAL_HOST_DECISION_SCHEMA_VERSION = "0.1"
 APPROVAL_HOST_DECISION_KIND = "KNOWLEDGE_FORGE_APPROVAL_HOST_DECISION"
@@ -68,6 +75,56 @@ _SIGNATURE_RE = re.compile(r"^hmac-sha256:[0-9a-f]{64}$")
 
 class ApprovalHostError(ValueError):
     """Raised when a host approval decision cannot authorize promotion."""
+
+
+# Host key file bounds, shared by every trusted-host surface (the single
+# approve CLI and the interactive approve TUI). The key is the whole trust
+# anchor, so the file checks are deliberately strict.
+MAX_HOST_KEY_BYTES = 4096
+
+
+def read_host_key_file(path: Path) -> bytes:
+    """Load a trusted host key file with fail-closed hygiene checks.
+
+    The file must be a regular file with no symlink path components and
+    1..4096 bytes of secret material. On POSIX it must additionally be mode
+    0600 (not group/other readable) and owned by this process account, so a
+    host running under its own account is the only reader.
+    """
+
+    resolved = Path(os.path.abspath(path))
+    for parent in resolved.parents:
+        if parent.is_symlink():
+            raise ApprovalHostError(
+                "host key path contains a symlink component; the host key must "
+                "be a plain 0600 file owned by this process account"
+            )
+    try:
+        key_stat = os.stat(resolved, follow_symlinks=False)
+    except OSError as exc:
+        raise ApprovalHostError(f"host key file is missing: {path}") from exc
+    if not stat.S_ISREG(key_stat.st_mode):
+        raise ApprovalHostError("host key file must be a regular file")
+    if sys.platform != "win32":
+        if key_stat.st_mode & 0o077:
+            raise ApprovalHostError(
+                "host key file is readable by group or others; refusing (mode "
+                "must be 0600 and the file owned by this process account)"
+            )
+        if key_stat.st_uid != os.geteuid():
+            raise ApprovalHostError(
+                "host key file is not owned by this process account; the "
+                "trusted host alone may hold and use its own key"
+            )
+    try:
+        key = read_bounded_bytes(resolved, MAX_HOST_KEY_BYTES, "host key file")
+    except SecureIOError as exc:
+        raise ApprovalHostError(str(exc)) from exc
+    if not key:
+        raise ApprovalHostError(
+            "host key file must be 1..4096 bytes of secret material"
+        )
+    return key
 
 
 def _canonical_bytes(value: Any) -> bytes:
@@ -269,12 +326,28 @@ class ConsumedDecisionLedger:
     """
 
     def __init__(self, path: str | Path) -> None:
-        self.path = Path(path)
+        try:
+            self.path = prepare_private_regular_file(
+                path, "approval decision ledger"
+            )
+        except SecureIOError as exc:
+            raise ApprovalHostError(str(exc)) from exc
         self.connection = sqlite3.connect(
             self.path, isolation_level=None
         )
         try:
-            os.chmod(self.path, 0o600)
+            ledger_stat = self.path.lstat()
+            if not stat.S_ISREG(ledger_stat.st_mode):
+                raise ApprovalHostError(
+                    "approval decision ledger must be a regular file"
+                )
+            if sys.platform != "win32" and (
+                ledger_stat.st_uid != os.geteuid()
+                or stat.S_IMODE(ledger_stat.st_mode) != 0o600
+            ):
+                raise ApprovalHostError(
+                    "approval decision ledger owner/mode mismatch"
+                )
             self.connection.execute(
                 "PRAGMA journal_mode=DELETE"
             )

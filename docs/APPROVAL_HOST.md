@@ -4,6 +4,12 @@
 TRUSTED HOST. Until that host exists, every path reports the exact missing
 dependency instead of approving anything.**
 
+**Ordinary-user integration:** `inline_approval.prepare_inline_approval`
+returns one native-host card; the host renders Approve/Reject in the existing
+conversation and calls `complete_inline_promotion` only with its own signed
+decision. There is deliberately no same-UID `approve` command or TTY fallback.
+See `docs/INLINE_APPROVAL.md`.
+
 ## What this solves
 
 Users could forge and validate a skill, but completing promotion required a
@@ -21,7 +27,7 @@ registry, same receipts) and adds the smallest trusted-host seam:
 - a **trusted host** (its own process, its own account, its own secret key)
   authenticates the human in whatever UI it has — one Approve/Reject action —
   and signs the decision with its own HMAC key;
-- the host runs **one command** to apply that decision;
+- the host calls one protected completion operation with that decision;
 - the engine verifies everything and, only if all checks pass, performs the
   real registry transition and writes real receipts.
 
@@ -34,11 +40,9 @@ user:   Promote it.
 agent:  Promotion request ready. Please review and approve.
         (stages approval-request.json + approval-evidence.json +
          current-candidate.json; chat CANNOT approve)
-trusted host:  shows the card, the human clicks Approve, the host
-        independently authenticates the human and signs the decision
-        -> runs: knowledge-forge-approve <from-dir> --bundle <dir>
-                 --registry <registry.json> --host-key <keyfile>
-                 --promoted-lifecycle-out <path> --receipt-out <path>
+trusted host:  shows the inline card; the human clicks Approve; the host
+        independently authenticates the human, signs the decision and calls
+        the protected completion API outside agent tool permissions
 agent:  Skill successfully promoted.                     (real PROMOTED state)
 ```
 
@@ -52,7 +56,9 @@ verifies them before displaying anything):
 | `approval-request.json` | the promotion request (identity, receipts, expiry) |
 | `approval-evidence.json` | digest-bound evidence items for the exact package |
 | `current-candidate.json` | staleness binding: "this is the exact candidate now" |
-| `approval-host-decision.json` | host-signed `APPROVED`/`REJECTED` decision |
+
+The signed decision is host-owned state or an in-memory host value. It must
+never be written into the agent-staged request directory.
 
 A host backend builds the signed decision in one call:
 
@@ -69,18 +75,24 @@ decision = build_host_decision(
 )
 ```
 
-Then one user-facing action runs the whole verified transition:
+The host then calls the command-free adapter:
 
-```bash
-knowledge-forge-approve <from-dir> --bundle <bundle-dir> \
-    --registry <state>/registry.json --host-key <host-key-file> \
-    --promoted-lifecycle-out <state>/lifecycle.json \
-    --receipt-out <state>/receipt.json
+```python
+from knowledge_forge.inline_approval import complete_inline_promotion
+result = complete_inline_promotion(
+    request_dir,
+    bundle_dir,
+    signed_host_decision=decision,
+    registry_path=protected_registry,
+    host_key_path=protected_host_key,
+    now=now,
+)
 ```
 
 Success output is a real promotion receipt
 (`promoted: true`, `model_authorized: false`, registry digest, file paths).
-Any failure exits 2 with an `ok: false` JSON naming the refusal.
+The adapter raises a typed refusal on failure; the diagnostic host CLI exits 2
+with an `ok: false` JSON naming that refusal.
 
 ## What is verified before anything is promoted
 
@@ -106,18 +118,17 @@ anything (`issue_operator_authorization_from_review` still always raises).
    host key file (`0600`) and the governed registry state.
 2. In the host backend: after the human clicks Approve **with the host's own
    authentication already established**, call `build_host_decision` with the
-   host key, persist `approval-host-decision.json`, and invoke
-   `bin/knowledge-forge-approve` once. That invocation is the single
-   user-facing action.
+   host key and pass the in-memory decision to `complete_inline_promotion`.
+   Do not expose either operation as an agent tool.
 3. Show the returned receipt to the user. Do not paraphrase a failure as
    success: `promoted: true` is the only success signal.
 
 ## What is NOT yet live (exact missing dependencies)
 
-- **A deployed trusted host.** No ToadAid-app backend integration exists in
-  this repo; the CLI is the contract a host process calls, and the repo does
-  not run one. Until a host is installed and configured, the answer to
-  "approve it" is the typed refusal, not a promotion.
+- **A deployed trusted host.** This repo provides the adapter contract, not a
+  ToadAid-app/Codex native confirmation implementation. Until a host connects
+  its protected UI event, "approve it" remains intent awaiting host approval,
+  not a promotion.
 - **The registry itself** must be initialized by an administrator
   (`--registry` must already exist; the approve flow refuses to create it).
 - For hardened multi-host deployments the existing

@@ -2,6 +2,14 @@
 
 ## Unreleased — initial open-source source snapshot
 
+- Added the command-free inline approval adapter for trusted hosts. Agents can
+  prepare a bounded review card, but ordinary chat and agent-created TTYs
+  cannot authorize or promote. A native host Approve event produces the
+  signed decision consumed by the existing single-use approval host. Removed
+  the duplicate same-UID `bin/approve` ceremony, moved decisions out of
+  agent-staged directories, added bounded no-follow reads, serialized host
+  promotions, and made lifecycle/receipt output paths immutable per request.
+
 - Added the approval-host contract (APPROVAL UX P1): chat can request skill
   promotion (`approval.build_approval_request`, unchanged review-only
   receipts), while a trusted host process converts one human Approve/Reject

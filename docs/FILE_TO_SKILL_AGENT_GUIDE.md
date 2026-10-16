@@ -121,6 +121,15 @@ When the user requests "promote", "send for approval", or similar:
    model cannot approve its own candidate, use an ordinary agent PATH to
    invoke `knowledge-forge-operator`, or turn chat instructions into
    `OperatorAuthorization`.
+7. Where the surrounding product implements the inline host adapter, return
+   the prepared card and let that host render **Approve & Promote**, **Reject**
+   and **View details** in the existing conversation. The user runs no command
+   and supplies no path or digest. The host sends its signed decision directly
+   to the protected completion API; ordinary chat text such as `APPROVE` is
+   intent only and is not an authorization input. See
+   `docs/INLINE_APPROVAL.md`. When no independently trusted host UI is
+   configured, the answer stays the exact missing dependency—never a
+   paraphrased success or a same-UID TTY fallback.
 
 If an actual authenticated promotion host and transport have not been built
 and tested, this workflow **ends at a validated candidate with a review

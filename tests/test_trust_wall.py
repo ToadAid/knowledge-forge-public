@@ -43,11 +43,17 @@ def _profile():
     )
 
 
-def _candidate(source_id: str):
+def _candidate(
+    source_id: str,
+    *,
+    knowledge_id: str = "handbook:governance",
+    slug: str = "governance-handbook",
+    title: str = "Governance Handbook",
+):
     def unit(claim_key, kind, title, body, section):
         return {
             "unit_id": unit_id_for(
-                "handbook:governance",
+                knowledge_id,
                 claim_key,
             ),
             "kind": kind,
@@ -73,10 +79,10 @@ def _candidate(source_id: str):
         "schema_version": "0.3",
         "state": "COMPILED_CANDIDATE",
         "authority": "KNOWLEDGE_ONLY",
-        "knowledge_id": "handbook:governance",
+        "knowledge_id": knowledge_id,
         "skill": {
-            "slug": "governance-handbook",
-            "title": "Governance Handbook",
+            "slug": slug,
+            "title": title,
             "purpose": "reference",
         },
         "compiler": {
@@ -143,7 +149,13 @@ def _faithfulness_report(lifecycle, claim_index):
     }
 
 
-def _governed_package(root: Path):
+def _governed_package(
+    root: Path,
+    *,
+    knowledge_id: str = "handbook:governance",
+    slug: str = "governance-handbook",
+    title: str = "Governance Handbook",
+):
     source = root / "source.md"
     source.write_text(
         "# Approval Quorum\n"
@@ -156,7 +168,12 @@ def _governed_package(root: Path):
     )
     source_id = "sha256:" + sha256(source.read_bytes()).hexdigest()
     files = build_skill_package(
-        _candidate(source_id),
+        _candidate(
+            source_id,
+            knowledge_id=knowledge_id,
+            slug=slug,
+            title=title,
+        ),
         compiled_at="2026-09-24T19:00:00Z",
     )
     validation_report = validate_or_raise(files)

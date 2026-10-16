@@ -60,19 +60,26 @@ transport has actually accepted the request. A local review-only TUI can
 record a review choice, but its receipt is **not authenticated promotion
 authorization**.
 
-For an independently administered Linux host, the repository includes a
-protected promotion reference that reduces the post-install human action to
-one command and one typed confirmation. It is intentionally separate from the
-agent installer: after an administrator has provisioned and verified distinct
-agent, reviewer and operator identities, the human runs:
+The intended integrated product experience needs no user command:
 
 ```text
-knowledge-forge-promote /path/to/validated-bundle
+You:    Promote it.
+Host:   [View details] [Approve & Promote] [Reject]
+You:    select Approve & Promote.
+Agent:  Promoted. Receipt and registry identity are shown.
 ```
 
-and types the exact displayed `APPROVE <challenge>` phrase. This convenience
-does not make chat text an authorization and must not be activated while the
-agent shares the human reviewer's UID or privileged tools.
+The repository provides the inline host adapter for this flow, but the generic
+installer does not deploy the trusted UI. The surrounding product must capture
+the click outside the agent channel, independently authenticate the user, and
+keep its signing key and governed registry outside agent permissions. Saying
+`approve` in chat requests the card; it does not itself authorize promotion.
+If that host integration is absent, the request remains pending.
+
+For an independently administered Linux deployment, the repository also keeps
+the protected socket service as a hardened backend reference. It is
+intentionally separate from the agent installer and requires an administrator
+to provision and verify distinct agent, reviewer, and operator identities.
 
 ## What you should check before approving a skill
 
@@ -142,7 +149,9 @@ Installation or a manual preview alone does not provide this functionality.
 
 See the [newcomer guide](docs/NEWCOMER_GUIDE.md),
 [agent file-to-skill guide](docs/FILE_TO_SKILL_AGENT_GUIDE.md), and
-[approval boundary](docs/GENERIC_APPROVAL_TUI.md) for details.
+[command-free approval integration](docs/INLINE_APPROVAL.md) for details. The
+[review-only approval boundary](docs/GENERIC_APPROVAL_TUI.md) remains useful
+for diagnostic review receipts.
 
 ## If the agent says it cannot proceed
 

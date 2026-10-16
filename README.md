@@ -23,7 +23,8 @@ Until an approved host transport exists, the honest result is
 **review handoff ready — not sent, and not promoted**.
 
 **[Read the simple user manual](USER_MANUAL.md)** ·
-[Agent-facing one-sentence workflow](docs/FILE_TO_SKILL_AGENT_GUIDE.md)
+[Agent-facing one-sentence workflow](docs/FILE_TO_SKILL_AGENT_GUIDE.md) ·
+[Command-free approval integration](docs/INLINE_APPROVAL.md)
 
 ## New here? Install, forge, and ask
 
@@ -98,6 +99,7 @@ memory, or execution authority.
   on an ordinary agent's `PATH`;
 - the P2B0 provider-neutral approval request contract and review-only terminal
   interface;
+- a command-free inline approval adapter for an independently trusted host;
 - deterministic schemas, synthetic fixtures, and the complete regression suite.
 
 ## Continuous integration
@@ -229,6 +231,21 @@ promotion remains a separate, explicit local operator operation outside the
 ordinary agent `PATH`. Read
 [docs/GENERIC_APPROVAL_TUI.md](docs/GENERIC_APPROVAL_TUI.md) before integrating
 review output.
+
+### Command-free product integration
+
+The intended ordinary-user flow is conversational: ask the agent to forge the
+document, say “promote it,” inspect a native **Approve & Promote** card, and
+click once. The user runs no command and handles no path, key, or digest. The
+repository provides the bounded card and protected-completion adapter for a
+product host to implement that flow; see
+[docs/INLINE_APPROVAL.md](docs/INLINE_APPROVAL.md).
+
+This is an integration contract, not a deployed approval service. Chat text is
+intent only. Until the surrounding product supplies an independently
+authenticated native UI event and keeps its signing key and protected registry
+outside agent permissions, the request remains pending and nothing is
+promoted. There is no same-account TTY fallback.
 
 ### Linux protected promotion reference
 
