@@ -2,6 +2,15 @@
 
 ## Unreleased — initial open-source source snapshot
 
+- Make the agent ask before anything lands after validation (docs only, no
+  runtime change): after showing VALIDATED results the agent asks
+  **library, governed promotion, or both** — a chat yes to the library
+  runs `personal add --accept`, a chat yes to promotion is only the
+  *request* that stages the approval card (the two card clicks stay the
+  actual signature), and silence adds nothing. Stated in
+  `docs/FILE_TO_SKILL_AGENT_GUIDE.md` (new "The ask" section, routing
+  reply template).
+
 - Make existing Personal Forge the default newcomer workflow:
   Forge → Accept → Ask. Align user manual, install guides, agent runbook,
   and advanced-doc entry points without changing any runtime policy.
