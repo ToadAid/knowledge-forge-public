@@ -159,3 +159,26 @@ Check ancestry/ownership/ACLs and actual sandbox reachability independently.
 `INSTALLED, NOT CERTIFIED` and active sockets do not prove those boundaries.
 Only after verification should a real VALIDATED package be submitted for its
 own human decision. Setup consent approves no knowledge package.
+
+
+## Adding the trusted Codex-native lane to an existing deployment
+
+Follow the single [Codex native administrator workflow](CODEX_NATIVE_MCP_DEPLOYMENT.md).
+`install.sh --migrate-codex-native --reviewer HUMAN --commit FULL_SHA --plan`
+(or `--check`) inspects an existing protected baseline without changing it.
+The separate independent-root `--apply` installs only absent pinned native
+artifacts and leaves them dormant. It never resets state, updates existing
+human units, changes agent settings, enrolls, approves or promotes a package.
+Partial/unknown installations and incompatible engines refuse; preserve them
+for independent review. Do not rerun the initial installer on valuable state.
+
+The native socket uses its own matching `knowledge-forge-codex-operator@.service`,
+not the human service template. `/opt/toadaid-kf-agent` is a new pinned snapshot;
+ordinary installation does not create it. The read-only `--preflight` reports
+blocking/unknown evidence and never certifies a human-UID Desktop session.
+There is no safe supported Desktop cross-UID launcher in this repository;
+`--enable-socket` refuses. Credential enrollment, verified actual `kf-agent`
+transport, native provider availability, explicit future activation, MCP
+registration and a new session all require separate human/admin steps. TUI or
+generic popup success is not native verification. Governed promotion and
+explicit PERSONAL acceptance remain separate.

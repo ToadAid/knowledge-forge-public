@@ -4,8 +4,9 @@ import tempfile
 from pathlib import Path
 import os
 import stat
+import subprocess
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from knowledge_forge.codex_credential_registry import (
     CodexCredentialError,
@@ -14,7 +15,7 @@ from knowledge_forge.codex_credential_registry import (
     verify_registered_proof,
 )
 from knowledge_forge.codex_p256 import CodexP256Error, verify_p256_sha256
-from knowledge_forge.codex_enrollment import enroll
+from knowledge_forge.codex_enrollment import CodexAppServerClient, enroll
 
 
 CHALLENGE = "a25vd2xlZGdlLWZvcmdlLWNvZGV4LXByb29mLXRlc3Q"
@@ -29,6 +30,25 @@ SIGNATURE = (
 
 
 class CodexP256Tests(unittest.TestCase):
+    def test_app_server_client_opts_into_experimental_user_verification(self) -> None:
+        process = Mock()
+        process.stdin = Mock()
+        process.stdout = iter(
+            [
+                '{"jsonrpc":"2.0","id":1,"result":{}}\n',
+                '{"jsonrpc":"2.0","id":2,"result":{"credentialId":"synthetic-device"}}\n',
+            ]
+        )
+        process.stderr = iter(())
+        process.poll.return_value = 0
+        process.wait.return_value = 0
+        with patch.object(subprocess, "Popen", return_value=process):
+            client = CodexAppServerClient()
+            client.request("userVerification/status", 2)
+
+        initialize = process.stdin.write.call_args_list[0].args[0]
+        self.assertIn('"capabilities":{"experimentalApi":true}', initialize)
+
     def test_known_p256_sha256_proof_verifies(self) -> None:
         verify_p256_sha256(CHALLENGE, SIGNATURE, PUBLIC_KEY)
 

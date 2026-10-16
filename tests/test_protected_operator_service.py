@@ -319,7 +319,11 @@ class ProtectedOperatorServiceTests(unittest.TestCase):
         self.assertNotIn("kf-agent", socket_unit)
         self.assertIn("SocketGroup=kf-agent", codex_socket_unit)
         self.assertIn("SocketMode=0660", codex_socket_unit)
-        self.assertIn("Service=knowledge-forge-operator@.service", codex_socket_unit)
+        self.assertNotIn("Service=", codex_socket_unit)
+        native_service = (repo / "deploy/linux-protected-operator/knowledge-forge-codex-operator@.service").read_text()
+        self.assertIn("User=kf-operator", native_service)
+        self.assertIn("ExecStart=/opt/toadaid-kf-agent/bin/knowledge-forge-codex-operator", native_service)
+        self.assertIn("NoNewPrivileges=yes", native_service)
         self.assertIn("codex-operator.sock", codex_socket_unit)
         self.assertNotIn("Requires=knowledge-forge-operator.socket", service_unit)
 

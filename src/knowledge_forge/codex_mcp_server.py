@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 from datetime import datetime, timezone
 import json
+import os
 from pathlib import Path
 import socket
 import sys
@@ -96,6 +97,8 @@ class CodexApprovalMcpServer:
     ) -> None:
         self.workspace_root = Path(workspace_root).resolve(strict=True)
         self.operator_socket = Path(operator_socket)
+        if self.operator_socket != CODEX_SOCKET_PATH:
+            raise CodexMcpServerError('Only the Codex proof-only socket is permitted; no fallback')
         self.input = input_stream
         self.output = output_stream
 
@@ -267,6 +270,10 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
+        import pwd
+        expected_uid = pwd.getpwnam('kf-agent').pw_uid
+        if expected_uid == 0 or os.getuid() != expected_uid or os.geteuid() != expected_uid:
+            raise CodexMcpServerError('MCP transport must actually run as non-root kf-agent')
         server = CodexApprovalMcpServer(
             workspace_root=args.workspace_root,
             operator_socket=args.operator_socket,
@@ -274,7 +281,7 @@ def main(argv: list[str] | None = None) -> int:
             output_stream=sys.stdout,
         )
         server.serve()
-    except (OSError, ValueError) as exc:
+    except (OSError, ValueError, KeyError) as exc:
         print(f"knowledge-forge Codex MCP refused: {exc}", file=sys.stderr)
         return 2
     return 0

@@ -11,6 +11,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from knowledge_forge.ledger_sqlite_pilot import (
     KIND, SQLiteLedgerPilot, SQLitePilotError,
@@ -233,7 +234,10 @@ class SQLiteLedgerPilotTests(unittest.TestCase):
     def test_protected_paths_refused(self):
         for name in ("/var/lib/toadaid-kf-operator/pilot.sqlite3",
                      "/opt/toadaid-kf-operator/pilot.sqlite3"):
-            with self.subTest(path=name), self.assertRaises(SQLitePilotError):
+            # Use synthetic metadata so this negative test never probes the
+            # host's real protected state (which may correctly be inaccessible).
+            with self.subTest(path=name), patch.object(Path, "is_symlink", return_value=False), \
+                    patch.object(Path, "is_dir", return_value=True), self.assertRaises(SQLitePilotError):
                 SQLiteLedgerPilot(name)
 
     def test_two_processes_exactly_one_consume(self):

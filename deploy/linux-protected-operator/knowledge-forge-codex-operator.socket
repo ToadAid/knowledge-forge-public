@@ -4,7 +4,6 @@ Description=ToadAid Knowledge Forge Codex native approval transport socket
 [Socket]
 ListenStream=/run/toadaid-knowledge-forge/codex-operator.sock
 Accept=yes
-Service=knowledge-forge-operator@.service
 SocketUser=kf-operator
 SocketGroup=kf-agent
 SocketMode=0660

@@ -46,7 +46,7 @@ An optional second socket supports the Codex native-proof flow documented in
 [Codex native MCP promotion deployment](CODEX_NATIVE_MCP_DEPLOYMENT.md). It is
 accessible to `kf-agent`, but its protocol accepts only a signed native
 user-verification proof; it cannot run the typed human ceremony. The protected
-service checks the exact peer UID before selecting either protocol.
+native service checks its exact socket and peer UID before accepting proof operations; the existing human socket ACL remains unchanged.
 
 ## Candidate bundle
 
@@ -111,8 +111,8 @@ below remain required; this command is not an upgrade or certification tool.
    and is not group/other writable.
 5. The supplied service and socket units are root-owned, reviewed,
    daemon-reloaded and socket-activated only after adversarial UID/ACL tests.
-   Enable the optional Codex socket only after completing its separate native
-   credential enrollment and proof-path tests.
+   The Codex migration installs dormant units only; native enablement remains
+   blocked pending a separately reviewed supported UID transport and provider.
 6. The root-owned human client is available to reviewers but not installed in
    the ordinary agent command prefix.
 7. `kf-agent` cannot connect to the human-reviewer socket, read operator
@@ -132,3 +132,26 @@ The reference is Linux/systemd only. macOS authorization services and native
 Windows service/ACL/token implementations require separate threat models and
 must not reuse Linux peer-credential claims. Passing unit tests does not prove
 that a particular machine has been safely provisioned or activated.
+
+
+## Adding the trusted Codex-native lane to an existing deployment
+
+Follow the single [Codex native administrator workflow](CODEX_NATIVE_MCP_DEPLOYMENT.md).
+`install.sh --migrate-codex-native --reviewer HUMAN --commit FULL_SHA --plan`
+(or `--check`) inspects an existing protected baseline without changing it.
+The separate independent-root `--apply` installs only absent pinned native
+artifacts and leaves them dormant. It never resets state, updates existing
+human units, changes agent settings, enrolls, approves or promotes a package.
+Partial/unknown installations and incompatible engines refuse; preserve them
+for independent review. Do not rerun the initial installer on valuable state.
+
+The native socket uses its own matching `knowledge-forge-codex-operator@.service`,
+not the human service template. `/opt/toadaid-kf-agent` is a new pinned snapshot;
+ordinary installation does not create it. The read-only `--preflight` reports
+blocking/unknown evidence and never certifies a human-UID Desktop session.
+There is no safe supported Desktop cross-UID launcher in this repository;
+`--enable-socket` refuses. Credential enrollment, verified actual `kf-agent`
+transport, native provider availability, explicit future activation, MCP
+registration and a new session all require separate human/admin steps. TUI or
+generic popup success is not native verification. Governed promotion and
+explicit PERSONAL acceptance remain separate.
