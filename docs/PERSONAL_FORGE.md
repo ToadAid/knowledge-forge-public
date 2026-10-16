@@ -123,6 +123,8 @@ never a silent empty answer.
 | Permissions | directory `0700`, file `0600` |
 | Writes | atomic; deterministic canonical JSON bytes |
 | Self-digest | `entries_sha256` reverified on every load |
+| Single-writer coordination | `add`/`remove` hold a portable advisory lock (`personal-library.lock`, `flock`/`msvcrt`) across the whole read-modify-write; on contention the operation is explicitly refused, and another writer's entry is never silently dropped. Readers stay lock-free (atomic replace means every read sees one complete file) |
+| Read bounds | package artifacts are size-checked before reading (512 files / 64 MiB, 4096-entry scan cap, per-file and total byte caps), lifecycle records are bounded at 16 MiB, the library file at 64 MiB; any file that changes while being read fails closed |
 | Separate state | wholly outside the governed registry/state roots; no `registry.json` anywhere |
 | Removal | deletes the library reference only; package files are untouched |
 

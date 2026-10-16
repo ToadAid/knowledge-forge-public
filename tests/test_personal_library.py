@@ -9,6 +9,7 @@ from pathlib import Path
 import shutil
 import stat
 import tempfile
+import threading
 from typing import Any
 import unittest
 from unittest import mock
@@ -17,6 +18,7 @@ from _platform_support import (
     skip_unless_symlinks,
 )
 
+import knowledge_forge.personal_library as personal_library
 from knowledge_forge.agent_authoring import finalize_agent_draft
 from knowledge_forge.cli import build_parser, main
 from knowledge_forge.lifecycle import (
@@ -29,7 +31,11 @@ from knowledge_forge.lifecycle import (
 from knowledge_forge.personal_library import (
     PERSONAL_LIBRARY_SCHEMA_VERSION,
     PERSONAL_KNOWLEDGE_MODE,
+    PersonalLibraryError,
+    add_personal_entry,
     evidence_sha256,
+    load_personal_library,
+    remove_personal_entry,
 )
 from knowledge_forge.retrieval import HARD_MAX_UNITS_PER_TURN
 from knowledge_forge.validate import validate_skill_package
@@ -840,3 +846,315 @@ class PersonalLibraryTests(unittest.TestCase):
             ])
             self.assertEqual(rc, 2)
             self.assertFalse(err["ok"])
+
+class PersonalLibraryReliabilityTests(unittest.TestCase):
+    """Review repairs: single-writer library coordination (P1) and bounded
+    package/JSON reading (P2). Governed surfaces are not touched here."""
+
+    def _library(self, tmp: Path) -> Path:
+        return Path(tmp) / "library.json"
+
+    def _worker_add(
+        self,
+        out_root: Path,
+        library_path: Path,
+        results: dict,
+        errors: dict,
+    ) -> None:
+        try:
+            results[id(out_root)] = add_personal_entry(
+                out_root / "package",
+                out_root / "lifecycle.validated.json",
+                library_path=library_path,
+                accept=True,
+                added_at=STAMP,
+            )
+        except PersonalLibraryError as exc:
+            errors[id(out_root)] = str(exc)
+
+    def _run_two(self, target_a, target_b):
+        threads = [
+            threading.Thread(target=target_a, name="writer-a"),
+            threading.Thread(target=target_b, name="writer-b"),
+        ]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+
+    def test_two_concurrent_adds_preserve_both_entries(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            liquidity = _finalize_skill(root, "liquidity")
+            quorum = _finalize_skill(root, "quorum")
+            library_path = self._library(root)
+            results: dict = {}
+            errors: dict = {}
+            self._run_two(
+                lambda: self._worker_add(liquidity, library_path, results, errors),
+                lambda: self._worker_add(quorum, library_path, results, errors),
+            )
+            self.assertEqual(errors, {})
+            self.assertEqual(len(results), 2)
+            library = load_personal_library(library_path)
+            self.assertEqual(len(library["entries"]), 2)
+            for payload in results.values():
+                self.assertIn(payload["skill_id"], library["entries"])
+            expected_digest = evidence_sha256(dict(library["entries"]))
+            self.assertEqual(library["entries_sha256"], expected_digest)
+
+    def test_concurrent_duplicate_add_exactly_one_succeeds(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            liquidity = _finalize_skill(root, "liquidity")
+            library_path = self._library(root)
+            results: dict = {}
+            errors: dict = {}
+            self._run_two(
+                lambda: self._worker_add(liquidity, library_path, results, errors),
+                lambda: self._worker_add(liquidity, library_path, results, errors),
+            )
+            self.assertEqual(len(results) + len(errors), 2)
+            self.assertEqual(len(results), 1)
+            self.assertEqual(len(errors), 1)
+            self.assertIn("already in the personal library", next(iter(errors.values())))
+            library = load_personal_library(library_path)
+            self.assertEqual(len(library["entries"]), 1)
+
+    def test_concurrent_add_and_remove_race_preserves_updates(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            liquidity = _finalize_skill(root, "liquidity")
+            quorum = _finalize_skill(root, "quorum")
+            two_unit = _finalize_skill(root, "two-unit")
+            library_path = self._library(root)
+            add_personal_entry(
+                liquidity / "package",
+                liquidity / "lifecycle.validated.json",
+                library_path=library_path,
+                accept=True,
+                added_at=STAMP,
+            )
+            add_personal_entry(
+                quorum / "package",
+                quorum / "lifecycle.validated.json",
+                library_path=library_path,
+                accept=True,
+                added_at=STAMP,
+            )
+            results: dict = {}
+            errors: dict = {}
+            self._run_two(
+                lambda: self._worker_add(two_unit, library_path, results, errors),
+                lambda: self._worker(
+                    lambda: remove_personal_entry(
+                        "knowledge-forge:test:quorum@sha256"
+                        ":64d250a8b04c35396e2f0ba098ff034333347211d4f136348a1777eae0248cb5",
+                        library_path=library_path,
+                    ),
+                    results,
+                    errors,
+                ),
+            )
+            self.assertEqual(errors, {})
+            library = load_personal_library(library_path)
+            self.assertEqual(len(library["entries"]), 2)
+            self.assertFalse(
+                any("quorum" in skill_id for skill_id in library["entries"])
+            )
+            self.assertTrue(
+                any(item["lifecycle_state"] == VALIDATED
+                    for item in library["entries"].values())
+            )
+
+    def _worker(self, operation, results, errors):
+        try:
+            results.setdefault("__ops__", []).append(operation())
+        except PersonalLibraryError as exc:
+            errors.setdefault("__ops__", []).append(str(exc))
+            raise AssertionError("remove race must not fail") from exc
+
+    def test_concurrent_failed_add_leaves_library_valid(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            liquidity = _finalize_skill(root, "liquidity")
+            broken = _finalize_skill(root, "quorum")
+            manifest = json.loads(
+                (broken / "package" / "manifest.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            (broken / "package" / manifest["units"][0]["path"]).unlink()
+            library_path = self._library(root)
+            results: dict = {}
+            errors: dict = {}
+            self._run_two(
+                lambda: self._worker_add(liquidity, library_path, results, errors),
+                self._worker_add(broken, library_path, results, errors),
+            )
+            self.assertEqual(len(results), 1)
+            self.assertEqual(len(errors), 1)
+            self.assertIn("validation failed", next(iter(errors.values())))
+            library = load_personal_library(library_path)
+            self.assertEqual(len(library["entries"]), 1)
+            expected_digest = evidence_sha256(dict(library["entries"]))
+            self.assertEqual(library["entries_sha256"], expected_digest)
+
+    def test_write_lock_contention_refuses_without_modifying_library(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            liquidity = _finalize_skill(root, "liquidity")
+            library_path = self._library(root)
+            with mock.patch.object(
+                personal_library, "_PERSONAL_LOCK_TIMEOUT_SECONDS", 0.0
+            ):
+                lock_path = library_path.parent / "personal-library.lock"
+                held = os.open(lock_path, os.O_RDWR | os.O_CREAT, 0o600)
+                try:
+                    personal_library._acquire_write_lock(held)
+                    with self.assertRaisesRegex(
+                        PersonalLibraryError, "another personal library writer"
+                    ):
+                        add_personal_entry(
+                            liquidity / "package",
+                            liquidity / "lifecycle.validated.json",
+                            library_path=library_path,
+                            accept=True,
+                            added_at=STAMP,
+                        )
+                finally:
+                    os.close(held)
+            # Releasing the competing writer lets the operation succeed.
+            add_personal_entry(
+                liquidity / "package",
+                liquidity / "lifecycle.validated.json",
+                library_path=library_path,
+                accept=True,
+                added_at=STAMP,
+            )
+            library = load_personal_library(library_path)
+            self.assertEqual(len(library["entries"]), 1)
+
+    # --- P2: bounded package and JSON reading ---
+
+    def test_snapshot_refuses_oversized_artifact_before_reading(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            out_root = _finalize_skill(root, "liquidity")
+            with mock.patch.object(
+                personal_library, "MAX_PACKAGE_BYTES", 64
+            ):
+                with self.assertRaisesRegex(PersonalLibraryError, "byte limit"):
+                    personal_library._snapshot_package(out_root / "package")
+
+    def test_snapshot_refuses_too_many_files(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            out_root = _finalize_skill(root, "liquidity")
+            with mock.patch.object(personal_library, "MAX_PACKAGE_FILES", 2):
+                with self.assertRaisesRegex(PersonalLibraryError, "file limit"):
+                    personal_library._snapshot_package(out_root / "package")
+
+    def test_snapshot_refuses_excessive_directory_entries(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            out_root = _finalize_skill(root, "liquidity")
+            with mock.patch.object(
+                personal_library, "_PERSONAL_SCAN_ENTRY_LIMIT", 2
+            ):
+                with self.assertRaisesRegex(
+                    PersonalLibraryError, "directory entry scan limit"
+                ):
+                    personal_library._snapshot_package(out_root / "package")
+
+    @skip_unless_symlinks
+    def test_snapshot_refuses_symlink_artifact(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            out_root = _finalize_skill(root, "liquidity")
+            package = out_root / "package"
+            (package / "linked.json").symlink_to(package / "manifest.json")
+            with self.assertRaisesRegex(
+                PersonalLibraryError, "must not contain symlinks"
+            ):
+                personal_library._snapshot_package(package)
+
+    def test_snapshot_refuses_artifact_changed_during_inspection(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            out_root = _finalize_skill(root, "liquidity")
+            original = Path.read_bytes
+
+            def inflated(self):
+                return original(self) + b"tampered\n"
+
+            with mock.patch.object(Path, "read_bytes", inflated):
+                with self.assertRaisesRegex(
+                    PersonalLibraryError,
+                    "changed while being",
+                ):
+                    personal_library._snapshot_package(out_root / "package")
+
+    def test_add_refuses_oversized_lifecycle_record(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            out_root = _finalize_skill(root, "liquidity")
+            with mock.patch.object(
+                personal_library, "_MAX_LIFECYCLE_RECORD_BYTES", 8
+            ):
+                with self.assertRaisesRegex(PersonalLibraryError, "exceeds"):
+                    add_personal_entry(
+                        out_root / "package",
+                        out_root / "lifecycle.validated.json",
+                        library_path=self._library(root),
+                        accept=True,
+                        added_at=STAMP,
+                    )
+            self.assertFalse(self._library(root).exists())
+
+    def test_add_refuses_oversized_library_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            liquidity = _finalize_skill(root, "liquidity")
+            library_path = self._library(root)
+            add_personal_entry(
+                liquidity / "package",
+                liquidity / "lifecycle.validated.json",
+                library_path=library_path,
+                accept=True,
+                added_at=STAMP,
+            )
+            quorum = _finalize_skill(root, "quorum")
+            with mock.patch.object(personal_library, "_MAX_LIBRARY_BYTES", 256):
+                with self.assertRaisesRegex(PersonalLibraryError, "exceeds"):
+                    add_personal_entry(
+                        quorum / "package",
+                        quorum / "lifecycle.validated.json",
+                        library_path=library_path,
+                        accept=True,
+                        added_at=STAMP,
+                    )
+            library = load_personal_library(library_path)
+            self.assertEqual(len(library["entries"]), 1)
+
+    def test_governed_registry_state_untouched_by_concurrency_repair(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            liquidity = _finalize_skill(root, "liquidity")
+            library_path = self._library(root)
+            add_personal_entry(
+                liquidity / "package",
+                liquidity / "lifecycle.validated.json",
+                library_path=library_path,
+                accept=True,
+                added_at=STAMP,
+            )
+            remove_personal_entry(
+                "knowledge-forge:test:liquidity@sha256"
+                ":64d250a8b04c35396e2f0ba098ff034333347211d4f136348a1777eae0248cb5",
+                library_path=library_path,
+            )
+            self.assertEqual(
+                [p.name for p in root.rglob("registry.json")],
+                [],
+            )

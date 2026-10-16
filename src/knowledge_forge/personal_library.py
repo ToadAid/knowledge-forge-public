@@ -10,10 +10,17 @@ bytes and returns strictly untrusted knowledge data.
 ``--accept`` records explicit conversational acceptance. It is not proof of
 authenticated human identity, and library state is stamped to say so:
 ACCEPTED != AUTHENTICATED, VALIDATED != PROMOTED.
+
+Writers (add/remove) take a portable advisory lock for the whole
+read-modify-write transaction; on contention they refuse instead of ever
+silently dropping another writer's entry. Package, lifecycle, and library
+reads are size-bounded before reading and fail closed if files change
+during inspection.
 """
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 from copy import deepcopy
 from datetime import datetime, timezone
 from hashlib import sha256
@@ -22,8 +29,15 @@ import os
 from pathlib import Path
 import re
 import stat
+import sys
 import tempfile
+import time
 from typing import Any, Mapping
+
+if sys.platform == "win32":
+    import msvcrt
+else:
+    import fcntl
 
 from .consumer_discovery import GLOBAL_HARD_MAX_SKILLS_PER_QUERY
 from .lifecycle import (
@@ -54,6 +68,11 @@ PERSONAL_ACCEPTANCE_CHANNEL = (
     "CONVERSATIONAL_ACCEPTANCE_FLAG_NOT_AUTHENTICATED_HUMAN"
 )
 PERSONAL_TOOL_POLICY_RULE = "PERSONAL_MODE_GRANTS_NO_TOOLS"
+PERSONAL_LOCK_FILENAME = "personal-library.lock"
+_PERSONAL_LOCK_TIMEOUT_SECONDS = 10.0
+_PERSONAL_SCAN_ENTRY_LIMIT = 4096
+_MAX_LIFECYCLE_RECORD_BYTES = 16 * 1024 * 1024
+_MAX_LIBRARY_BYTES = 64 * 1024 * 1024
 
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
 _SPACE_RE = re.compile(r"\s+")
@@ -154,7 +173,107 @@ def _reject_symlink_components(path: Path, label: str) -> None:
             )
 
 
+def _acquire_write_lock(descriptor: int) -> None:
+    """Try to take the advisory writer lock; refuse after a bounded wait."""
+
+    deadline = time.monotonic() + _PERSONAL_LOCK_TIMEOUT_SECONDS
+    while True:
+        try:
+            if sys.platform == "win32":
+                os.lseek(descriptor, 0, os.SEEK_SET)
+                msvcrt.locking(descriptor, msvcrt.LK_NBLCK, 1)
+            else:
+                fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return
+        except OSError as exc:
+            if time.monotonic() >= deadline:
+                raise PersonalLibraryError(
+                    "another personal library writer is active; operation "
+                    "refused without modifying the library"
+                ) from exc
+            time.sleep(0.05)
+
+
+@contextmanager
+def _library_write_lock(path: Path):
+    """Single-writer coordination for the library read-modify-write
+    transaction (personal add / personal remove).
+
+    An advisory lock file next to the library — never deleted, content
+    meaningless — serializes writers across processes on both POSIX
+    (fcntl.flock) and native Windows (msvcrt.locking). Readers stay
+    lock-free: persistence is atomic via os.replace, so every read observes
+    exactly one complete library file. On lock timeout the operation is
+    explicitly refused and the library is left untouched; nothing silently
+    overwrites another writer's changes.
+    """
+
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    except OSError as exc:
+        raise PersonalLibraryError(
+            "personal library parent is unavailable"
+        ) from exc
+    lock_path = path.parent / PERSONAL_LOCK_FILENAME
+    _reject_symlink_components(lock_path, "personal library lock")
+    try:
+        open_flags = os.O_RDWR | os.O_CREAT
+        if hasattr(os, "O_NOFOLLOW"):
+            open_flags |= os.O_NOFOLLOW
+        descriptor = os.open(lock_path, open_flags, 0o600)
+    except OSError as exc:
+        raise PersonalLibraryError(
+            "personal library lock is unavailable"
+        ) from exc
+    try:
+        _acquire_write_lock(descriptor)
+        yield
+    finally:
+        try:
+            if sys.platform == "win32":
+                os.lseek(descriptor, 0, os.SEEK_SET)
+                msvcrt.locking(descriptor, msvcrt.LK_UNLCK, 1)
+            else:
+                fcntl.flock(descriptor, fcntl.LOCK_UN)
+        finally:
+            os.close(descriptor)
+
+
+def _read_bounded_bytes(path: Path, limit: int, label: str) -> bytes:
+    """Read a regular file only after pre-checking its size; fail closed
+    if the file changes between inspection and the completed read."""
+
+    try:
+        info = os.stat(path)
+    except OSError as exc:
+        raise PersonalLibraryError(f"{label} is unreadable: {path}") from exc
+    if not stat.S_ISREG(info.st_mode):
+        raise PersonalLibraryError(f"{label} must be a regular file: {path}")
+    if info.st_size > limit:
+        raise PersonalLibraryError(
+            f"{label} exceeds {limit} byte limit: {path}"
+        )
+    try:
+        payload = path.read_bytes()
+    except OSError as exc:
+        raise PersonalLibraryError(f"{label} is unreadable: {path}") from exc
+    if len(payload) != info.st_size:
+        raise PersonalLibraryError(f"{label} changed while being read: {path}")
+    return payload
+
+
 def _snapshot_package(package_root: str | Path) -> dict[str, bytes]:
+    """Bounded package snapshot.
+
+    Limits are enforced incrementally so a hostile or oversized tree is
+    refused before exhausting resources: each artifact's size is checked
+    before it is read, the file/byte caps apply as soon as they are passed,
+    the directory scan is capped and never materializes the full tree list,
+    and a post-read size check fails closed when an artifact changes during
+    inspection. The captured bytes are exactly the bytes later hashed and
+    validated.
+    """
+
     root = Path(package_root)
     if root.is_symlink() or not root.is_dir():
         raise PersonalLibraryError(
@@ -163,8 +282,14 @@ def _snapshot_package(package_root: str | Path) -> dict[str, bytes]:
 
     files: dict[str, bytes] = {}
     total = 0
-    paths = sorted(root.rglob("*"), key=lambda item: item.as_posix())
-    for path in paths:
+    scanned = 0
+    for path in root.rglob("*"):
+        scanned += 1
+        if scanned > _PERSONAL_SCAN_ENTRY_LIMIT:
+            raise PersonalLibraryError(
+                "personal package exceeds "
+                f"{_PERSONAL_SCAN_ENTRY_LIMIT} directory entry scan limit"
+            )
         if path.is_symlink():
             raise PersonalLibraryError(
                 "personal package must not contain symlinks"
@@ -177,11 +302,27 @@ def _snapshot_package(package_root: str | Path) -> dict[str, bytes]:
             )
         relative = path.relative_to(root).as_posix()
         try:
+            info = path.stat()
+        except OSError as exc:
+            raise PersonalLibraryError(
+                f"personal package artifact is unreadable: {relative}"
+            ) from exc
+        if info.st_size > MAX_PACKAGE_BYTES:
+            raise PersonalLibraryError(
+                f"personal package artifact exceeds {MAX_PACKAGE_BYTES} "
+                f"byte limit: {relative}"
+            )
+        try:
             payload = path.read_bytes()
         except OSError as exc:
             raise PersonalLibraryError(
                 f"personal package artifact is unreadable: {relative}"
             ) from exc
+        if len(payload) != info.st_size:
+            raise PersonalLibraryError(
+                "personal package artifact changed while being inspected: "
+                f"{relative}"
+            )
         files[relative] = payload
         total += len(payload)
         if len(files) > MAX_PACKAGE_FILES:
@@ -339,9 +480,12 @@ def load_personal_library(path_value: str | Path) -> dict[str, Any]:
         raise PersonalLibraryError(
             f"personal library does not exist: {path}"
         )
+    payload = _read_bounded_bytes(
+        path, _MAX_LIBRARY_BYTES, "personal library"
+    )
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        value = json.loads(payload.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise PersonalLibraryError(
             f"cannot read personal library: {path}"
         ) from exc
@@ -511,12 +655,9 @@ def add_personal_entry(
             f"validated lifecycle is not an existing regular file: "
             f"{record_path}"
         )
-    try:
-        record_bytes = record_path.read_bytes()
-    except OSError as exc:
-        raise PersonalLibraryError(
-            f"validated lifecycle is unreadable: {record_path}"
-        ) from exc
+    record_bytes = _read_bounded_bytes(
+        record_path, _MAX_LIFECYCLE_RECORD_BYTES, "validated lifecycle"
+    )
     record = _json_object(record_bytes, name="validated lifecycle")
     report = validate_lifecycle_record(record)
     if not report["valid"]:
@@ -544,14 +685,6 @@ def add_personal_entry(
     )
     _check_identity_binding(manifest, record)
 
-    skill_id = manifest["skill_id"]
-    library = _library_for_write(path)
-    if skill_id in library["entries"]:
-        raise PersonalLibraryError(
-            f"skill_id '{skill_id}' is already in the personal library; "
-            "remove it before re-adding"
-        )
-
     events = record["events"]
     entry = {
         "skill_id": manifest["skill_id"],
@@ -578,9 +711,17 @@ def add_personal_entry(
         },
         "lifecycle_record": deepcopy(dict(record)),
     }
-    library["entries"][skill_id] = entry
-    library["entries_sha256"] = evidence_sha256(dict(library["entries"]))
-    _save_library(library, path)
+    skill_id = manifest["skill_id"]
+    with _library_write_lock(path):
+        library = _library_for_write(path)
+        if skill_id in library["entries"]:
+            raise PersonalLibraryError(
+                f"skill_id '{skill_id}' is already in the personal library; "
+                "remove it before re-adding"
+            )
+        library["entries"][skill_id] = entry
+        library["entries_sha256"] = evidence_sha256(dict(library["entries"]))
+        _save_library(library, path)
 
     return {
         "schema_version": PERSONAL_LIBRARY_SCHEMA_VERSION,
@@ -664,14 +805,19 @@ def remove_personal_entry(
     path = _absolute_without_resolution(
         library_path if library_path is not None else default_library_path()
     )
-    library = _require_library(path)
-    if skill_id not in library["entries"]:
+    if not path.exists():
         raise PersonalLibraryError(
-            f"skill is not in the personal library: {skill_id}"
+            f"personal library does not exist: {path}"
         )
-    del library["entries"][skill_id]
-    library["entries_sha256"] = evidence_sha256(dict(library["entries"]))
-    _save_library(library, path)
+    with _library_write_lock(path):
+        library = load_personal_library(path)
+        if skill_id not in library["entries"]:
+            raise PersonalLibraryError(
+                f"skill is not in the personal library: {skill_id}"
+            )
+        del library["entries"][skill_id]
+        library["entries_sha256"] = evidence_sha256(dict(library["entries"]))
+        _save_library(library, path)
     return {
         "schema_version": PERSONAL_LIBRARY_SCHEMA_VERSION,
         "ok": True,
