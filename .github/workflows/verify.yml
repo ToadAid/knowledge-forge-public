@@ -90,6 +90,18 @@ jobs:
         run: '"%LOCALAPPDATA%\ToadAid\knowledge-forge\bin\knowledge-forge-authoring.exe" --help'
       - name: No operator surface was installed
         run: python -I -c "import os, pathlib, sys; root = pathlib.Path(os.environ['LOCALAPPDATA'], 'ToadAid', 'knowledge-forge'); hits = [str(p) for p in root.rglob('*operator*')]; names = sorted(p.name for p in (root / 'bin').iterdir()); print(names, hits); sys.exit(0 if not hits and names == ['knowledge-forge-authoring.exe', 'knowledge-forge.exe'] else 1)"
+      - name: Run Codex native approval bridge tests natively
+        env:
+          PYTHONPATH: src
+        run: python -m unittest discover -s tests -p test_codex_approval_bridge.py
+      - name: Run approval host security tests natively
+        env:
+          PYTHONPATH: src
+        run: python -m unittest discover -s tests -p test_approval_host.py
+      - name: Run generic host adapter tests natively
+        env:
+          PYTHONPATH: src
+        run: python -m unittest discover -s tests -p test_generic_host_adapter.py
       - name: Run complete Python standard-library suite natively
         env:
           PYTHONPATH: src
