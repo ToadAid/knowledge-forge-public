@@ -270,7 +270,10 @@ def _read_bounded_bytes(path: Path, limit: int, label: str) -> bytes:
     except OSError as exc:
         raise PersonalLibraryError(f"{label} is unreadable: {path}") from exc
     try:
-        info = os.fstat(descriptor)
+        # Windows can expose stale/unstable fstat metadata immediately after
+        # a rewrite. Path stat matches the native Windows file-size contract
+        # previously used here; bounded os.read still enforces the hard cap.
+        info = os.stat(path) if sys.platform == "win32" else os.fstat(descriptor)
         if not stat.S_ISREG(info.st_mode):
             raise PersonalLibraryError(
                 f"{label} must be a regular file: {path}"
@@ -287,27 +290,26 @@ def _read_bounded_bytes(path: Path, limit: int, label: str) -> bytes:
                 break
             payload.extend(chunk)
             remaining -= len(chunk)
-        final = os.fstat(descriptor)
         if len(payload) > limit:
             raise PersonalLibraryError(
                 f"{label} exceeds {limit} byte limit: {path}"
             )
-        if (
-            len(payload) != info.st_size
-            or final.st_size != info.st_size
-            or (
-                sys.platform != "win32"
-                and (
-                    final.st_mtime_ns != info.st_mtime_ns
-                    or final.st_ctime_ns != info.st_ctime_ns
-                )
-            )
-            or final.st_dev != info.st_dev
-            or final.st_ino != info.st_ino
-        ):
+        if len(payload) != info.st_size:
             raise PersonalLibraryError(
                 f"{label} changed while being read: {path}"
             )
+        if sys.platform != "win32":
+            final = os.fstat(descriptor)
+            if (
+                final.st_size != info.st_size
+                or final.st_mtime_ns != info.st_mtime_ns
+                or final.st_ctime_ns != info.st_ctime_ns
+                or final.st_dev != info.st_dev
+                or final.st_ino != info.st_ino
+            ):
+                raise PersonalLibraryError(
+                    f"{label} changed while being read: {path}"
+                )
         return bytes(payload)
     except OSError as exc:
         raise PersonalLibraryError(f"{label} is unreadable: {path}") from exc
