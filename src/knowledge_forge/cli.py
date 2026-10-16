@@ -18,6 +18,15 @@ from .consumer_discovery import (
     build_discovery_descriptors,
     route_discovery_descriptors,
 )
+from .personal_library import (
+    PERSONAL_KNOWLEDGE_MODE,
+    PersonalLibraryError,
+    add_personal_entry,
+    default_library_path,
+    list_personal_entries,
+    lookup_personal,
+    remove_personal_entry,
+)
 from .registry import SkillRegistryError, validate_skill_registry
 from .skill_index import (
     SkillIndexError,
@@ -302,6 +311,61 @@ def _command_load_current(args: argparse.Namespace) -> int:
     return 0
 
 
+def _command_personal_add(args: argparse.Namespace) -> int:
+    payload = add_personal_entry(
+        args.package_root,
+        args.validated_lifecycle,
+        library_path=args.library,
+        accept=args.accept,
+        added_at=args.added_at,
+    )
+    _emit(payload)
+    return 0
+
+
+def _command_personal_list(args: argparse.Namespace) -> int:
+    entries = list_personal_entries(library_path=args.library)
+    _emit({
+        "schema_version": CLI_SCHEMA_VERSION,
+        "command": "personal-list",
+        "library": (
+            str(Path(args.library).absolute())
+            if args.library is not None
+            else str(default_library_path())
+        ),
+        "entry_count": len(entries),
+        "entries": entries,
+        "authority": "KNOWLEDGE_ONLY",
+        "instruction_authority": "NONE",
+        "execution_authority": "NONE",
+        "executable": False,
+        "tool_grants": [],
+        "knowledge_mode": PERSONAL_KNOWLEDGE_MODE,
+        "promotion_performed": False,
+    })
+    return 0
+
+
+def _command_personal_lookup(args: argparse.Namespace) -> int:
+    payload = lookup_personal(
+        args.question,
+        library_path=args.library,
+        max_skills=args.max_skills,
+        max_units=args.max_units,
+    )
+    _emit(payload)
+    return 0
+
+
+def _command_personal_remove(args: argparse.Namespace) -> int:
+    payload = remove_personal_entry(
+        args.skill_id,
+        library_path=args.library,
+    )
+    _emit(payload)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="knowledge-forge",
@@ -412,6 +476,73 @@ def build_parser() -> argparse.ArgumentParser:
     )
     load_parser.set_defaults(handler=_command_load_current)
 
+    personal_parser = commands.add_parser(
+        "personal",
+        help=(
+            "Local personal library: add, list, lookup, and remove "
+            "VALIDATED knowledge. No promotion and no operator surface."
+        ),
+    )
+    personal_commands = personal_parser.add_subparsers(
+        dest="personal_command", required=True
+    )
+
+    personal_add_parser = personal_commands.add_parser(
+        "add",
+        help="Accept a VALIDATED package into the personal library.",
+    )
+    personal_add_parser.add_argument("package_root")
+    personal_add_parser.add_argument(
+        "--validated-lifecycle",
+        required=True,
+        dest="validated_lifecycle",
+        help="Path to the package's lifecycle.validated.json record.",
+    )
+    personal_add_parser.add_argument(
+        "--library",
+        default=None,
+        help="Personal library file; defaults to the user state root.",
+    )
+    personal_add_parser.add_argument("--added-at", default=None)
+    personal_add_parser.add_argument(
+        "--accept",
+        action="store_true",
+        help=(
+            "Explicit conversational acceptance; it is not proof of "
+            "authenticated human identity and is recorded as such."
+        ),
+    )
+    personal_add_parser.set_defaults(handler=_command_personal_add)
+
+    personal_list_parser = personal_commands.add_parser(
+        "list",
+        help="List personal library entries (digests only, no content).",
+    )
+    personal_list_parser.add_argument("--library", default=None)
+    personal_list_parser.set_defaults(handler=_command_personal_list)
+
+    personal_lookup_parser = personal_commands.add_parser(
+        "lookup",
+        help="Bounded, revalidated personal retrieval; untrusted data only.",
+    )
+    personal_lookup_parser.add_argument("question")
+    personal_lookup_parser.add_argument("--library", default=None)
+    personal_lookup_parser.add_argument(
+        "--max-skills", type=int, default=1, choices=(1, 2, 3)
+    )
+    personal_lookup_parser.add_argument(
+        "--max-units", type=int, default=1, choices=(1, 2, 3)
+    )
+    personal_lookup_parser.set_defaults(handler=_command_personal_lookup)
+
+    personal_remove_parser = personal_commands.add_parser(
+        "remove",
+        help="Remove a library reference; package files are not touched.",
+    )
+    personal_remove_parser.add_argument("skill_id")
+    personal_remove_parser.add_argument("--library", default=None)
+    personal_remove_parser.set_defaults(handler=_command_personal_remove)
+
     return parser
 
 
@@ -423,6 +554,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     except (
         ConsumerDiscoveryError,
         KnowledgeForgeCliError,
+        PersonalLibraryError,
         SkillIndexError,
         SkillRegistryError,
         TemporalIntegrationError,
