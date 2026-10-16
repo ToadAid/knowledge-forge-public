@@ -57,6 +57,12 @@ from .validate import PackageValidationError, validate_or_raise
 MAX_APPROVAL_JSON_BYTES = 1024 * 1024
 MAX_LIFECYCLE_JSON_BYTES = 16 * 1024 * 1024
 MAX_PACKAGE_ENTRIES = 4096
+_APPROVE_FROM_DIR_FILES = (
+    "approval-request.json",
+    "approval-evidence.json",
+    "current-candidate.json",
+    "approval-host-decision.json",
+)
 
 
 class ApprovalHostCliError(ValueError):

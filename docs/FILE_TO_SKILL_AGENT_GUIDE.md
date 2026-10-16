@@ -127,9 +127,18 @@ When the user requests "promote", "send for approval", or similar:
    and supplies no path or digest. The host sends its signed decision directly
    to the protected completion API; ordinary chat text such as `APPROVE` is
    intent only and is not an authorization input. See
-   `docs/INLINE_APPROVAL.md`. When no independently trusted host UI is
-   configured, the answer stays the exact missing dependency—never a
-   paraphrased success or a same-UID TTY fallback.
+   `docs/INLINE_APPROVAL.md`.
+   Where instead the human operates a real terminal, point them at the
+   **one-word host flow**: `approve <request-dir>` (`docs/APPROVE_TUI.md`).
+   Stage the request artifacts plus the validated bundle
+   (`<request-dir>/` and `<request-dir>/promotion-bundle/`), then tell the
+   user: "*Ready — type `approve` and confirm in your terminal.*" **The agent
+   never runs `approve` itself and never needs to be in the loop after
+   staging**; the card, the typed `APPROVE <token>` phrase and the real
+   promotion all happen in the user's own TTY (shared-account independence is
+   procedural, and the TUI says so). When no independently trusted host UI or
+   terminal is configured, the answer stays the exact missing dependency —
+   never a paraphrased success.
 
 If an actual authenticated promotion host and transport have not been built
 and tested, this workflow **ends at a validated candidate with a review

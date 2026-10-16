@@ -5,10 +5,23 @@
 - Added the command-free inline approval adapter for trusted hosts. Agents can
   prepare a bounded review card, but ordinary chat and agent-created TTYs
   cannot authorize or promote. A native host Approve event produces the
-  signed decision consumed by the existing single-use approval host. Removed
-  the duplicate same-UID `bin/approve` ceremony, moved decisions out of
-  agent-staged directories, added bounded no-follow reads, serialized host
-  promotions, and made lifecycle/receipt output paths immutable per request.
+  signed decision consumed by the existing single-use approval host. Moved
+  decisions out of agent-staged directories, added bounded no-follow reads,
+  serialized host promotions, and made lifecycle/receipt output paths
+  immutable per request.
+- Restored the one-word interactive approval TUI (`bin/approve`,
+  `python3 -m knowledge_forge.approve_tui`; docs/APPROVE_TUI.md): the
+  ordinary-user terminal surface of the approval-host contract, back after
+  its accidental removal. One administrator `approve --setup` creates the
+  0700 state root, a generated 0600 host key and an initialized governed
+  registry; everyday use shows the approval card in the user's own terminal,
+  requires a typed `APPROVE <request-digest token>` (bounded mismatches,
+  fail-closed EOF, expired-refused-before-prompt, `REJECT` records a signed
+  no-op), signs the host decision with the key this process holds, and drives
+  the unchanged verified pipeline (signature, expiry, binding, single-use
+  ledger, engine) to a real PROMOTED registry transition. The agent can stage
+  and request but never runs the flow; when the host shares the account with
+  the agent the independence is procedural, not OS-level, and says so.
 
 - Added the approval-host contract (APPROVAL UX P1): chat can request skill
   promotion (`approval.build_approval_request`, unchanged review-only

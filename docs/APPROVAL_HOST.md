@@ -7,8 +7,16 @@ dependency instead of approving anything.**
 **Ordinary-user integration:** `inline_approval.prepare_inline_approval`
 returns one native-host card; the host renders Approve/Reject in the existing
 conversation and calls `complete_inline_promotion` only with its own signed
-decision. There is deliberately no same-UID `approve` command or TTY fallback.
-See `docs/INLINE_APPROVAL.md`.
+decision. See `docs/INLINE_APPROVAL.md`.
+
+**Ordinary-user terminal cut:** the human's own terminal is already a trusted
+host — `bin/approve` (`docs/APPROVE_TUI.md`) wraps this same contract into one
+interactive word: card → typed `APPROVE <token>` → real promotion. When the
+approval shares the user's account with the agent, its independence is
+procedural (real TTY, typed phrase, agent never runs it), not OS-level, and
+it says so. The host-key/CLI contract below remains the deployment shape for
+hosted heads (ToadAid-app and friends); both drive the identical signing,
+single-use ledger and unchanged engine.
 
 ## What this solves
 
