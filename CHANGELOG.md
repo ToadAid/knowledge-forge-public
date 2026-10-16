@@ -2,6 +2,16 @@
 
 ## Unreleased — initial open-source source snapshot
 
+- Add explicit administrator-only `install.sh --deploy-protected` for initial
+  Linux/systemd deployment: create or verify locked role accounts, install
+  code from an exact reviewed Git commit, initialize operator-owned state,
+  install socket/service/reviewer units and optionally activate system sockets.
+  Existing protected targets are preserved by refusal. The selected human
+  starts their desktop broker; agent settings, model identity, native credential
+  enrollment and package approvals are never changed by deployment. Synthetic
+  tests cover role restrictions, pinned snapshots, cancellation, preservation,
+  failure ordering and activation; a live deployment still needs verification.
+
 - Fix the zenity approval card failing before any decision on Linux:
   zenity/GTK renders dialog text as Pango markup, and the decision dialogs
   sent raw text containing `&` (e.g. "Approve this promotion? [Approve &

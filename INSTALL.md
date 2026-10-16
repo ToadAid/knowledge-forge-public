@@ -100,6 +100,15 @@ it does not deploy services or establish a verified approval system. See
 handling and remaining deployment requirements. Agents must not execute the
 privileged mode or collect administrator passwords.
 
+For accounts **and** Linux protected service deployment in one independently
+reviewed administrator operation, use the separate `--deploy-protected` mode
+with an exact reviewed commit and explicit human reviewer. `--enable-services`
+opts into system socket activation. Existing role accounts can be reused after
+restriction checks. The selected human still starts their desktop broker, and
+actual model execution/request transport must be independently isolated under
+`kf-agent`; no agent settings are changed. See
+[full deployment instructions](docs/INSTALL_SH.md#deploy-accounts-and-the-protected-service-together-linuxsystemd).
+
 The POSIX installer checks that the checkout-local operator CLI exists and
 starts, but does not install it into the ordinary agent prefix. The native
 Windows installer never runs the operator at all; its doctor runs only the two

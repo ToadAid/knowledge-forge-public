@@ -93,7 +93,12 @@ read-only findings, and deployment plan from
 The administrator reviews and provisions from a **separate agent-inaccessible
 console**. The agent may prepare the handoff but must not execute a root
 provisioning script, create the accounts itself, launch a reviewer as the human,
-or run a fake approval. There is no combined privileged installer in this flow.
+or run a fake approval. Ordinary agent installation never performs privileged
+deployment. The separate administrator-only `install.sh --deploy-protected`
+mode can create or verify accounts and install the reference services together,
+with explicit reviewer, commit pin, and optional system-socket activation.
+It must be reviewed and run only from that independent console; it cannot
+certify isolation, migrate the current agent, or approve a package.
 
 The administrator may review the account-only convenience script described in
 [INSTALL_SH.md](INSTALL_SH.md). Its `--create-protected-accounts --plan` mode is
