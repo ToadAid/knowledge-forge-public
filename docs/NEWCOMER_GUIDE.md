@@ -20,8 +20,13 @@ Or tell your agent:
 Install https://github.com/ToadAid/knowledge-forge-public in my private
 persistent workspace, following INSTALL.md and INSTALL_AGENT.md.
 Install only the ordinary consumer and authoring commands; check --help.
-Do not overwrite my agent configuration, enable a service, install an
-operator, promote knowledge, or publish my source. Show installed paths.
+Read docs/AGENT_SETUP.md and run its read-only setup helper. Explain optional
+protected approval and ask whether I want separate kf-agent and kf-operator
+accounts, unless I have already chosen Personal Forge only.
+Do not overwrite my agent configuration, promote knowledge, or publish my
+source. Ordinary installation must not create accounts, enable services or
+install an operator. If I choose protected setup, prepare the separate
+administrator handoff first. Show installed paths.
 ```
 
 **Linux / macOS / WSL:**
@@ -50,6 +55,19 @@ bin\knowledge-forge-install-agent.cmd
 The installed shims point at the original checkout; keep it in place.
 For custom/private paths and exact Windows requirements, see
 [INSTALL_AGENT.md](../INSTALL_AGENT.md).
+
+### Optional protected approval setup
+
+As part of onboarding, the agent follows [AGENT_SETUP.md](AGENT_SETUP.md) and
+runs `bin/knowledge-forge-setup --check-only`. Unless you have already chosen,
+it asks whether you want protected promotion with approval popups, explaining
+that you or an independent administrator must create separate `kf-agent` and
+`kf-operator` accounts and keep your human reviewer account distinct.
+
+Personal Forge works without that setup. Choosing protected setup prepares an
+administrator handoff; it does not create accounts, enable services, change
+agent settings or approve packages. The protected daemon reference is currently
+Linux/systemd only; ordinary Windows/macOS installation remains available.
 
 ## 2. Forge and validate a document
 

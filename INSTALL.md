@@ -28,6 +28,12 @@ package, request your explicit local acceptance, use `personal add --accept`,
 and query `personal lookup` for source-linked knowledge. This does **not**
 require a PROMOTED registry or separate protected operator.
 
+Agent onboarding also offers [optional protected setup](docs/AGENT_SETUP.md).
+The read-only `bin/knowledge-forge-setup --check-only` helper shows prerequisites
+and the question about separate `kf-agent` / `kf-operator` accounts. The agent
+asks once, respecting prior choices. A yes leads to an independent administrator
+handoff; ordinary installation still creates no accounts or services.
+
 If you are implementing independently authenticated *governed* consumption,
 see [advanced generic host integration](docs/GENERIC_AGENT_INTEGRATION.md).
 

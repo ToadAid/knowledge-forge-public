@@ -54,6 +54,9 @@ class AgentInstallerTests(unittest.TestCase):
             self.assertFalse(payload["consumer_cli_installed"])
             self.assertFalse(payload["authoring_cli_installed"])
             self.assertFalse(payload["operator_cli_installed"])
+            self.assertEqual(payload["agent_setup_guide"], str(REPO_ROOT / "docs/AGENT_SETUP.md"))
+            self.assertEqual(payload["agent_setup_helper"], str(REPO_ROOT / "bin/knowledge-forge-setup"))
+            self.assertFalse(payload["protected_promotion_installed_by_this_command"])
             self.assertEqual(
                 payload["promotion_authority"],
                 "EXTERNAL_AUTHENTICATED_HUMAN_HOST_ONLY",
@@ -88,6 +91,7 @@ class AgentInstallerTests(unittest.TestCase):
             self.assertTrue(consumer.is_file())
             self.assertTrue(authoring.is_file())
             self.assertFalse(operator.exists())
+            self.assertFalse((prefix / "bin" / "knowledge-forge-setup").exists())
             self.assertTrue(os.access(consumer, os.X_OK))
             self.assertTrue(os.access(authoring, os.X_OK))
 

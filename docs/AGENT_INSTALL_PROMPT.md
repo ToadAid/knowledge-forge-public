@@ -21,6 +21,7 @@ lifecycle.
 Read first:
 - README.md
 - INSTALL_AGENT.md
+- docs/AGENT_SETUP.md
 - docs/GENERIC_AGENT_INTEGRATION.md
 - DOCTRINE.md
 
@@ -57,6 +58,14 @@ Installation:
    `knowledge-forge-authoring --help` surfaces.
 6. Confirm there is NO installed `knowledge-forge-operator` in the generic
    prefix.
+   Run the read-only bin/knowledge-forge-setup --check-only and follow
+   docs/AGENT_SETUP.md. If the user has not already chosen, explain Personal
+   Forge versus protected popup approval and ask whether they want separate
+   kf-agent / kf-operator accounts with a distinct human reviewer. Respect a
+   previous personal-only/no-service choice; if protected integration was
+   already requested, prepare the administrator handoff without re-asking.
+   Do not create accounts, invoke sudo provisioning, enable services or alter
+   agent settings. Protected provisioning is a separate administrator ceremony.
 7. Build a thin host adapter using the provider-neutral seam documented in
    docs/GENERIC_AGENT_INTEGRATION.md. Do not depend on Agent0/Agent1 adapters.
 8. Keep a trusted mapping from current promoted skill identity to local package

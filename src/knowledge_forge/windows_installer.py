@@ -664,6 +664,9 @@ def run(argv: Sequence[str], checks: Optional[HostChecks] = None) -> dict:
 
     common = {
         "schema_version": SCHEMA_VERSION,
+        "agent_setup_guide": ntpath.join(checkout, "docs", "AGENT_SETUP.md"),
+        "agent_setup_helper": ntpath.join(checkout_src, "knowledge_forge", "agent_setup.py"),
+        "protected_promotion_installed_by_this_command": False,
         "distribution": "CHECKOUT_LOCAL",
         "checkout_root": checkout,
         "prefix": prefix,
