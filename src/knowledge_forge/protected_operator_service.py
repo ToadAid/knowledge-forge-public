@@ -1,9 +1,11 @@
 """Linux protected promotion service core.
 
 This module is authority-bearing only when deployed as root-owned code, run as
-the dedicated ``kf-operator`` account, and reached through a systemd-owned Unix
-socket that excludes ``kf-agent``.  The generic agent installer never exposes
-it.  Development imports and unit tests do not establish that boundary.
+the dedicated ``kf-operator`` account, and reached through the supplied
+systemd-owned Unix sockets. The human socket excludes ``kf-agent``; the Codex
+socket admits that exact UID only to a proof-verifying protocol. The generic
+agent installer never exposes the operator. Development imports and unit tests
+do not establish that boundary.
 """
 
 from __future__ import annotations
@@ -26,6 +28,8 @@ import struct
 from typing import Any, Mapping
 
 from .candidate_preview import preview_validated_candidate
+from .codex_credential_registry import verify_registered_proof
+from .codex_mcp_approval import _proof_from_response
 from .operator_promotion import (
     OperatorAuthorization,
     persist_operator_promotion,
@@ -36,6 +40,7 @@ from .registry import load_skill_registry, registry_bytes
 
 CONFIG_PATH = Path("/etc/toadaid-kf/operator.json")
 SOCKET_PATH = Path("/run/toadaid-knowledge-forge/operator.sock")
+CODEX_SOCKET_PATH = Path("/run/toadaid-knowledge-forge/codex-operator.sock")
 MAX_FRAME_BYTES = 96 * 1024 * 1024
 MAX_PACKAGE_FILES = 512
 MAX_PACKAGE_BYTES = 64 * 1024 * 1024
@@ -80,6 +85,15 @@ class PromotionSession:
     preview: Mapping[str, Any]
     registry_sha256: str
     policy: OperatorPolicy
+
+
+@dataclass(frozen=True)
+class CodexPromotionSession:
+    promotion: PromotionSession
+    challenge: str
+    title: str
+    description: str
+    expires_at: str
 
 
 def _json_bytes(value: Any) -> bytes:
@@ -175,6 +189,20 @@ def peer_identity(connection: socket.socket, *, operator_uid: int, agent_uid: in
     except KeyError as exc:
         raise ProtectedOperatorError("peer UID has no local account identity") from exc
     return PeerIdentity(pid=pid, uid=uid, gid=gid, principal=principal)
+
+
+def agent_peer_identity(
+    connection: socket.socket, *, operator_uid: int, agent_uid: int
+) -> PeerIdentity:
+    try:
+        pid, uid, gid = struct.unpack(
+            "3i", connection.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12)
+        )
+    except (OSError, struct.error) as exc:
+        raise ProtectedOperatorError("cannot authenticate Unix peer credentials") from exc
+    if uid != agent_uid or uid in (0, operator_uid):
+        raise ProtectedOperatorError("Codex transport peer must be the configured agent UID")
+    return PeerIdentity(pid=pid, uid=uid, gid=gid, principal="codex-agent-transport")
 
 
 def send_frame(connection: socket.socket, value: Mapping[str, Any]) -> None:
@@ -451,6 +479,173 @@ def prepare_promotion(request: Mapping[str, Any], *, policy: OperatorPolicy,
     return session, challenge
 
 
+def prepare_codex_promotion(
+    request: Mapping[str, Any], *, policy: OperatorPolicy,
+    peer: PeerIdentity, now: datetime
+) -> tuple[CodexPromotionSession, dict[str, Any]]:
+    """Prepare an operator-owned native challenge for the agent transport."""
+
+    if set(request) != {"operation", "bundle"} or request.get("operation") != "PREPARE_CODEX":
+        raise ProtectedOperatorError("unsupported Codex operator request")
+    files, lifecycle, bundle_sha = decode_bundle(request["bundle"])
+    preview = preview_validated_candidate(files, lifecycle, observed_at=_stamp(now))
+    registry_path = policy.state_root / "registry.json"
+    registry = load_skill_registry(registry_path)
+    registry_sha = _sha(registry_bytes(registry))
+    title = "Approve Knowledge Forge promotion"
+    expires_at = _stamp(now + timedelta(seconds=CHALLENGE_SECONDS))
+    description = (
+        "Promote exactly this validated knowledge skill once.\n"
+        f"Skill: {preview['skill_id']}\n"
+        f"Version: {preview['skill_version']}\n"
+        f"Package: {preview['package_receipt_sha256']}\n"
+        f"Registry: {registry_sha}\n"
+        f"Expires: {expires_at}"
+    )
+    nonce = secrets.token_hex(32)
+    challenge_payload = {
+        "schema_version": "0.1",
+        "kind": "KNOWLEDGE_FORGE_CODEX_PROTECTED_PROMOTION",
+        "nonce": nonce,
+        "bundle_sha256": bundle_sha,
+        "registry_sha256": registry_sha,
+        "skill_id": preview["skill_id"],
+        "skill_version": preview["skill_version"],
+        "title": title,
+        "description": description,
+        "expires_at": expires_at,
+    }
+    challenge = base64.urlsafe_b64encode(_json_bytes(challenge_payload)).decode("ascii").rstrip("=")
+    ledger = ProtectedLedger(policy.state_root / "authorizations.sqlite3")
+    challenge_id, ledger_expiry = ledger.issue(
+        bundle_sha256=bundle_sha,
+        registry_sha256=registry_sha,
+        peer_uid=peer.uid,
+        token=nonce,
+        now=now,
+    )
+    if ledger_expiry != expires_at:
+        raise ProtectedOperatorError("native challenge expiry mismatch")
+    promotion = PromotionSession(
+        challenge_id=challenge_id,
+        token=nonce,
+        peer=peer,
+        files=files,
+        lifecycle=lifecycle,
+        preview=preview,
+        registry_sha256=registry_sha,
+        policy=policy,
+    )
+    session = CodexPromotionSession(
+        promotion=promotion,
+        challenge=challenge,
+        title=title,
+        description=description,
+        expires_at=expires_at,
+    )
+    request_id = f"codex-protected:{challenge_id}"
+    return session, {
+        "status": "AWAITING_CODEX_NATIVE_USER_VERIFICATION",
+        "challenge_id": challenge_id,
+        "elicitation": {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "method": "elicitation/create",
+            "params": {
+                "mode": "openai/userVerification",
+                "challenge": challenge,
+                "title": title,
+                "description": description,
+            },
+        },
+    }
+
+
+def confirm_codex_promotion(
+    session: CodexPromotionSession,
+    response: Mapping[str, Any],
+    *,
+    now: datetime,
+) -> dict[str, Any]:
+    """Verify one native proof inside the operator boundary and promote."""
+
+    if set(response) != {"operation", "challenge_id", "elicitation_response"}:
+        raise ProtectedOperatorError("Codex completion fields mismatch")
+    promotion = session.promotion
+    if (
+        response.get("operation") != "COMPLETE_CODEX"
+        or response.get("challenge_id") != promotion.challenge_id
+    ):
+        raise ProtectedOperatorError("Codex completion binding mismatch")
+    expected_id = f"codex-protected:{promotion.challenge_id}"
+    try:
+        proof = _proof_from_response(
+            response["elicitation_response"], expected_request_id=expected_id
+        )["proof"]
+        principal = verify_registered_proof(
+            promotion.policy.state_root / "codex-credentials.json",
+            session.challenge,
+            proof["credentialId"],
+            proof["signature"],
+        )
+    except Exception as exc:
+        raise ProtectedOperatorError("Codex native proof verification failed") from exc
+
+    with _promotion_lock(promotion.policy.state_root):
+        registry_path = promotion.policy.state_root / "registry.json"
+        current_registry = load_skill_registry(registry_path)
+        current_registry_sha = _sha(registry_bytes(current_registry))
+        ledger = ProtectedLedger(promotion.policy.state_root / "authorizations.sqlite3")
+        ledger.consume(
+            challenge_id=promotion.challenge_id,
+            peer_uid=promotion.peer.uid,
+            token=promotion.token,
+            registry_sha256=current_registry_sha,
+            now=now,
+        )
+        try:
+            result = promote_validated_skill(
+                current_registry,
+                _package_json(promotion.files, "manifest.json"),
+                promotion.lifecycle,
+                _package_json(promotion.files, "claim-index.json"),
+                _package_json(promotion.files, "SOURCE_RECEIPT.json"),
+                authorization=OperatorAuthorization(
+                    principal_ref=principal,
+                    authorization_ref=f"codex-native:{promotion.challenge_id}",
+                    verified_by_host=True,
+                ),
+                decision_ref=f"codex-device-proof:{promotion.challenge_id}",
+                occurred_at=_stamp(now),
+            )
+            name = sha256(promotion.preview["skill_id"].encode("utf-8")).hexdigest()
+            paths = persist_operator_promotion(
+                result,
+                registry_path=registry_path,
+                promoted_lifecycle_path=(
+                    promotion.policy.state_root / "lifecycles"
+                    / f"{name}.v{promotion.preview['skill_version']}.json"
+                ),
+                receipt_path=(
+                    promotion.policy.state_root / "receipts"
+                    / f"{promotion.challenge_id}.json"
+                ),
+            )
+            receipt_sha = _sha(Path(paths["receipt"]).read_bytes())
+        except Exception:
+            ledger.finish(promotion.challenge_id, receipt_sha256=None)
+            raise
+        ledger.finish(promotion.challenge_id, receipt_sha256=receipt_sha)
+    return {
+        "status": "PROMOTED",
+        "skill_id": promotion.preview["skill_id"],
+        "skill_version": promotion.preview["skill_version"],
+        "principal": principal,
+        "receipt_sha256": receipt_sha,
+        "paths": paths,
+    }
+
+
 def confirm_promotion(session: PromotionSession, response: Mapping[str, Any], *,
                       now: datetime) -> dict[str, Any]:
     if set(response) != {"challenge_id", "confirmation"} or response.get("challenge_id") != session.challenge_id:
@@ -510,9 +705,22 @@ def confirm_promotion(session: PromotionSession, response: Mapping[str, Any], *,
 
 
 def handle_connection(connection: socket.socket, *, policy: OperatorPolicy,
-                      peer: PeerIdentity, now_fn=_now) -> None:
+                      peer: PeerIdentity, initial_request: Mapping[str, Any] | None = None,
+                      now_fn=_now) -> None:
+    request = initial_request if initial_request is not None else recv_frame(connection)
+    if request.get("operation") == "PREPARE_CODEX":
+        native_session, native_challenge = prepare_codex_promotion(
+            request, policy=policy, peer=peer, now=now_fn()
+        )
+        send_frame(connection, native_challenge)
+        connection.settimeout(CHALLENGE_SECONDS + 5)
+        result = confirm_codex_promotion(
+            native_session, recv_frame(connection), now=now_fn()
+        )
+        send_frame(connection, result)
+        return
     session, challenge = prepare_promotion(
-        recv_frame(connection), policy=policy, peer=peer, now=now_fn()
+        request, policy=policy, peer=peer, now=now_fn()
     )
     send_frame(connection, challenge)
     connection.settimeout(CHALLENGE_SECONDS + 5)
@@ -531,11 +739,21 @@ def handle_connection(connection: socket.socket, *, policy: OperatorPolicy,
 def serve_connected_socket(connection: socket.socket) -> None:
     policy = _load_policy()
     operator_uid, agent_uid = verify_runtime(policy)
-    peer = peer_identity(connection, operator_uid=operator_uid, agent_uid=agent_uid)
     os.umask(0o077)
     try:
         connection.settimeout(INITIAL_REQUEST_SECONDS)
-        handle_connection(connection, policy=policy, peer=peer)
+        request = recv_frame(connection)
+        if request.get("operation") == "PREPARE_CODEX":
+            peer = agent_peer_identity(
+                connection, operator_uid=operator_uid, agent_uid=agent_uid
+            )
+        else:
+            peer = peer_identity(
+                connection, operator_uid=operator_uid, agent_uid=agent_uid
+            )
+        handle_connection(
+            connection, policy=policy, peer=peer, initial_request=request
+        )
     except Exception as exc:
         try:
             send_frame(connection, {"status": "REFUSED", "error": str(exc)})

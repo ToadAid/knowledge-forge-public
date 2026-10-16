@@ -74,7 +74,10 @@ revalidation. A no-match must be reported, not invented away.
 [optional governed promotion](#advanced-optional-human-review-and-governed-promotion).
 The experimental [Codex native verification bridge](docs/CODEX_NATIVE_APPROVAL.md)
 and [Codex MCP native-approval transport](docs/CODEX_MCP_HOST_INTEGRATION.md)
-are included as host integration components, not an installed approval screen.
+are included as host integration components. The protected deployment and
+registration procedure is documented in
+[Codex native MCP promotion deployment](docs/CODEX_NATIVE_MCP_DEPLOYMENT.md);
+it is not silently installed or activated.
 This advanced path is separate from the personal-library workflow.
 
 ## ToadAid community

@@ -1,7 +1,7 @@
 # Knowledge Forge Public — feature availability
 
-**Snapshot:** public `main` at
-`490da9ab3a6002eef2309e6a403d3ed797ebc2ce`
+**Snapshot:** feature work based on public `main` at
+`3aa4289041bb665ea33a3590a040f5e6ee79cff8`
 (October 16, 2026). This document is a source-and-regression review,
 **not** certification of an independently deployed agent integration.
 
@@ -16,7 +16,7 @@
 | Auto lookup in fresh Claude/Codex conversations | Not included in generic installer | No native workflow/hook installed automatically |
 | Governed registry / operator | Advanced, optional | Existing code/reference deployment; independent protections required for activation |
 | OpenClaw / Hermes / generic native-host approval | Adapter contracts + synthetic tests | No proof of deployed host integration or protected principal |
-| Codex native device verification bridge | Merged code + synthetic tests, not deployed | [PR #50](https://github.com/ToadAid/knowledge-forge-public/pull/50) merged the experimental `userVerification/verify` bridge with test-verifier coverage; it does **not** install a live Codex approval UI, enroll device credentials, or activate a protected backend |
+| Codex native device verification bridge | Transport + protected operator integration in repository; administrator deployment still required | The bridge maps `openai/userVerification` to an operator-owned challenge, verifies an enrolled P-256 proof inside the protected service, and promotes once. It does **not** silently install services, enroll credentials, modify Codex configuration, or activate a backend. See [Codex native MCP promotion deployment](CODEX_NATIVE_MCP_DEPLOYMENT.md). |
 | Claude native approval bridge | Not demonstrated | Do not infer from generic-host vocabulary or Codex bridge |
 | Universal native `Approve once` button | Not deployed by generic installer | Requires host-specific real integration and enforcement boundary |
 

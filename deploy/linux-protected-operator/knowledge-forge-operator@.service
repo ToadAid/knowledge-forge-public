@@ -1,7 +1,5 @@
 [Unit]
 Description=ToadAid Knowledge Forge protected promotion ceremony
-Requires=knowledge-forge-operator.socket
-After=knowledge-forge-operator.socket
 
 [Service]
 Type=exec

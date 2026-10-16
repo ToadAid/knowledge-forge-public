@@ -87,6 +87,13 @@ the protected operator/service boundary. Installation and account enrollment
 remain explicit administrator actions; this repository change performs
 neither.
 
+The bounded stdio transport and protected proof-only operator protocol are
+described in
+[Codex native MCP promotion deployment](CODEX_NATIVE_MCP_DEPLOYMENT.md). They
+remain inactive until an administrator installs the protected service, enrolls
+the reviewer credential, registers the MCP server, and starts a new Codex
+session.
+
 ## Test status
 
 The deterministic tests exercise the exact elicitation mapping, a successful

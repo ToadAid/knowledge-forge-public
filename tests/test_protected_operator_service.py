@@ -24,9 +24,12 @@ from knowledge_forge.protected_operator_service import (
     ConfirmationMismatch,
     _promotion_lock,
     confirm_promotion,
+    confirm_codex_promotion,
     decode_bundle,
+    prepare_codex_promotion,
     prepare_promotion,
     peer_identity,
+    agent_peer_identity,
 )
 from knowledge_forge.registry import create_skill_registry, load_skill_registry, save_skill_registry
 from tests.test_candidate_preview import fixture
@@ -199,6 +202,95 @@ class ProtectedOperatorServiceTests(unittest.TestCase):
             peer = peer_identity(FakeConnection(1000), operator_uid=2002, agent_uid=2001)
         self.assertEqual((peer.pid, peer.uid, peer.principal), (4321, 1000, "alice"))
 
+    def test_agent_peer_is_accepted_only_for_native_transport(self):
+        class FakeConnection:
+            def __init__(self, uid):
+                self.uid = uid
+            def getsockopt(self, *_args):
+                return struct.pack("3i", 4321, self.uid, self.uid)
+
+        peer = agent_peer_identity(
+            FakeConnection(2001), operator_uid=2002, agent_uid=2001
+        )
+        self.assertEqual(peer.principal, "codex-agent-transport")
+        for uid in (0, 1000, 2002):
+            with self.assertRaisesRegex(ProtectedOperatorError, "configured agent UID"):
+                agent_peer_identity(
+                    FakeConnection(uid), operator_uid=2002, agent_uid=2001
+                )
+
+    def test_codex_native_proof_promotes_inside_operator_boundary(self):
+        agent = PeerIdentity(
+            pid=4321, uid=2001, gid=2001, principal="codex-agent-transport"
+        )
+        session, challenge = prepare_codex_promotion(
+            {"operation": "PREPARE_CODEX", "bundle": self.bundle},
+            policy=self.policy,
+            peer=agent,
+            now=CLOCK,
+        )
+        elicitation = challenge["elicitation"]
+        response = {
+            "operation": "COMPLETE_CODEX",
+            "challenge_id": challenge["challenge_id"],
+            "elicitation_response": {
+                "jsonrpc": "2.0",
+                "id": elicitation["id"],
+                "result": {
+                    "action": "accept",
+                    "content": {
+                        "credentialId": "codex-device-1",
+                        "signature": "c2lnbmF0dXJl",
+                    },
+                },
+            },
+        }
+        with patch(
+            "knowledge_forge.protected_operator_service.verify_registered_proof",
+            return_value="codex:user:tommy",
+        ) as verifier:
+            result = confirm_codex_promotion(session, response, now=CLOCK)
+        self.assertEqual(result["status"], "PROMOTED")
+        self.assertEqual(result["principal"], "codex:user:tommy")
+        verifier.assert_called_once()
+        registry = load_skill_registry(self.state / "registry.json")
+        self.assertIn(self.manifest["skill_id"], registry["skills"])
+        with self.assertRaisesRegex(ProtectedOperatorError, "unknown, spent"):
+            with patch(
+                "knowledge_forge.protected_operator_service.verify_registered_proof",
+                return_value="codex:user:tommy",
+            ):
+                confirm_codex_promotion(session, response, now=CLOCK)
+
+    def test_codex_decline_never_reaches_proof_verifier(self):
+        agent = PeerIdentity(
+            pid=4321, uid=2001, gid=2001, principal="codex-agent-transport"
+        )
+        session, challenge = prepare_codex_promotion(
+            {"operation": "PREPARE_CODEX", "bundle": self.bundle},
+            policy=self.policy,
+            peer=agent,
+            now=CLOCK,
+        )
+        response = {
+            "operation": "COMPLETE_CODEX",
+            "challenge_id": challenge["challenge_id"],
+            "elicitation_response": {
+                "jsonrpc": "2.0",
+                "id": challenge["elicitation"]["id"],
+                "result": {"action": "decline"},
+            },
+        }
+        verifier = patch(
+            "knowledge_forge.protected_operator_service.verify_registered_proof"
+        )
+        with verifier as mocked:
+            with self.assertRaisesRegex(ProtectedOperatorError, "verification failed"):
+                confirm_codex_promotion(session, response, now=CLOCK)
+        mocked.assert_not_called()
+        registry = load_skill_registry(self.state / "registry.json")
+        self.assertNotIn(self.manifest["skill_id"], registry["skills"])
+
     def test_protected_surface_is_not_added_to_ordinary_agent_installer(self):
         repo = Path(__file__).resolve().parents[1]
         installer = (repo / "bin" / "knowledge-forge-install-agent").read_text(encoding="utf-8")
@@ -215,6 +307,7 @@ class ProtectedOperatorServiceTests(unittest.TestCase):
         repo = Path(__file__).resolve().parents[1]
         socket_unit = (repo / "deploy/linux-protected-operator/knowledge-forge-operator.socket").read_text()
         service_unit = (repo / "deploy/linux-protected-operator/knowledge-forge-operator@.service").read_text()
+        codex_socket_unit = (repo / "deploy/linux-protected-operator/knowledge-forge-codex-operator.socket").read_text()
         self.assertIn("SocketGroup=kf-reviewers", socket_unit)
         self.assertIn("SocketMode=0660", socket_unit)
         self.assertIn("Accept=yes", socket_unit)
@@ -224,6 +317,11 @@ class ProtectedOperatorServiceTests(unittest.TestCase):
         self.assertIn("RestrictAddressFamilies=AF_UNIX", service_unit)
         self.assertIn("RuntimeMaxSec=10min", service_unit)
         self.assertNotIn("kf-agent", socket_unit)
+        self.assertIn("SocketGroup=kf-agent", codex_socket_unit)
+        self.assertIn("SocketMode=0660", codex_socket_unit)
+        self.assertIn("Service=knowledge-forge-operator@.service", codex_socket_unit)
+        self.assertIn("codex-operator.sock", codex_socket_unit)
+        self.assertNotIn("Requires=knowledge-forge-operator.socket", service_unit)
 
 
 if __name__ == "__main__":
