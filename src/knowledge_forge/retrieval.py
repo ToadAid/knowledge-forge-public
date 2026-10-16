@@ -4,12 +4,17 @@ from __future__ import annotations
 
 from copy import deepcopy
 import re
-from typing import Any, Mapping
+from typing import Any, Mapping, NamedTuple, Sequence
 
 RETRIEVAL_INDEX_VERSION = "0.1"
 HARD_MAX_UNITS_PER_TURN = 3
-_TOKEN_RE = re.compile(r"[a-z0-9]+")
+# Unicode-aware word tokens: any letter or digit run (ASCII, CJK ideographs,
+# kana, or other scripts). Underscore is deliberately not a word character.
+_TOKEN_RE = re.compile(r"[^\W_]+")
 _SPACE_RE = re.compile(r"\s+")
+# Whitespace/punctuation-split words that keep stopwords: compound matching
+# needs "Clair de Lune" and "Gather the tribes" to stay contiguous.
+_WORD_RE = re.compile(r"\w+")
 _STOPWORDS = frozenset({
     "a", "an", "and", "are", "as", "at", "be", "by", "do", "does", "for",
     "from", "how", "in", "is", "it", "of", "on", "or", "the", "to", "what",
@@ -21,15 +26,150 @@ class RetrievalError(ValueError):
     """Raised when deterministic retrieval cannot produce a safe route."""
 
 
+# Deterministic matching bounds. Match tiers compare index metadata (aliases,
+# terms) against question form only — never unit bodies — and every rule is an
+# anchored containment or equality, never similarity scoring or widening when
+# nothing matches: insufficient evidence keeps the typed NO MATCH refusal.
+_MAX_QUERY_WORDS = 96
+_MAX_COMPOUND_WORDS = 8
+# Alias must squash to at least this weight to compound-match: 6 latin/other
+# characters, or 3 CJK ideographs (a CJK character weighs 2; short CJK
+# bigrams are far too common to containment-match safely).
+_MIN_COMPOUND_WEIGHT = 6
+# A query word routes by prefix only from this length, only at the start of
+# an alias token, and only to a strictly longer compound token.
+_MIN_PREFIX_CHARS = 5
+
+# CJK ideographs (incl. extensions), kana, and CJK compatibility forms.
+_CJK_RANGES = (
+    (0x3040, 0x30FF),
+    (0x3400, 0x4DBF),
+    (0x4E00, 0x9FFF),
+    (0xF900, 0xFAFF),
+)
+
+
+class _QueryPlan(NamedTuple):
+    phrase: str
+    tokens: frozenset[str]
+    words: tuple[str, ...]
+    compound_forms: frozenset[str]
+    squashed: str
+
+
+def _is_cjk_char(ch: str) -> bool:
+    code = ord(ch)
+    return any(low <= code <= high for low, high in _CJK_RANGES)
+
+
 def _normalized_phrase(value: str) -> str:
-    return _SPACE_RE.sub(" ", value.strip().lower())
+    return _SPACE_RE.sub(" ", value.strip().casefold())
 
 
 def _tokens(value: str) -> tuple[str, ...]:
     return tuple(
-        token for token in _TOKEN_RE.findall(value.lower())
+        token for token in _TOKEN_RE.findall(value.casefold())
         if token not in _STOPWORDS
     )
+
+
+def _squashed(value: str) -> str:
+    return "".join(ch for ch in value.casefold() if ch.isalnum())
+
+
+def _pure_cjk(squashed: str) -> bool:
+    return bool(squashed) and all(_is_cjk_char(ch) for ch in squashed)
+
+
+def _match_weight(squashed: str) -> int:
+    return sum(2 if _is_cjk_char(ch) else 1 for ch in squashed)
+
+
+def _query_plan(question: str) -> _QueryPlan:
+    phrase = _normalized_phrase(question)
+    words = tuple(_WORD_RE.findall(phrase))
+    if len(words) > _MAX_QUERY_WORDS:
+        raise RetrievalError(
+            f"question exceeds the deterministic routing bound of "
+            f"{_MAX_QUERY_WORDS} words"
+        )
+    compound_forms: set[str] = set()
+    for width in range(1, min(_MAX_COMPOUND_WORDS, len(words)) + 1):
+        for start in range(len(words) - width + 1):
+            form = _squashed(" ".join(words[start:start + width]))
+            if _match_weight(form) >= _MIN_COMPOUND_WEIGHT:
+                compound_forms.add(form)
+    return _QueryPlan(
+        phrase,
+        frozenset(_tokens(question)),
+        words,
+        frozenset(compound_forms),
+        _squashed(phrase),
+    )
+
+
+def _alias_rank(
+    plan: _QueryPlan,
+    aliases: Sequence[Any],
+) -> tuple[int, int, int]:
+    """Rank (exact_alias, compound, prefix) for one unit's index aliases."""
+
+    exact = 0
+    compound = 0
+    prefix = 0
+    for alias in aliases:
+        if not isinstance(alias, str) or not alias:
+            continue
+        if _normalized_phrase(alias) in plan.phrase:
+            exact = max(exact, len(_tokens(alias)))
+        squashed = _squashed(alias)
+        weight = _match_weight(squashed)
+        if weight >= _MIN_COMPOUND_WEIGHT and (
+            squashed in plan.compound_forms
+            or (_pure_cjk(squashed) and squashed in plan.squashed)
+        ):
+            compound = max(compound, weight)
+        for token in _tokens(alias):
+            for word in plan.words:
+                if (
+                    len(word) >= _MIN_PREFIX_CHARS
+                    and len(word) < len(token)
+                    and token.startswith(word)
+                ):
+                    prefix = max(prefix, len(word))
+    return exact, compound, prefix
+
+
+def question_rank_scores(
+    question: str,
+    routed_units: Sequence[Mapping[str, Any]],
+) -> tuple[int, int, int, int]:
+    """Deterministic (exact_alias, compound, prefix, overlap) for routed units.
+
+    Shared ranking for every consumption surface (governed and personal) so
+    they route and rank identically. Index metadata only; unit bodies never
+    participate. Returns the same components `route_question` ranked with.
+    """
+
+    plan = _query_plan(question)
+    exact = 0
+    compound = 0
+    prefix = 0
+    terms: set[str] = set()
+    for entry in routed_units:
+        if not isinstance(entry, Mapping):
+            raise RetrievalError("retrieval index contains invalid unit entry")
+        aliases = entry.get("aliases")
+        if not isinstance(aliases, list):
+            raise RetrievalError("retrieval index unit routing metadata is invalid")
+        entry_exact, entry_compound, entry_prefix = _alias_rank(plan, aliases)
+        exact = max(exact, entry_exact)
+        compound = max(compound, entry_compound)
+        prefix = max(prefix, entry_prefix)
+        for term in entry.get("terms", []):
+            if isinstance(term, str):
+                terms.add(term)
+    return exact, compound, prefix, len(plan.tokens & terms)
 
 
 def _claim_aliases(unit: Mapping[str, Any]) -> list[str]:
@@ -209,16 +349,15 @@ def route_question(
     if index.get("schema_version") != RETRIEVAL_INDEX_VERSION:
         raise RetrievalError("retrieval index schema_version mismatch")
 
-    query_phrase = _normalized_phrase(question)
-    query_tokens = set(_tokens(question))
-    if not query_tokens:
+    plan = _query_plan(question)
+    if not plan.tokens:
         raise RetrievalError("question contains no routing terms")
 
     units = index.get("units")
     if not isinstance(units, list) or not units:
         raise RetrievalError("retrieval index requires units")
 
-    scored: list[tuple[int, int, str, dict[str, Any]]] = []
+    scored: list[tuple[int, int, int, int, str, dict[str, Any]]] = []
     for raw_entry in units:
         if not isinstance(raw_entry, Mapping):
             raise RetrievalError("retrieval index contains invalid unit entry")
@@ -228,25 +367,21 @@ def route_question(
         if not isinstance(aliases, list) or not isinstance(terms, list) or not isinstance(unit_id, str):
             raise RetrievalError("retrieval index unit routing metadata is invalid")
 
-        overlap = len(query_tokens & set(terms))
-        exact_alias = max(
-            (
-                len(_tokens(alias))
-                for alias in aliases
-                if isinstance(alias, str)
-                and alias
-                and _normalized_phrase(alias) in query_phrase
-            ),
-            default=0,
-        )
-        if overlap or exact_alias:
-            scored.append((exact_alias, overlap, unit_id, deepcopy(dict(raw_entry))))
+        exact_alias, compound, prefix = _alias_rank(plan, aliases)
+        overlap = len(plan.tokens & set(terms))
+        if exact_alias or compound or prefix or overlap:
+            scored.append(
+                (exact_alias, compound, prefix, overlap, unit_id,
+                 deepcopy(dict(raw_entry)))
+            )
 
     if not scored:
         raise RetrievalError("no relevant knowledge unit found from retrieval index")
 
-    scored.sort(key=lambda item: (-item[0], -item[1], item[2]))
-    return [entry for _, _, _, entry in scored[:max_units]]
+    scored.sort(
+        key=lambda item: (-item[0], -item[1], -item[2], -item[3], item[4])
+    )
+    return [entry for *_, entry in scored[:max_units]]
 
 
 def evaluate_fixture(index: Mapping[str, Any], fixture: Mapping[str, Any]) -> dict[str, Any]:
