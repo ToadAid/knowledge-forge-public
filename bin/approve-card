@@ -1,0 +1,4 @@
+#!/bin/sh
+# On-screen approve-card: Claude-side desktop approval host (see docs/APPROVE_CARD.md).
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+exec /usr/bin/env PYTHONPATH="$REPO_ROOT/src" python3 -m knowledge_forge.approve_card "$@"

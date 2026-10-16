@@ -31,6 +31,7 @@ protected deployment boundary below.
 | `openclaw` | OpenClaw plugin approval | `allow-once` | `allow-always`, bypass, chat text |
 | `hermes` | Hermes approval transport | `once` | `session`, `always`, YOLO/bypass, chat text |
 | `codex` | Codex native user verification | `approve-once` | MCP confirmation, chat text, unverifiable device proof |
+| `claude` | Claude desktop approval card (`bin/approve-card`) | `approve-once` | reusable approval, bypass, chat text |
 
 The OpenClaw mapping was checked against upstream commit
 `4881c9bbda01cb300680a09847e0895a0bcf492c`. The Hermes mapping was checked
@@ -136,6 +137,30 @@ reviewer principal before calling `complete_codex_native_approval(...)`.
 Cancellation or failed verification produces no proof and no promotion. Keep
 the proof verifier, credential registry, host key, decision ledger, registry,
 and completion call outside model permissions.
+
+## Claude wiring
+
+The Claude side uses the same generic adapter contract with a real desktop
+window instead of a hypothetical host app. The agent may stage the request
+(bounded artifacts plus the validated bundle) and may invoke
+`bin/approve-card <request-dir>`; the card window it opens is the approval
+host. The user clicks **[Approve & Promote]** or **[Reject]** — click-only, no
+typing; Approve needs one further confirm click (fail-closed on cancel or
+close). The card process then builds the one-shot host event and
+calls `complete_generic_host_approval(adapter_id="claude", ...)`, which
+signs with the host key a36d8dd-style outside any agent channel and drives
+the unchanged engine to the real PROMOTED transition.
+
+One-time provisioning is `bin/approve-card --setup` (0700 state root,
+generated 0600 host key, initialized registry; refuses overwrite). On this
+pilot's personal machine the setup and the card share the user's account
+with the agent; independence is procedural — a real window the agent does
+not click — not OS-level, and the card states exactly that on every show.
+Chat text such as `APPROVE` in the conversation remains intent only and
+can never authorize.
+
+Manual smoke on a real display verifies the promoted receipts; CI drives
+the same core with a scripted window. See `docs/APPROVE_CARD.md`.
 
 ## Verification included here
 

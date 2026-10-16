@@ -9,6 +9,18 @@
   capabilities from agent-specific integration and deployment gaps,
   including the merged PR #50 Codex native bridge (code present; live
   native UI and protected deployment not established).
+- Added the Claude-side on-screen approval card (`bin/approve-card`,
+  `python3 -m knowledge_forge.approve_card`; docs/APPROVE_CARD.md): the
+  ordinary user clicks **Approve & Promote** or **Reject** in a real desktop
+  window — no commands, no paths, no typing — and, on Approve, one further
+  confirm click executes the promotion (cancel or close refuses
+  fail-closed). The card is the approval host: it prepares and
+  completes the decision through the generic native-host adapter contract
+  (`adapter_id="claude"`), signing with a key the agent channel cannot use,
+  driving the unchanged engine to a real PROMOTED transition through the
+  single-use ledger with immutable per-request receipt/lifecycle outputs.
+  The agent stages and may pop the card; chat text never authorizes. The
+  same-account procedural-independence caveat is printed on every card.
 
 - Added the command-free inline approval adapter for trusted hosts. Agents can
   prepare a bounded review card, but ordinary chat and agent-created TTYs
