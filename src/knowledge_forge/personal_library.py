@@ -295,8 +295,13 @@ def _read_bounded_bytes(path: Path, limit: int, label: str) -> bytes:
         if (
             len(payload) != info.st_size
             or final.st_size != info.st_size
-            or final.st_mtime_ns != info.st_mtime_ns
-            or final.st_ctime_ns != info.st_ctime_ns
+            or (
+                sys.platform != "win32"
+                and (
+                    final.st_mtime_ns != info.st_mtime_ns
+                    or final.st_ctime_ns != info.st_ctime_ns
+                )
+            )
             or final.st_dev != info.st_dev
             or final.st_ino != info.st_ino
         ):
