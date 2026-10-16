@@ -1,162 +1,105 @@
-# Knowledge Forge user manual: from a file to a skill
+# Knowledge Forge — user manual
 
-**No programming required to describe the job.** Tell your coding agent where
-your file is. The agent handles the technical workflow and shows you what it
-created. You decide whether to request review; a separate authorized human
-operator decides whether it may become promoted knowledge.
+**Forge → Accept → Ask.** A person can give a terminal-capable AI agent a
+document, review its knowledge skills, accept them into a personal library,
+then ask questions grounded in the stored source references. This is the
+ordinary-user workflow; it does not need privileged operator deployment.
 
-## The short version
+## Give the agent one clear instruction
 
-After Knowledge Forge has been installed for your agent, you can say:
+Before the first request, the agent needs the
+[newcomer guide](docs/NEWCOMER_GUIDE.md) and a working local installation.
+It needs Git, Python 3.10+, and permission to read the file you name.
+The generic installer adds commands, **not** an automatic Claude/Codex
+plugin or chat hook.
 
-> Make `~/Downloads/my-notes.md` into a knowledge skill.
-
-Or, when you want to start the review process:
-
-> Make `~/Downloads/my-book.pdf` into knowledge skills and submit them for approval.
-
-Or:
-
-> Turn `~/Downloads/temp/toadgod-lore.json` into source-grounded skills.
-> Preserve original quotations and attribution. Prepare them for human review.
-
-You do **not** need to write a long technical prompt or know the names of the
-authoring commands. The agent should explain what it is doing in ordinary
-language and tell you when a decision is needed.
-
-**First-time setup:** installing Knowledge Forge does not automatically
-teach every Claude/Codex/other agent to recognize the short request. Until your
-agent has an explicitly installed file-to-skill workflow, start by saying:
-
-> Install ToadAid Knowledge Forge from
-> https://github.com/ToadAid/knowledge-forge-public, following its
-> [installation guide](INSTALL_AGENT.md) and
-> [file-to-skill agent guide](docs/FILE_TO_SKILL_AGENT_GUIDE.md), in a private
-> workspace without changing my agent's global configuration. Then make
-> `/path/to/my-file` into a knowledge skill and prepare it for review.
-
-You can instead share this manual with an agent that already has the ordinary
-consumer and authoring commands. The current generic installer installs the
-commands, **not** a native Claude/Codex hook, background assistant, or
-automatic knowledge-search integration.
-
-## What happens after you say "make this a skill"?
-
-| Step | What the agent does | What you see |
-| --- | --- | --- |
-| 1. Check the file | Checks access, format, size, rights and source identity without changing your original | File name, type, count/coverage when available |
-| 2. Plan coverage | Lists what will become knowledge and what will be omitted; proposes multiple skills when the source is large | A plain-language coverage plan |
-| 3. Forge | Uses Knowledge Forge's documented source-bound authoring workflow | Draft skill names and supporting sources |
-| 4. Validate | Checks the generated packages, citations, hashes and lifecycle | PASS or actionable failure; unproven claims clearly marked |
-| 5. Request review | Prepares the exact validated package and review evidence for a human | A review handoff and its *actual* delivery status |
-| 6. Human decision | A separately authenticated, authorized operator may approve or reject through a properly configured host | Verified decision and, only after authorized execution, promoted registry state |
-
-The first four steps are available today in the ordinary local authoring
-workflow. **A universal submit-for-approval service, authenticated reviewer,
-and automatic promotion path are not included in the generic installer.**
-An agent can prepare a review handoff today; it must say
-`REVIEW_HANDOFF_READY — NOT SENT` unless a separately configured, permitted
-transport has actually accepted the request. A local review-only TUI can
-record a review choice, but its receipt is **not authenticated promotion
-authorization**.
-
-The intended integrated product experience needs no user command:
+Copy this once and replace the path:
 
 ```text
-You:    Promote it.
-Host:   [View details] [Approve & Promote] [Reject]
-You:    select Approve & Promote.
-Agent:  Promoted. Receipt and registry identity are shown.
+Install https://github.com/ToadAid/knowledge-forge-public by following
+docs/NEWCOMER_GUIDE.md in my private workspace. Keep my existing agent
+configuration unchanged. Use docs/FILE_TO_SKILL_AGENT_GUIDE.md to forge
+<absolute-path-to-my-file> into source-grounded VALIDATED knowledge.
+Preserve the original file and report complete coverage, omissions,
+claim judgments and citations. Ask me before adding anything to my
+PERSONAL library. After I say yes, use knowledge-forge personal add.
+When I ask a question, use knowledge-forge personal lookup, and cite
+only source bindings actually returned. Do not perform governed promotion.
 ```
 
-The repository provides the inline host adapter for this flow, but the generic
-installer does not deploy the trusted UI. The surrounding product must capture
-the click outside the agent channel, independently authenticate the user, and
-keep its signing key and governed registry outside agent permissions. Saying
-`approve` in chat requests the card; it does not itself authorize promotion.
-If that host integration is absent, the request remains pending.
+Once the agent understands the workflow, a short exchange might look like:
 
-For an independently administered Linux deployment, the repository also keeps
-the protected socket service as a hardened backend reference. It is
-intentionally separate from the agent installer and requires an administrator
-to provision and verify distinct agent, reviewer, and operator identities.
+```text
+You:   Forge this book into skills, brother.
+Agent: Forged 2 VALIDATED packages. Covered 26 of 28 sections; 2 omitted.
+       The claim-support decisions were model-judged. Add them?
+You:   Yes, add both to my library.
+Agent: Added both to your local PERSONAL library; neither is PROMOTED.
+You:   What does it say about patience?
+Agent: [Runs personal lookup; summarizes supported units with sources.]
+```
 
-## What you should check before approving a skill
+This is an illustrative conversation, not a claim that an agent
+integration or native UI has already been installed.
 
-Look at the agent's **coverage report**. For example, if the source has 132
-records but only five were selected, the agent must say **5 of 132**, name the
-five and explain the 127 omitted records. It must not claim that the entire
-file was forged.
+## What happens behind the scenes
 
-Check that each important claim cites its source. In a history or lore
-collection, distinguish the original author, a repost, a later explanation,
-and an AI interpretation. An AI's statement that a claim is
-`SUPPORTED` is its semantic judgment; package validation does not prove that
-the claim is factually true.
+| Step | The agent does | What you check |
+| --- | --- | --- |
+| Inspect | Reads only the chosen source, records identity and content hash | Right file and permission |
+| Plan | Counts sections/records and lists intended coverage and omissions | No hidden sampling |
+| Forge | Creates structured draft, support plan and source-grounded package | Attribution, quotes, dates, uncertainty |
+| Validate | Runs `finalize` then `validate-package`; checks `VALIDATED` lifecycle | Real results and source bindings |
+| Accept | **Asks you first**, then invokes `personal add --accept` if you agree | Local acceptance, not promotion |
+| Ask | Invokes `personal lookup` and reads its bounded source-linked context | Answer and references actually returned |
 
-If the document is large, the agent may propose multiple packages. It should
-respect the current 64-unit-per-draft and maximum three support
-sections-per-unit limits rather than silently discarding entries.
+A personal library stores package references and validation data, **not a
+second copy of your source or package**. Moving, changing or deleting the
+package can cause future lookup to refuse. `personal remove` deletes the
+library reference only; original files are untouched.
 
-For private or copyrighted files, use only sources you are authorized to
-process. The agent should not upload or publish their contents without your
-informed permission.
+The agent must not silently substitute raw-file reading or its general
+knowledge for a Forge lookup. If lookup returns no match, report that
+honestly and do not fabricate citations.
 
-## Ask the agent what happened
+## Review the result
 
-Natural-language follow-ups work:
+If a 132-record collection is reduced to five records, the report must say
+**5 of 132**, naming and explaining omissions. Ask the agent to show the
+source evidence, uncertain claims, original author, dates, URLs where they
+exist, and any AI-written interpretation.
 
-- "Show me which parts of the file you included and which you skipped."
-- "Show me the exact original text supporting this knowledge unit."
-- "What did you infer that the source did not say?"
-- "Show me the validation report and where the finished package is."
-- "Prepare a promotion review request; do not approve it yourself."
-- "Was my review request actually sent? To whom?"
-- "Is this skill validated, reviewed, authorized, or promoted? Show the evidence."
+A model's `SUPPORTED` entailment is **not independent verification** of
+truth. A `VALIDATED` package proves the specified structure/integrity
+checks passed, not perfect semantic faithfulness. Qualifiers such as
+*may*, *if* and *according to* should stay with their original propositions.
 
-If a claim is not supported, ask the agent to revise the draft, then validate
-a **new candidate**. Do not work around a failed validator or invent missing
-source evidence.
+Never provide sources you do not have rights to process or redistribute.
+Local software does not override an agent provider's separate data policies.
 
-## Understand the status
+## Linux, native Windows and PDFs
 
-| Status | Meaning |
-| --- | --- |
-| `DRAFT` | Proposed content; not a validated package |
-| `VALIDATED` | Integrity/contract checks passed; **not promoted** |
-| `REVIEW_HANDOFF_READY` | Local review materials prepared; may not have been sent |
-| `REVIEWED_ONLY` | A local review choice recorded; **not authentication or approval authority** |
-| `PROMOTED` | Only after a separate authenticated, authorized operator action and verified registry/lifecycle evidence |
+The ordinary installer works on Linux and native Windows 10/11 with
+Python 3.10+ and Git. Windows users can use normal `cmd.exe` without WSL or
+administrator rights. Text-bearing PDF extraction optionally needs Poppler;
+explicit OCR needs Poppler and Tesseract. Knowledge Forge does not install
+these system tools. See [INSTALL.md](INSTALL.md).
 
-These are **plain-language UX labels**, not a promise that the current CLI
-implements a queue, notification service, or these exact names as lifecycle
-states.
+## What does "accept" mean?
 
-A model **must not** approve or promote the skill it authored. Saying "please
-promote it" means **request a human decision**, not waive the approval gate.
-Validation success and an agent's confident answer do not grant authority.
+For Personal Forge, your explicit **yes** permits the agent to run
+`personal add --accept`. The library records conversational acceptance:
+`authenticated_human=false`. It remains `VALIDATED`, not `PROMOTED`.
+Retrieved content is `UNTRUSTED_KNOWLEDGE_DATA`/`KNOWLEDGE_ONLY`,
+with no instruction authority, execution authority or tool grants.
 
-## Can I immediately ask my agent questions about the new skill?
+Advanced governed promotion is different: independently authenticated
+human authorization and a protected host are required. A native approval
+adapter contract alone does **not** prove live client integration.
 
-You can request a clearly labeled **manual package-inspection preview** from
-a `VALIDATED` package. This is a test, not trusted retrieval. It must not
-pretend the package is promoted.
+[Personal Forge commands](docs/PERSONAL_FORGE.md) ·
+[Feature status](docs/FEATURE_STATUS.md) ·
+[Optional governed approval](docs/INLINE_APPROVAL.md)
 
-Automatic, governed retrieval is a **separate host integration**: an authorized
-operator first promotes the exact validated package, and a tested host adapter
-discovers and loads only current promoted knowledge under existing host policy.
-Installation or a manual preview alone does not provide this functionality.
-
-See the [newcomer guide](docs/NEWCOMER_GUIDE.md),
-[agent file-to-skill guide](docs/FILE_TO_SKILL_AGENT_GUIDE.md), and
-[command-free approval integration](docs/INLINE_APPROVAL.md) for details. The
-[review-only approval boundary](docs/GENERIC_APPROVAL_TUI.md) remains useful
-for diagnostic review receipts.
-
-## If the agent says it cannot proceed
-
-A refusal can be the correct result: unreadable source, unsupported input,
-unknown author, missing sections, a changed hash, absent optional PDF/OCR
-dependencies, failed validation, or an unavailable approval destination.
-Ask it to report the exact reason and what *you* can do next. It must not
-invent a success, skip evidence, or promote through a workaround.
+**Laws:** `VALIDATED != PROMOTED` · `KNOWLEDGE != AUTHORITY` ·
+`ACCEPTED != AUTHENTICATED`.
