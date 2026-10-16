@@ -43,6 +43,10 @@ SHA-256 signature over the decoded challenge bytes. The local client may
 collect that proof, but the authenticated service owns credential registration
 and account binding; local UI success alone is not enrollment or authorization.
 
+For an MCP host, Knowledge Forge maps this primitive through Codex's distinct
+`openai/userVerification` elicitation mode. See
+[Codex MCP native-approval integration](CODEX_MCP_HOST_INTEGRATION.md).
+
 Knowledge Forge deliberately does not implement credential enrollment or a
 standalone trust store inside agent-accessible code. The bridge receives an
 injected proof verifier so a deployment can keep account binding and public-key
@@ -50,9 +54,9 @@ verification in its protected host backend.
 
 ## Deployment requirements
 
-This bridge is ready for host integration, not automatically active after a
-normal Knowledge Forge install. A real deployment still requires all of the
-following:
+The bridge and MCP transport adapter are ready for protected host integration,
+not automatically active after a normal Knowledge Forge install. A real
+deployment still requires all of the following:
 
 - a Codex client and app-server configuration that exposes native user
   verification on supported hardware;
