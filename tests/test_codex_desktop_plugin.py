@@ -69,8 +69,8 @@ class CodexDesktopPluginTests(unittest.TestCase):
         }
         completed = mock.Mock(returncode=0,
                               stdout=json.dumps(payload).encode(), stderr=b"")
-        with mock.patch.object(mod.shutil, "which", return_value="/bin/kf"), \\
-             mock.patch.object(mod.subprocess, "run", return_value=completed) as run:
+        with (mock.patch.object(mod.shutil, "which", return_value="/bin/kf"),
+              mock.patch.object(mod.subprocess, "run", return_value=completed) as run):
             result = mod.call("knowledge_lookup", {"question": "patience", "max_units": 2})
         self.assertFalse(result["isError"])
         self.assertEqual(result["structuredContent"], payload)

@@ -89,7 +89,7 @@ def _run_cli(argv: list[str]) -> dict[str, Any]:
 
 
 def call(name: Any, arguments: Any) -> dict[str, Any]:
-    if name not in TOOLS or not isinstance(arguments, dict):
+    if not isinstance(name, str) or name not in TOOLS or not isinstance(arguments, dict):
         return _error("Unknown Knowledge Forge tool or invalid arguments")
     if name == "library_list":
         if arguments:
