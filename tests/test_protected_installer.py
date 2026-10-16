@@ -196,6 +196,37 @@ class ProtectedInstallerTests(unittest.TestCase):
         self.assertFalse(installer.CODE.exists())
         self.assertEqual(mutations, [])
 
+    def test_agent_socket_has_matching_equally_hardened_template(self):
+        units = REPO / 'deploy/linux-protected-operator'
+        socket = (units / 'knowledge-forge-agent-requests.socket').read_text()
+        self.assertIn('Accept=yes', socket)
+        self.assertNotIn('Service=', socket)
+        self.assertIn('SocketGroup=kf-agent', socket)
+        self.assertEqual((units / 'knowledge-forge-agent-requests@.service').read_bytes(),
+                         (units / 'knowledge-forge-operator@.service').read_bytes())
+        self.assertIn('knowledge-forge-agent-requests@.service', installer.UNITS)
+
+    @unittest.skipUnless(Path('/usr/bin/systemd-analyze').is_file(), 'Offline systemd unit verifier')
+    def test_real_offline_systemd_verifier_accepts_socket_template_mapping(self):
+        units = REPO / 'deploy/linux-protected-operator'
+        staged = self.root / 'verify-units'
+        staged.mkdir()
+        paths = []
+        for name in installer.UNITS:
+            text = (units / name).read_text()
+            # Test the real parser/association rules without installing anything
+            # under /opt, creating accounts, starting units or connecting to a bus.
+            text = text.replace('ExecStart=/opt/toadaid-kf-operator/bin/knowledge-forge-protected-operator serve-connection',
+                                'ExecStart=/usr/bin/true')
+            text = text.replace('User=kf-operator', f'User={os.getuid()}')
+            text = text.replace('Group=kf-operator', f'Group={os.getgid()}')
+            path = staged / name
+            path.write_text(text)
+            paths.append(str(path))
+        result = subprocess.run(['/usr/bin/systemd-analyze', 'verify', '--man=no', *paths],
+                                capture_output=True, text=True, env=installer.ENV)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_systemd_adapter_queries_instance_for_template_without_starting_it(self):
         host = installer.LinuxHost()
         for requested, expected in [('knowledge-forge-operator@.service',

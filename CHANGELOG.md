@@ -2,6 +2,14 @@
 
 ## Unreleased — initial open-source source snapshot
 
+- Fix generic agent socket activation on systemd 255: remove the incompatible
+  `Service=` override for `Accept=yes` and install the matching, equally hardened
+  `knowledge-forge-agent-requests@.service` template. Add offline real-systemd
+  unit validation regression and a narrow partial-install repair procedure that
+  preserves initialized registry/authorization state.
+  The non-authorizing SQLite rehearsal now rejects protected paths before
+  metadata probes, retaining typed refusal when real operator state is private.
+
 - Fix the administrator installer's read-only systemd template check: inspect
   a concrete probe instance without starting it, preserve refusal for existing
   units and bus errors, and report no partial mutation for failures before

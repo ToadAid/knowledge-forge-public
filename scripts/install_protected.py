@@ -30,7 +30,7 @@ USER = Path('/etc/systemd/user')
 TMPFILES = Path('/etc/tmpfiles.d/knowledge-forge-runtime.conf')
 RUNTIME = Path('/run/toadaid-knowledge-forge')
 UNITS = ('knowledge-forge-operator@.service', 'knowledge-forge-operator.socket',
-         'knowledge-forge-agent-requests.socket')
+         'knowledge-forge-agent-requests@.service', 'knowledge-forge-agent-requests.socket')
 REVIEWER_UNIT = 'knowledge-forge-reviewer.service'
 SOCKETS = ('knowledge-forge-operator.socket', 'knowledge-forge-agent-requests.socket')
 SYSTEM_PATH = '/usr/sbin:/usr/bin:/sbin:/bin'

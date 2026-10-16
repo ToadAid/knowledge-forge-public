@@ -132,7 +132,8 @@ The fixed configuration is `/etc/toadaid-kf/operator.json`; mode-0700 state is
 owned by `kf-operator` under `/var/lib/toadaid-kf-operator`. State initialization
 runs as that non-root account using the installed code.
 
-The system receives `knowledge-forge-operator@.service`, the human-reviewer and
+The system receives `knowledge-forge-operator@.service`, the identically hardened
+`knowledge-forge-agent-requests@.service` template, the human-reviewer and
 agent-request socket units, and the runtime tmpfiles rule. The optional Codex
 native-proof socket is not installed or enabled. The desktop broker unit is
 installed at `/etc/systemd/user/knowledge-forge-reviewer.service`, available but
@@ -176,3 +177,47 @@ Check ancestry/ownership/ACLs and actual sandbox reachability independently.
 `INSTALLED, NOT CERTIFIED` and active sockets do not prove those boundaries.
 Only after verification should a real VALIDATED package be submitted for its
 own human decision. Setup consent approves no knowledge package.
+
+## Repair an interrupted agent-socket installation
+
+An older unit incorrectly used `Service=knowledge-forge-operator@.service` with
+`Accept=yes`. On systemd 255 this fails validation after state initialization.
+The fixed socket uses its matching `knowledge-forge-agent-requests@.service`
+template, with the same operator UID and hardening. No policy or ACL is relaxed.
+
+If the log shows `initialized: true` followed by this unit-validation failure,
+the deployment is partial. Do not rerun the full installer or delete its state.
+An independent administrator reviews a fixed checkout and the existing units,
+backs up the old socket unit, then replaces only that unit and adds the matching
+template from the reviewed checkout:
+
+```bash
+sudo install -o root -g root -m 0644 \
+  deploy/linux-protected-operator/knowledge-forge-agent-requests@.service \
+  /etc/systemd/system/knowledge-forge-agent-requests@.service
+sudo install -o root -g root -m 0644 \
+  deploy/linux-protected-operator/knowledge-forge-agent-requests.socket \
+  /etc/systemd/system/knowledge-forge-agent-requests.socket
+sudo systemd-analyze verify \
+  /etc/systemd/system/knowledge-forge-operator@.service \
+  /etc/systemd/system/knowledge-forge-operator.socket \
+  /etc/systemd/system/knowledge-forge-agent-requests@.service \
+  /etc/systemd/system/knowledge-forge-agent-requests.socket
+```
+
+Stop if validation fails. Only after it succeeds, the administrator can complete
+the previously requested socket activation:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now knowledge-forge-operator.socket knowledge-forge-agent-requests.socket
+systemctl is-active knowledge-forge-operator.socket knowledge-forge-agent-requests.socket
+```
+
+These commands do not rerun initialization or replace code, configuration,
+registry, ledger or receipts. The installed `DEPLOYMENT.json` still identifies
+the original code commit; record the reviewed unit-fix commit separately in
+the administrator's change log. If either socket was already active, inspect
+its current configuration and plan an explicit administrator restart instead
+of assuming `enable --now` reloads an active socket. The human-session and
+actual agent-isolation checks above remain required before real promotion.
