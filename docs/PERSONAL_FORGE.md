@@ -113,6 +113,27 @@ executed.
 No match at all (or an unrevalidated library) exits 2 with a typed refusal —
 never a silent empty answer.
 
+### How `personal lookup` routes questions
+
+Routing is deterministic — index metadata (aliases/terms) vs. question form
+only; unit bodies never participate — and ranks four tiers, strongest first:
+
+| Tier | Matches | Example |
+| --- | --- | --- |
+| Exact alias | the alias phrase appears verbatim in the question | ask "approval quorum" → the quorum unit |
+| Compound form | the alias, with all non-alphanumerics squashed out, equals a contiguous run of question words | ask "Clair de Lune" → the `clairdelune` alias |
+| Prefix | a question word of ≥5 characters prefixes a longer alias token | ask "govern rule" → the `governance` token |
+| Token overlap | shared routing tokens | ask "liquidity range" → liquidity units |
+
+Unicode-aware throughout: accented words are one token (`café`), and CJK
+aliases containment-match when at least three ideographs appear together —
+short CJK bigrams are deliberately too common to match.
+
+The no-widening law holds in every tier: if no alias matches by any rule, the
+typed NO MATCH refusal is returned. Nothing matching more softly is widened
+in to cover a miss; compound and prefix matching make *natural phrasing*
+find lore-native terms, they do not lower the bar for genuine misses.
+
 ## Library hygiene
 
 | Property | Behavior |
