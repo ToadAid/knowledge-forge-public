@@ -1,5 +1,10 @@
 # Generic agents: protected queue and desktop approval
 
+Onboarding begins with [AGENT_SETUP.md](AGENT_SETUP.md) and the read-only
+`bin/knowledge-forge-setup --check-only` helper. The agent explains the account
+separation and asks about protected setup before preparing this deployment.
+An existing protected-setup request or personal-only choice is respected.
+
 This Linux reference adds a common promotion request path for terminal agents.
 It reuses the protected operator UID, package validation, five-minute human
 challenge, consume-once authorization ledger and governed promotion engine.

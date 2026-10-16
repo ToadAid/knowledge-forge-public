@@ -54,6 +54,20 @@ operator and tested host adapter remain necessary. See
 
 ## Quick install
 
+Agent onboarding includes the optional protected setup choice in
+[AGENT_SETUP.md](docs/AGENT_SETUP.md). After checking the ordinary tools, run
+the read-only checkout helper `bin/knowledge-forge-setup --check-only`. If the
+user has not already chosen, explain Personal Forge and ask whether they want
+protected approval with separate `kf-agent` and `kf-operator` accounts and a
+distinct human reviewer. Respect an existing personal-only or no-service choice.
+
+Installer JSON points to the guide and helper in `agent_setup_guide` and
+`agent_setup_helper`; these are onboarding pointers, not installed extra tools.
+Native Windows can run its returned Python helper path with `python -B`; it
+reports the Linux protected-daemon reference unsupported there. Both installers
+remain noninteractive and preserve their existing manifest bytes and two-command
+surface. No accounts or services are created by setup checks.
+
 From the repository root:
 
 ```bash
