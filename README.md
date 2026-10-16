@@ -7,6 +7,24 @@ without confusing knowledge with execution authority.
 It runs from a local checkout. No hosted service, VPS, account, remote approval
 server, or production connection is required.
 
+## Just want to turn a file into a skill?
+
+**You should not need to know the Forge commands.** After your agent has the
+file-to-skill guide available, tell it:
+
+> Make `~/Downloads/my-document.pdf` into knowledge skills and prepare them
+> for human approval.
+
+The agent should inspect the source, explain coverage and omissions, forge and
+validate the package(s), then prepare a review handoff. **The agent may request
+promotion; it may not approve its own work.** A generic install has no
+automatic approval delivery, reviewer authentication, or native agent hooks.
+Until an approved host transport exists, the honest result is
+**review handoff ready — not sent, and not promoted**.
+
+**[Read the simple user manual](USER_MANUAL.md)** ·
+[Agent-facing one-sentence workflow](docs/FILE_TO_SKILL_AGENT_GUIDE.md)
+
 ## New here? Install, forge, and ask
 
 **Using Claude Code, Codex, or another terminal agent?** Start with
