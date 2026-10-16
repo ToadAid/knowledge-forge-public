@@ -94,6 +94,14 @@ jobs:
         env:
           PYTHONPATH: src
         run: python -m unittest discover -s tests -p test_codex_approval_bridge.py
+      - name: Run approval nonce replay test natively
+        env:
+          PYTHONPATH: src
+        run: python -m unittest discover -s tests -p test_approval_host.py -k ledger_refuses_same_nonce
+      - name: Run approval ledger migration test natively
+        env:
+          PYTHONPATH: src
+        run: python -m unittest discover -s tests -p test_approval_host.py -k ledger_migrates_existing_schema
       - name: Run approval host security tests natively
         env:
           PYTHONPATH: src
