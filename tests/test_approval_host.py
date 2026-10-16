@@ -9,7 +9,7 @@ missing-dependency refusal when no trusted host is configured.
 
 from __future__ import annotations
 
-from contextlib import redirect_stdout
+from contextlib import closing, redirect_stdout
 from copy import deepcopy
 import hashlib
 from io import StringIO
@@ -428,7 +428,7 @@ class ApprovalHostChainTests(unittest.TestCase):
         path = self.flow.state / "old-approval-host-decisions.sqlite3"
         import sqlite3
 
-        with sqlite3.connect(path) as connection:
+        with closing(sqlite3.connect(path)) as connection:
             connection.execute(
                 "CREATE TABLE host_decisions ("
                 "decision_digest TEXT PRIMARY KEY NOT NULL, "
@@ -436,6 +436,7 @@ class ApprovalHostChainTests(unittest.TestCase):
                 "principal_ref TEXT NOT NULL, "
                 "consumed_at TEXT NOT NULL)"
             )
+            connection.commit()
         os.chmod(path, 0o600)
         ledger = ConsumedDecisionLedger(path)
         try:
