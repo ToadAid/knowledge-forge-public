@@ -41,8 +41,11 @@ versions are compatible. Re-review the host on upgrade.
 The Codex profile has a dedicated bridge for the experimental app-server
 `userVerification/verify` protocol. See
 [Codex native approval](CODEX_NATIVE_APPROVAL.md) for its exact readiness and
-deployment boundary. It is repository support, not an assertion that the
-currently running Codex client has installed or enabled the bridge.
+deployment boundary, and
+[Codex MCP native-approval integration](CODEX_MCP_HOST_INTEGRATION.md) for the
+`openai/userVerification` elicitation transport. It is repository support, not
+an assertion that the currently running Codex client has installed or enabled
+the bridge.
 
 ## Integration sequence
 
