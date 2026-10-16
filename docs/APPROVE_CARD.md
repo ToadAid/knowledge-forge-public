@@ -7,12 +7,12 @@ desktop window opens on the user's screen with the card and two buttons.
 ```text
 Agent:  Forged and validated. Coverage and omissions shown. Promotion needs your approval.
 Card:   [desktop window opens: skill, source, validation, digests, expiry]
-User:   clicks [Approve & Promote]  →  types  APPROVE <8-hex token>  →  [OK]
+User:   clicks [Approve & Promote]  →  clicks [Confirm && Promote]
 Card:   PROMOTED. Receipt and registry identity shown.
 ```
 
 `Reject` records a signed no-op — nothing is promoted. Closing the window
-without choosing, or mistyping the phrase three times, refuses fail-closed.
+without choosing, or cancelling the confirm dialog, refuses fail-closed.
 
 ## The one command (agent side)
 

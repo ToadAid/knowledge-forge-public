@@ -17,8 +17,6 @@ from unittest import mock
 
 from _platform_support import skip_posix_file_modes_on_windows
 
-from knowledge_forge.approval import approval_request_sha256
-from knowledge_forge.approval_tui import _confirmation_token
 from knowledge_forge.approve_card import (
     ApproveCardError,
     ScriptedCard,
@@ -37,11 +35,8 @@ class ApproveCardTests(unittest.TestCase):
         self.flow = _Flow()
         self.addCleanup(self.flow.teardown)
 
-    def _token(self) -> str:
-        return _confirmation_token(approval_request_sha256(self.flow.request))
-
-    def _card(self, decisions, phrases) -> ScriptedCard:
-        return ScriptedCard(list(decisions), list(phrases))
+    def _card(self, decisions, confirmations) -> ScriptedCard:
+        return ScriptedCard(list(decisions), list(confirmations))
 
     def _run(self, card, **overrides):
         args = dict(
@@ -56,8 +51,7 @@ class ApproveCardTests(unittest.TestCase):
         return _run_approve_card_at(self.flow.from_dir, card, **args)
 
     def test_full_card_approve_promotes_for_real(self) -> None:
-        phrase = f"APPROVE {self._token()}"
-        card = self._card(["APPROVE"], [phrase])
+        card = self._card(["APPROVE"], [True])
         payload = self._run(card)
         self.assertTrue(payload["ok"])
         self.assertTrue(payload["promoted"])
@@ -92,13 +86,12 @@ class ApproveCardTests(unittest.TestCase):
             any("fail-closed" in text for text in card.shown)
         )
 
-    def test_phrase_mismatch_three_times_refuses(self) -> None:
-        bad = f"APPROVE {'0' * 8}"
-        card = self._card(["APPROVE"], [bad, bad, bad])
+    def test_cancelled_confirmation_refuses(self) -> None:
+        card = self._card(["APPROVE"], [False])
         payload = self._run(card)
         self.assertFalse(payload["ok"])
         self.assertFalse(payload["promoted"])
-        self.assertIn("confirmation mismatch", payload["refusal"])
+        self.assertIn("promotion not confirmed", payload["refusal"])
 
     def test_card_text_states_laws_and_caveat(self) -> None:
         card = self._card(["REJECT"], [])
@@ -106,8 +99,9 @@ class ApproveCardTests(unittest.TestCase):
         text = card.shown[0]
         self.assertIn("VALIDATED != PROMOTED", text)
         self.assertIn("procedural", text)
-        self.assertIn("Chat text can never authorize", text)
-        self.assertIn(f"APPROVE {self._token()}", text)
+        self.assertIn("Chat text can", text)
+        self.assertIn("never authorize", text)
+        self.assertIn("To approve: click [Approve & Promote]", text)
         self.assertIn(self.flow.manifest["skill_id"], text)
         self.assertIn(EXPIRES_AT, text)
 

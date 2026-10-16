@@ -144,10 +144,9 @@ The Claude side uses the same generic adapter contract with a real desktop
 window instead of a hypothetical host app. The agent may stage the request
 (bounded artifacts plus the validated bundle) and may invoke
 `bin/approve-card <request-dir>`; the card window it opens is the approval
-host. The user clicks **[Approve & Promote]** or **[Reject]** and — only on
-Approve — types the confirmation phrase `APPROVE <8-hex token of the
-request digest>` inside the card window (bounded attempts, fail-closed on
-dialog close). The card process then builds the one-shot host event and
+host. The user clicks **[Approve & Promote]** or **[Reject]** — click-only, no
+typing; Approve needs one further confirm click (fail-closed on cancel or
+close). The card process then builds the one-shot host event and
 calls `complete_generic_host_approval(adapter_id="claude", ...)`, which
 signs with the host key a36d8dd-style outside any agent channel and drives
 the unchanged engine to the real PROMOTED transition.
@@ -156,10 +155,9 @@ One-time provisioning is `bin/approve-card --setup` (0700 state root,
 generated 0600 host key, initialized registry; refuses overwrite). On this
 pilot's personal machine the setup and the card share the user's account
 with the agent; independence is procedural — a real window the agent does
-not click, plus a typed phrase — not OS-level, and the card states exactly
-that on every show. Chat text such as `APPROVE` in the conversation remains
-intent only and can never authorize; the phrase counts only when typed
-inside the card window.
+not click — not OS-level, and the card states exactly that on every show.
+Chat text such as `APPROVE` in the conversation remains intent only and
+can never authorize.
 
 Manual smoke on a real display verifies the promoted receipts; CI drives
 the same core with a scripted window. See `docs/APPROVE_CARD.md`.

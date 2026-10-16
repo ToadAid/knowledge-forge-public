@@ -1,16 +1,17 @@
 """Claude-side on-screen approval card: a desktop host, not a chat surface.
 
 The agent may stage the request and pop this card on the user's screen, but
-the card window is the host that renders **Approve & Promote / Reject** and
-captures the typed confirmation phrase.  The decision travels through the
+the card window is the host that renders **Approve & Promote / Reject**. A
+click-only host action (with one Confirm click, no typing) selects the
+adapter's one-shot approval decision. The decision travels through the
 generic native-host adapter contract (``prepare_generic_host_approval`` /
 ``complete_generic_host_approval``): chat text never authorizes, the agent
 process never signs, and the card refuses fail-closed without a host key and
 an initialized registry.
 
 When the card shares the user's account with the agent, host independence is
-procedural (a real desktop window owned by this host program, a typed
-phrase), not OS-level — and the card says so.
+procedural (a real desktop window owned by this host program, clicked inside
+it), not OS-level — and the card says so.
 """
 
 from __future__ import annotations
@@ -35,7 +36,6 @@ from .generic_host_adapter import (
 )
 from .approval_host import ApprovalHostError
 from .approval_host_cli import ApprovalHostCliError
-from .approval_tui import _confirmation_token
 from .inline_approval import InlineApprovalError
 from .operator_promotion import OperatorPromotionError
 from .registry import (
@@ -52,7 +52,6 @@ DEFAULT_STATE_ROOT_NAME = Path("knowledge-forge") / "approval-host"
 HOST_KEY_FILENAME = "host-key"
 DEFAULT_REGISTRY_FILENAME = "registry.json"
 CLAUDE_ADAPTER_ID = "claude"
-_DEFAULT_MISMATCH_ATTEMPTS = 3
 
 _LAWS = (
     "VALIDATED != PROMOTED",
@@ -74,15 +73,20 @@ class ApproveCardUI(Protocol):
     def ask_decision(self, text: str) -> str | None:
         """Return 'APPROVE', 'REJECT', or None when the user closes."""
 
-    def ask_phrase(self, text: str) -> str | None: ...
+    def ask_confirm(self, text: str) -> bool:
+        """Second click: True = confirmed, False = cancelled."""
 
 
 class ScriptedCard:
     """Test fake: replays scripted user actions in order."""
 
-    def __init__(self, decisions: list[str | None], phrases: list[str | None]) -> None:
+    def __init__(
+        self,
+        decisions: list[str | None],
+        confirmations: list[bool | None],
+    ) -> None:
         self.decisions = list(decisions)
-        self.phrases = list(phrases)
+        self.confirmations = list(confirmations)
         self.shown: list[str] = []
 
     def show(self, text: str) -> None:
@@ -92,11 +96,14 @@ class ScriptedCard:
         self.shown.append(text)
         return self.decisions.pop(0)
 
-    def ask_phrase(self, text: str) -> str | None:
+    def ask_confirm(self, text: str) -> bool | None:
         self.shown.append(text)
-        if not self.phrases:
-            raise EOFError("no scripted phrase left")
-        return self.phrases.pop(0)
+        if not self.confirmations:
+            raise EOFError("no scripted confirmation left")
+        confirm = self.confirmations.pop(0)
+        if confirm is None:
+            return False
+        return bool(confirm)
 
 
 def default_state_root() -> Path:
@@ -114,7 +121,7 @@ def _resolve(root: Path | None, filename: str) -> Path:
     return base / filename
 
 
-def _card_text(card: Mapping[str, Any], *, phrase: str) -> str:
+def _card_text(card: Mapping[str, Any]) -> str:
     lines = [
         "Knowledge Forge — promotion approval card",
         "",
@@ -136,12 +143,13 @@ def _card_text(card: Mapping[str, Any], *, phrase: str) -> str:
         "  one real PROMOTED registry transition through the unchanged",
         "  verified pipeline (signature, expiry, binding, single-use ledger).",
         "",
-        f"To approve, type: {phrase}",
+        "To approve: click [Approve & Promote], then confirm once.",
         "",
         f"Laws: {', '.join(_LAWS)}",
         "The card window is the approval host. When it shares this account",
-        "with the agent, that independence is procedural — your click and",
-        "your typed phrase — not OS-level. Chat text can never authorize.",
+        "with the agent, that independence is procedural — your clicks in a",
+        "window the agent does not operate — not OS-level. Chat text can",
+        "never authorize.",
     ]
     return "\n".join(lines)
 
@@ -176,9 +184,7 @@ def _run_approve_card_at(
         _refuse(card, f"the approval request cannot be used yet: {exc}")
         raise
 
-    token = _confirmation_token(prepared["request_sha256"])
-    phrase = f"APPROVE {token}"
-    card.show(_card_text(prepared, phrase=phrase).rstrip("\n"))
+    card.show(_card_text(prepared).rstrip("\n"))
 
     decision = card.ask_decision(
         "Approve this promotion? [Approve & Promote] or [Reject]"
@@ -209,33 +215,18 @@ def _run_approve_card_at(
     }
 
     if decision == "APPROVE":
-        answer = None
-        mismatches = 0
-        for _ in range(_DEFAULT_MISMATCH_ATTEMPTS):
-            answer = card.ask_phrase(
-                f"Type the confirmation phrase to approve:\n{phrase}"
-            )
-            if answer is None:
-                break  # the user closed the confirm dialog: fail-closed
-            if answer.strip() == phrase:
-                break
-            mismatches += 1
-        if answer is None:
-            _refuse(card, "confirmation was not entered; refusing fail-closed")
-            return _refused_payload(
-                host_id, decided_by, "confirmation input ended"
-            )
-        if mismatches:
+        confirmed = card.ask_confirm(
+            "Confirm promotion?\n\n"
+            f"skill: {prepared['skill_id']}\n"
+            f"request digest: {prepared['request_sha256']}\n\n"
+            "This executes one real PROMOTED registry transition."
+        )
+        if not confirmed:
             _refuse(
-                card,
-                f"confirmation mismatch after {_DEFAULT_MISMATCH_ATTEMPTS} "
-                "attempts; refusing fail-closed",
+                card, "the promotion was not confirmed; refusing fail-closed"
             )
             return _refused_payload(
-                host_id,
-                decided_by,
-                "confirmation mismatch after "
-                f"{_DEFAULT_MISMATCH_ATTEMPTS} attempts",
+                host_id, decided_by, "promotion not confirmed"
             )
 
     registry = registry_path or _resolve(state_root, DEFAULT_REGISTRY_FILENAME)
@@ -414,14 +405,22 @@ class ZenityCard:
             return "REJECT"
         return None
 
-    def ask_phrase(self, text: str) -> str | None:
-        proc = subprocess.run(  # noqa: S603 - fixed argv, host-owned binary
-            [self.zenity, "--entry", "--title=Confirm approval", "--text", text],
-            capture_output=True,
+    def ask_confirm(self, text: str) -> bool | None:
+        rc = self._run(
+            [
+                "--question",
+                "--title=Confirm promotion",
+                f"--text={text}",
+                "--ok-label=Confirm && Promote",
+                "--cancel-label=Cancel",
+                "--width=600",
+            ]
         )
-        if proc.returncode != 0:
-            return None
-        return proc.stdout.decode("utf-8", errors="replace").strip()
+        if rc == 0:
+            return True
+        if rc == 1:
+            return False
+        return None
 
 
 def _emit(payload: Mapping[str, Any]) -> None:
