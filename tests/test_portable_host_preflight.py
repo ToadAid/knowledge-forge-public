@@ -8,6 +8,7 @@ import json
 import subprocess
 import sys
 import unittest
+from _platform_support import skip_unless_symlinks
 
 from knowledge_forge.portable_host_preflight import (
     PortableHostPreflightError, probe, _local_directory,
@@ -105,12 +106,14 @@ class PortableHostPreflightTests(unittest.TestCase):
             with self.assertRaises(PortableHostPreflightError):
                 self._probe(str(f))
 
+    @skip_unless_symlinks
     def test_symlink_package_refuses(self):
         with TemporaryDirectory() as tmp:
             link=Path(tmp)/"linked";link.symlink_to(tmp, target_is_directory=True)
             with self.assertRaises(PortableHostPreflightError):
                 self._probe(str(link))
 
+    @skip_unless_symlinks
     def test_symlink_ancestor_refuses(self):
         with TemporaryDirectory() as tmp:
             link=Path(tmp)/"parent";link.symlink_to(tmp, target_is_directory=True)

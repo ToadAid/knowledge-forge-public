@@ -10,6 +10,7 @@ import subprocess
 import sys
 import unittest
 from unittest.mock import patch
+from _platform_support import skip_posix_shebang_host_on_windows
 
 from knowledge_forge.portable_native_host_probe import (
     NativeHostProbeError, native_version, replay_synthetic,
@@ -42,6 +43,7 @@ class NativeHostProbeTests(unittest.TestCase):
         binary.chmod(binary.stat().st_mode | stat.S_IXUSR)
         return str(binary)
 
+    @skip_posix_shebang_host_on_windows
     def test_isolated_version_env_both_hosts(self):
         with TemporaryDirectory() as temp:
             binary = self._fake_host(temp, "2.1.296 (Claude Code)\n")
@@ -53,6 +55,7 @@ class NativeHostProbeTests(unittest.TestCase):
                     self.assertFalse(result["native_hook_dispatched"])
                     self.assertFalse(result["version_is_hook_capability_attestation"])
 
+    @skip_posix_shebang_host_on_windows
     def test_real_shell_profile_and_secrets_not_needed(self):
         with TemporaryDirectory() as temp:
             binary = self._fake_host(temp, "codex-cli 0.161.0\n")
@@ -60,6 +63,7 @@ class NativeHostProbeTests(unittest.TestCase):
                 result = native_version("codex-cli", binary=binary)
             self.assertEqual(result["version"], "0.161.0")
 
+    @skip_posix_shebang_host_on_windows
     def test_unrelated_secrets_and_loader_options_never_inherited(self):
         with TemporaryDirectory() as temp:
             binary = self._fake_host(temp, "2.1.296 (Claude Code)\n")

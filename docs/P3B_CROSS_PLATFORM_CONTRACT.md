@@ -1,6 +1,7 @@
 # P3B-CP0 — Cross-platform Forge contract and support truth
 
-**Status: ADDITIVE REVIEW CONTRACT ONLY. NO NATIVE WINDOWS INSTALLER OR TRUSTED OPERATOR.**
+**Status: ADDITIVE REVIEW CONTRACT. P3B-CP1 adds a native Windows ORDINARY
+installer only (consumer + authoring). NO TRUSTED OPERATOR ON ANY OS.**
 
 ## Non-negotiable invariant
 
@@ -19,7 +20,7 @@ VALIDATED, PROMOTED, evidence, candidate IDs or authorization**.
 | Linux | POSIX Bash installer; TNG regression proof | P3B Linux *diagnostics* only; protected host not provisioned |
 | macOS | POSIX documented; no macOS runner proof | Not implemented / not tested |
 | Windows WSL | POSIX documented; no WSL runner proof | WSL does not prove independent Windows host security |
-| Native Windows | **No Forge `.cmd`/PowerShell installer yet** | Not implemented / not tested |
+| Native Windows | P3B-CP1 `cmd.exe` installer (`bin\knowledge-forge-install-agent.cmd`): two ordinary `.exe` commands; native desktop proof + `windows-latest` CI | **Not implemented** (CP2 design only, see `P3B_CP2_WINDOWS_OPERATOR_DESIGN.md`) |
 
 The new `platform_contract.py` is self-observed **review-only data**. Even if
 an agent forges a platform label, it cannot obtain any authority via this API.
@@ -65,6 +66,15 @@ caller-controlled shortcut to the privileged operator CLI.
 6. Run an actual GitHub `windows-latest` job and an independent Windows
    desktop proof with native `cmd.exe` and both Claude Code and Codex.
 
+*CP1 status:* implemented as an ordinary installer only (see
+`INSTALL_AGENT.md#native-windows-cmdexe`). The installed commands are pip
+console-launcher `.exe` files rather than `.cmd` wrappers so that
+model-controlled arguments never pass through `cmd.exe`. The self-observed
+`platform_contract` labels (and their CP0 snapshot test) are deliberately left
+unchanged in CP1; updating the Windows `installer_support` label is a separate
+reviewer decision after CP1 is accepted. Every operator, authentication and
+promotion field stays `false` regardless.
+
 **CP2 — Protected host adapters, all OSes:** Linux distinct UIDs/ownership,
 Windows distinct service account/token/NTFS ACLs and independently controlled
 human-approval UI, macOS separate privileged architecture later. No OS adapter
@@ -92,3 +102,10 @@ merges, policy-grant widening or system provisioning from the agent.
 CP0 does **not** claim native Windows compatibility, macOS parity, a security
 boundary, operator provisioning, authenticated approval or a usable Windows
 installer. Update public compatibility claims only after real target OS proofs.
+
+## Native Windows test skips
+
+Every native Windows skip is named by the exact host capability it needs, lives in
+`tests/_platform_support.py`, and never skips on Linux. The P3B-CP1 R2 table of skips
+for the upstream Linux-native portable modules, with the Windows fail-closed tests
+that replace them, is in `docs/P3B_CP1_WINDOWS_TEST_SKIPS.md`.

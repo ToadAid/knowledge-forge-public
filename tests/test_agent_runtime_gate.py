@@ -10,6 +10,9 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
+from _platform_support import skip_linux_account_module_on_windows
+skip_linux_account_module_on_windows('agent_runtime_gate')
+
 from knowledge_forge.agent_runtime_gate import (
     AgentRuntimeGateError, AgentRuntimePolicy, inspect_ordinary_agent_runtime,
 )

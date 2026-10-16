@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 import tempfile
 import unittest
+from _platform_support import skip_without_pdftotext_on_windows
 
 from knowledge_forge.ingest import ingest_source
 from knowledge_forge.normalize import NormalizationError, normalize_source
@@ -71,6 +72,7 @@ class NormalizeTests(unittest.TestCase):
         self.assertNotEqual(sa["section_id"], sb["section_id"])
         self.assertEqual(sa["section_sha256"], sb["section_sha256"])
 
+    @skip_without_pdftotext_on_windows
     def test_pdf_normalizes_to_stable_page_sections(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "two-pages.pdf"

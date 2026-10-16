@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
+from _platform_support import skip_unless_symlinks
 
 from knowledge_forge.operator_drop import (
     COPY_AUTHORITY,
@@ -57,6 +58,7 @@ class OperatorDropTests(unittest.TestCase):
             [str(sandbox.resolve()), str(intake.resolve())],
         )
 
+    @skip_unless_symlinks
     def test_discovery_lists_regular_files_and_never_follows_symlinks(self):
         temp, drop, _sandbox, _intake, _other, policy = self._roots()
         self.addCleanup(temp.cleanup)
@@ -155,6 +157,7 @@ class OperatorDropTests(unittest.TestCase):
                         destination_root=sandbox,
                     )
 
+    @skip_unless_symlinks
     def test_source_symlink_is_refused(self):
         temp, drop, sandbox, _intake, _other, policy = self._roots()
         self.addCleanup(temp.cleanup)
@@ -169,6 +172,7 @@ class OperatorDropTests(unittest.TestCase):
                 destination_root=sandbox,
             )
 
+    @skip_unless_symlinks
     def test_symlink_destination_parent_is_refused(self):
         temp, drop, sandbox, _intake, other, policy = self._roots()
         self.addCleanup(temp.cleanup)

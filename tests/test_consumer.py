@@ -159,7 +159,8 @@ class ConsumerProofTests(unittest.TestCase):
             skill_path = skill_root / "SKILL.md"
             skill = skill_path.read_text()
             skill = skill.replace(f"(`{unit_id_for('handbook:governance', 'governance.approval_quorum')}`)", "(`wrong-unit`)")
-            skill_path.write_text(skill)
+            # Write exactly the bytes hashed below (Windows text mode would add CR).
+            skill_path.write_text(skill, newline="\n")
 
             receipt_path = skill_root / "SOURCE_RECEIPT.json"
             receipt = json.loads(receipt_path.read_text())

@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from _platform_support import skip_unless_symlinks
 
 from knowledge_forge.approval import ApprovalContractError
 from knowledge_forge.approval_tui import main
@@ -191,6 +192,7 @@ class CandidatePreviewTests(unittest.TestCase):
                        for p in Path(sandbox.name).rglob("*"))
         self.assertEqual(before, after)
 
+    @skip_unless_symlinks
     def test_cli_symlink_artifact_refused(self):
         sandbox, root, life, _files, _validated, _manifest = fixture()
         self.addCleanup(sandbox.cleanup)

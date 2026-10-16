@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from _platform_support import skip_unless_symlinks
 
 from knowledge_forge.claims import unit_id_for
 from knowledge_forge.emit import build_skill_package
@@ -426,6 +427,7 @@ class TrustWallTests(unittest.TestCase):
             ["wallet_send"],
         )
 
+    @skip_unless_symlinks
     def test_symlink_artifact_refuses_before_package_validation(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

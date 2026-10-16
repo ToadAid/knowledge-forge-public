@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import tempfile
 import unittest
+from _platform_support import skip_unless_symlinks
 
 from knowledge_forge.cli import build_parser as build_read_only_parser
 from knowledge_forge.operator_cli import (
@@ -26,6 +27,7 @@ class OperatorCliTests(unittest.TestCase):
         self.assertIn("promote", _subcommands(build_operator_parser()))
         self.assertNotIn("promote", _subcommands(build_read_only_parser()))
 
+    @skip_unless_symlinks
     def test_snapshot_refuses_symlink_artifact(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

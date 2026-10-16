@@ -1,0 +1,10 @@
+# P3B-CP1: byte-stable checkouts on every OS.
+#
+# Hash-pinned fixtures, schemas, provenance and evidence must keep their exact
+# LF bytes even when Git for Windows runs with core.autocrlf=true (its default),
+# otherwise a native-Windows clone silently changes digests and fails closed.
+* text=auto eol=lf
+
+# Native Windows batch transports are parsed by cmd.exe and need CRLF.
+*.cmd text eol=crlf
+*.bat text eol=crlf

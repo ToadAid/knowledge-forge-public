@@ -23,7 +23,9 @@ ordinary agent PATH
 
 ## Requirements
 
-- POSIX shell environment (Linux, macOS, or WSL)
+- POSIX shell environment (Linux, macOS, or WSL), **or** native Windows 10/11
+  with `cmd.exe` for the ordinary consumer/authoring install
+  ([Native Windows](#native-windows-cmdexe))
 - Git
 - Python 3.10 or newer
 - a persistent Knowledge Forge checkout
@@ -83,6 +85,97 @@ knowledge-forge-authoring --help
 The installer is create-once/idempotent for exact generated files. It refuses
 to overwrite different existing shims or manifests and refuses a prefix that
 already exposes `knowledge-forge-operator`.
+
+## Native Windows (cmd.exe)
+
+P3B-CP1 adds an **ordinary** native Windows installer: standard user, plain
+`cmd.exe`, Python 3.10+. No WSL, Git Bash, Node, PowerShell scripts,
+administrator rights, registry writes, services, downloads or PATH changes.
+It installs the same two ordinary commands and **never** installs, exposes or
+runs `knowledge-forge-operator`. Windows operator/promotion support is not
+implemented (see [the CP2 design note](docs/P3B_CP2_WINDOWS_OPERATOR_DESIGN.md)).
+
+Open a normal Command Prompt (not elevated) in the checkout:
+
+```bat
+bin\knowledge-forge-install-agent.cmd --check-only
+bin\knowledge-forge-install-agent.cmd
+```
+
+Default locations:
+
+```text
+%LOCALAPPDATA%\ToadAid\knowledge-forge\bin\knowledge-forge.exe
+%LOCALAPPDATA%\ToadAid\knowledge-forge\bin\knowledge-forge-authoring.exe
+%LOCALAPPDATA%\ToadAid\knowledge-forge\state\agent-integration.json
+```
+
+`--prefix`, `--state-root` and `--manifest` take absolute paths and win over
+the defaults (commands go in `<prefix>\bin`). If `%LOCALAPPDATA%` is missing or
+fails the checks below and no explicit paths are given, the installer refuses;
+it never guesses another location. PATH is not modified: call the commands by
+full path, or add `<prefix>\bin` to your own user PATH yourself.
+
+**Interpreter.** `KNOWLEDGE_FORGE_PYTHON` (absolute path to `python.exe`) if
+set, otherwise the Python Launcher `py -3`, otherwise the first `python` on
+PATH. Older than 3.10, or missing, exits 2 with nothing written. The absolute
+interpreter path and version are recorded in the manifest.
+
+**Why `.exe` commands.** The installed commands receive model-controlled
+arguments. A `.cmd` wrapper has to re-expand `%*`, and `cmd.exe` would then
+interpret `&`, `|`, `<`, `>` and `%` inside arguments (an argument `a&b` would
+run `b`). Each command is therefore built from the console launcher stub that
+ships with the selected interpreter's own `pip`
+(`pip\_vendor\distlib\t64.exe`, the mechanism pip uses for every Windows
+console script): its shebang pins the exact `python.exe -I`, and an embedded
+`__main__.py` runs `knowledge_forge` or `knowledge_forge.authoring_cli` from
+this exact checkout. Arguments go straight to Python; no shell parses them.
+Nothing is downloaded. If that interpreter has no `pip`, the installer
+refuses rather than falling back to a shell wrapper. Only the human-run
+installer itself is a `.cmd`; quote any of its path arguments that contain
+spaces or `& | ( )`.
+
+**Destination policy (fail closed).**
+
+- absolute local-drive paths only (`C:\...`); UNC/network, device or
+  extended-length (`\\?\`, `\\.\`), relative, `..`, alternate data streams,
+  reserved device names, trailing dots/spaces and paths over 200 characters
+  are refused;
+- symlinks, junctions and other reparse points anywhere in the path are
+  refused, as is any path whose real OS path differs (8.3 short names, SUBST
+  or mapped network drives, packaged-app file virtualization);
+- every directory written into must be owned by you, and no account other
+  than you, SYSTEM or Administrators may hold write access. A drive root such
+  as `E:\` (which usually grants *Authenticated Users* modify),
+  `C:\Users\Public`, other users' folders and `Program Files` are refused.
+  AppContainer grants (sandboxed apps running as *your own* account) are
+  reported, not refused, because they cannot exceed your rights;
+- an existing `knowledge-forge-operator` (any extension) or a shadowing
+  `knowledge-forge.cmd`/`.bat`/`.ps1`/... in `<prefix>\bin` is refused.
+
+`--check-only` performs all of these checks plus a doctor run of the two
+ordinary modules and writes nothing (no directories, files or bytecode
+caches). Its JSON reports `operator_cli_installed: false`,
+`promotion_authority: EXTERNAL_AUTHENTICATED_HUMAN_HOST_ONLY`,
+`windows_support.operator_security_verified: false`, and whether the checkout
+itself is writable by other accounts (`checkout_location_private`).
+
+**Writes, retries and recovery.** Each file is written to a temporary name
+and renamed into place without replacement. An existing file with identical
+bytes counts as done; different bytes are refused and preserved. The manifest
+is written last, only after both installed commands pass `--help`, so a failed
+run never leaves a manifest. Re-running after an interruption completes the
+missing files. If a file was changed (or `pip` was upgraded, which changes the
+launcher bytes), install into a new prefix/state, or deliberately delete only
+the exact files the installer named and run it again.
+
+**Known environment notes.**
+
+- Run the installer from a normal `cmd.exe`. Processes started by a packaged
+  (MSIX) desktop app may have `%LOCALAPPDATA%` writes virtualized into that
+  app's private storage; the installer detects this and refuses.
+- Some Windows sandboxes (for example the Codex sandbox) grant their own
+  accounts write access to `%LOCALAPPDATA%\Temp`; such a location is refused.
 
 ## Custom host paths
 

@@ -10,6 +10,7 @@ import sys
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
+from _platform_support import skip_linux_proc_namespaces_on_windows
 
 from knowledge_forge.portable_native_hermetic_preflight import (
     BWRAP, PYTHON, BOOTSTRAP_CODE, PROBE_CODE, STATUS_BLOCKED, STATUS_PASS,
@@ -226,6 +227,7 @@ class P7HermeticTests(unittest.TestCase):
         self.assertEqual(result['state'], STATUS_BLOCKED)
         self.assertFalse(result['native_launch_authorized'])
 
+    @skip_linux_proc_namespaces_on_windows
     def test_synthetic_runner_scope_fixed_and_sanitized(self):
         from knowledge_forge import portable_native_hermetic_preflight as mod
         parent={k:os.stat('/proc/self/ns/'+k).st_ino for k in ('net','mnt','pid')}

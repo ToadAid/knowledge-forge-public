@@ -4,6 +4,7 @@ from copy import deepcopy
 from pathlib import Path
 import tempfile
 import unittest
+from _platform_support import skip_posix_shebang_tools_on_windows
 from unittest.mock import patch
 
 from knowledge_forge.ingest import ingest_source
@@ -77,6 +78,7 @@ else:
 
 
 class OcrBoundaryTests(unittest.TestCase):
+    @skip_posix_shebang_tools_on_windows
     def test_explicit_external_ocr_records_tools_language_dpi_and_pages(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -125,6 +127,7 @@ class OcrBoundaryTests(unittest.TestCase):
             },
         )
 
+    @skip_posix_shebang_tools_on_windows
     def test_ocr_normalization_keeps_source_identity_and_marks_every_page_derived(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -281,6 +284,7 @@ class OcrBoundaryTests(unittest.TestCase):
                     tesseract_binary=tesseract,
                 )
 
+    @skip_posix_shebang_tools_on_windows
     def test_blank_ocr_output_refuses_instead_of_emitting_empty_knowledge(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

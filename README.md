@@ -94,7 +94,9 @@ build never authorizes promotion.
 
 - Python 3.10 or newer
 - Git
-- a POSIX shell environment such as Linux, macOS, or WSL
+- a POSIX shell environment such as Linux, macOS, or WSL, **or** native
+  Windows 10/11 with `cmd.exe` (ordinary consumer/authoring install only; see
+  [INSTALL_AGENT.md](INSTALL_AGENT.md#native-windows-cmdexe))
 
 The core and test suite use the Python standard library. Text-bearing PDF
 extraction optionally calls Poppler tools. Explicit OCR optionally calls Poppler
@@ -118,6 +120,15 @@ bin/knowledge-forge-install-agent
 export PATH="$HOME/.local/bin:$PATH"
 knowledge-forge --help
 knowledge-forge-authoring --help
+```
+
+On native Windows, from a normal `cmd.exe` (no WSL, Git Bash, PowerShell
+scripts or administrator rights):
+
+```bat
+bin\knowledge-forge-install-agent.cmd --check-only
+bin\knowledge-forge-install-agent.cmd
+"%LOCALAPPDATA%\ToadAid\knowledge-forge\bin\knowledge-forge.exe" --help
 ```
 
 The installer creates checkout-pointing shims and a host-owned integration

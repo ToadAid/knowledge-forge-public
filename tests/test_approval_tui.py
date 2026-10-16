@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from _platform_support import skip_bash_launcher_on_windows
 from unittest.mock import patch
 
 from knowledge_forge.approval import ApprovalContractError, ReviewDecisionLedger
@@ -178,6 +179,7 @@ class ApprovalTuiTests(unittest.TestCase):
         self.assertIsNone(result["receipt"])
         self.assertFalse(result["authorization_granted"])
 
+    @skip_bash_launcher_on_windows
     def test_piped_cli_refuses_and_never_exposes_operator_cli(self):
         with tempfile.TemporaryDirectory() as tmp:
             receipt = Path(tmp) / "should-not-exist.json"
@@ -196,6 +198,7 @@ class ApprovalTuiTests(unittest.TestCase):
         installer = (REPO_ROOT / "bin" / "knowledge-forge-install-agent").read_text(encoding="utf-8")
         self.assertIn("knowledge-forge-operator is deliberately NOT installed", installer)
 
+    @skip_bash_launcher_on_windows
     def test_expired_real_review_cli_rejects_caller_clock_override(self):
         request, evidence, binding, _identity = fixture()
         with tempfile.TemporaryDirectory() as tmp:
@@ -234,6 +237,7 @@ class ApprovalTuiTests(unittest.TestCase):
             self.assertIn("unrecognized arguments: --reviewed-at", run.stderr)
             self.assertFalse(receipt_path.exists())
 
+    @skip_bash_launcher_on_windows
     def test_cli_projects_all_surfaces_without_transport_authority(self):
         first = subprocess.run(
             [str(REPO_ROOT / "bin" / "knowledge-forge-review"), "synthetic-projections", "--as-of", REVIEWED],

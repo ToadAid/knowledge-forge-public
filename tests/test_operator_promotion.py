@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
+from _platform_support import skip_unless_symlinks
 
 from knowledge_forge.operator_promotion import (
     AUTHORIZATION_BOUNDARY,
@@ -325,6 +326,7 @@ class OperatorPromotionTests(unittest.TestCase):
             self.assertFalse(lifecycle_path.exists())
             self.assertFalse(receipt_path.exists())
 
+    @skip_unless_symlinks
     def test_symlink_ancestor_on_immutable_output_is_refused(self):
         result, inputs = self._promote()
         original_registry = inputs[0]
