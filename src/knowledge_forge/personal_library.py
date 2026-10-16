@@ -255,26 +255,59 @@ def _library_write_lock(path: Path):
 
 
 def _read_bounded_bytes(path: Path, limit: int, label: str) -> bytes:
-    """Read a regular file only after pre-checking its size; fail closed
-    if the file changes between inspection and the completed read."""
+    """Read at most limit + 1 bytes through one opened regular-file handle.
 
+    Pre-reading the size is not a memory bound: a file can grow after stat().
+    Open once, check the descriptor, cap the actual read, and compare post-read
+    metadata. Never allocate arbitrary growth from an untrusted artifact.
+    """
+
+    if limit < 0:
+        raise PersonalLibraryError(f"{label} exceeds byte limit: {path}")
+    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
     try:
-        info = os.stat(path)
+        descriptor = os.open(path, flags)
     except OSError as exc:
         raise PersonalLibraryError(f"{label} is unreadable: {path}") from exc
-    if not stat.S_ISREG(info.st_mode):
-        raise PersonalLibraryError(f"{label} must be a regular file: {path}")
-    if info.st_size > limit:
-        raise PersonalLibraryError(
-            f"{label} exceeds {limit} byte limit: {path}"
-        )
     try:
-        payload = path.read_bytes()
+        info = os.fstat(descriptor)
+        if not stat.S_ISREG(info.st_mode):
+            raise PersonalLibraryError(
+                f"{label} must be a regular file: {path}"
+            )
+        if info.st_size > limit:
+            raise PersonalLibraryError(
+                f"{label} exceeds {limit} byte limit: {path}"
+            )
+        payload = bytearray()
+        remaining = limit + 1
+        while remaining:
+            chunk = os.read(descriptor, min(1024 * 1024, remaining))
+            if not chunk:
+                break
+            payload.extend(chunk)
+            remaining -= len(chunk)
+        final = os.fstat(descriptor)
+        if len(payload) > limit:
+            raise PersonalLibraryError(
+                f"{label} exceeds {limit} byte limit: {path}"
+            )
+        if (
+            len(payload) != info.st_size
+            or final.st_size != info.st_size
+            or final.st_mtime_ns != info.st_mtime_ns
+            or final.st_ctime_ns != info.st_ctime_ns
+            or final.st_dev != info.st_dev
+            or final.st_ino != info.st_ino
+        ):
+            raise PersonalLibraryError(
+                f"{label} changed while being read: {path}"
+            )
+        return bytes(payload)
     except OSError as exc:
         raise PersonalLibraryError(f"{label} is unreadable: {path}") from exc
-    if len(payload) != info.st_size:
-        raise PersonalLibraryError(f"{label} changed while being read: {path}")
-    return payload
+    finally:
+        os.close(descriptor)
 
 
 def _snapshot_package(package_root: str | Path) -> dict[str, bytes]:
@@ -316,38 +349,16 @@ def _snapshot_package(package_root: str | Path) -> dict[str, bytes]:
                 "personal package contains a non-regular artifact"
             )
         relative = path.relative_to(root).as_posix()
-        try:
-            info = path.stat()
-        except OSError as exc:
-            raise PersonalLibraryError(
-                f"personal package artifact is unreadable: {relative}"
-            ) from exc
-        if info.st_size > MAX_PACKAGE_BYTES:
-            raise PersonalLibraryError(
-                f"personal package artifact exceeds {MAX_PACKAGE_BYTES} "
-                f"byte limit: {relative}"
-            )
-        try:
-            payload = path.read_bytes()
-        except OSError as exc:
-            raise PersonalLibraryError(
-                f"personal package artifact is unreadable: {relative}"
-            ) from exc
-        if len(payload) != info.st_size:
-            raise PersonalLibraryError(
-                "personal package artifact changed while being inspected: "
-                f"{relative}"
-            )
-        files[relative] = payload
-        total += len(payload)
-        if len(files) > MAX_PACKAGE_FILES:
+        if len(files) >= MAX_PACKAGE_FILES:
             raise PersonalLibraryError(
                 f"personal package exceeds {MAX_PACKAGE_FILES} file limit"
             )
-        if total > MAX_PACKAGE_BYTES:
-            raise PersonalLibraryError(
-                f"personal package exceeds {MAX_PACKAGE_BYTES} byte limit"
-            )
+        remaining_bytes = MAX_PACKAGE_BYTES - total
+        payload = _read_bounded_bytes(
+            path, remaining_bytes, f"personal package artifact {relative}"
+        )
+        files[relative] = payload
+        total += len(payload)
 
     if not files:
         raise PersonalLibraryError("personal package is empty")
