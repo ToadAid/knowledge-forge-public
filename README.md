@@ -285,6 +285,12 @@ promoted. There is no same-account TTY fallback.
 
 ### Linux protected promotion reference
 
+The optional [generic daemon approval queue](docs/GENERIC_DAEMON_APPROVAL.md)
+lets compatible agents submit validated bundles while a separate human desktop
+broker displays approval popups. A dedicated operator UID owns snapshots,
+registry and receipts. This requires explicit administrator deployment and an
+allowed request transport; ordinary installation does not activate it.
+
 The repository now includes a Linux/systemd reference for the intended simple
 human experience:
 

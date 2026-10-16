@@ -1,0 +1,16 @@
+[Unit]
+Description=Knowledge Forge human desktop approval broker
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/opt/toadaid-kf-operator/bin/knowledge-forge-review-daemon
+UMask=0077
+NoNewPrivileges=yes
+Restart=no
+
+# Install only in a human reviewer's user manager, never the agent's manager.
+# Activation is an explicit administrator/human action, not ordinary install.
+[Install]
+WantedBy=graphical-session.target

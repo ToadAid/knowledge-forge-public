@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+# Reviewer code must be root-installed, never loaded from an agent checkout.
+# Resolve the desktop binary only from administrator-owned system directories.
+export PATH=/usr/bin:/bin
+exec /usr/bin/python3 -I -B -c \
+  'import sys; sys.path.insert(0,"/opt/toadaid-kf-operator/src"); from knowledge_forge.generic_approval_reviewer import main; raise SystemExit(main())' \
+  "$@"

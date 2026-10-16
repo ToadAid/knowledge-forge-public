@@ -737,13 +737,17 @@ def handle_connection(connection: socket.socket, *, policy: OperatorPolicy,
 
 
 def serve_connected_socket(connection: socket.socket) -> None:
+    from .generic_approval_queue import (
+        AGENT_OPERATIONS, REVIEW_OPERATIONS, handle_generic_connection,
+    )
     policy = _load_policy()
     operator_uid, agent_uid = verify_runtime(policy)
     os.umask(0o077)
     try:
         connection.settimeout(INITIAL_REQUEST_SECONDS)
         request = recv_frame(connection)
-        if request.get("operation") == "PREPARE_CODEX":
+        operation = request.get("operation")
+        if operation == "PREPARE_CODEX" or operation in AGENT_OPERATIONS:
             peer = agent_peer_identity(
                 connection, operator_uid=operator_uid, agent_uid=agent_uid
             )
@@ -751,9 +755,15 @@ def serve_connected_socket(connection: socket.socket) -> None:
             peer = peer_identity(
                 connection, operator_uid=operator_uid, agent_uid=agent_uid
             )
-        handle_connection(
-            connection, policy=policy, peer=peer, initial_request=request
-        )
+        if operation in AGENT_OPERATIONS or operation in REVIEW_OPERATIONS:
+            handle_generic_connection(
+                connection, policy=policy, peer=peer, request=request,
+                agent=operation in AGENT_OPERATIONS, now_fn=_now,
+            )
+        else:
+            handle_connection(
+                connection, policy=policy, peer=peer, initial_request=request
+            )
     except Exception as exc:
         try:
             send_frame(connection, {"status": "REFUSED", "error": str(exc)})

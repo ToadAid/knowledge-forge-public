@@ -1,5 +1,9 @@
 # Linux protected promotion service
 
+For agent-neutral submission and a popup broker running under a separate human
+UID, see [Generic daemon approval](GENERIC_DAEMON_APPROVAL.md). Its optional
+queue/socket and reviewer service reuse this protected operator boundary.
+
 ## Status
 
 This directory contains a Linux-first reference implementation for the simple
