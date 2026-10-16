@@ -38,6 +38,29 @@ The test intentionally does **not** create a `PROMOTED` registry, invoke the pri
 | `NATIVE CLAUDE/CODEX` | **NOT ATTEMPTED** |
 | `PUBLIC USER USABILITY` | **NOT YET VALIDATED** |
 
+## Post-publication R2 — native Windows CI test-boundary reconciliation
+
+The draft PR's first Windows CI run (`38829873606`) failed on both Python 3.10
+and Python 3.13 because `P9BRealOrdinaryCliTests.setUpClass` unconditionally
+called `run_pilot()` on native Windows; the pilot intentionally raises
+`AcceptancePilotError('P9B Dell/Linux pilot only')` **before** reading a checkout
+or spawning any process. This was a **test selection error**, not evidence that
+ordinary Windows consumer/authoring installation failed. Linux CI succeeded.
+
+R2 limits the real E2E subprocess **test class** to Linux (not a blanket test
+module skip), keeping all eight real checks active on Linux. Two new
+cross-platform contract tests simulate `win32` and require that the callable
+pilot refuses before checkout checks or subprocess execution, and that the
+synthetic CLI mode refuses with **exit 2, empty stdout, exact stderr**. These
+negative tests also run on native Windows CI. No production implementation,
+installer, security gates, operator, or native host state is changed.
+
+**Evidence limit:** a green Windows matrix following this repair will prove the
+existing native Windows installation suites and the P9B fail-closed refusal,
+**not** Windows-native end-to-end P9B authoring/finalization. A separate Windows
+consumer+authoring E2E pilot using the installed `.exe` shims requires its own
+scoped cut and proof, not a reinterpretation of these Linux results.
+
 ## Dell staging / reproduction
 
 On exact Dell7920 protected-main P8 base, the self-contained P9B script uses an isolated worktree, exactly three SHA-256-sealed new source files, focused tests, complete `unittest discover -s tests`, read-only `bin/knowledge-forge-install-agent --check-only`, explicit synthetic pilot result and negative tests, then one **local-only** staging commit. No pushes, PRs, branch resets, protected-main writes, native hosts, operator commands, approvals or network requests from the pilot. The bootstrap shell performs bounded GitHub metadata queries and a single `git fetch` solely to obtain the pinned base.

@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import copy
 import json
+from contextlib import redirect_stderr, redirect_stdout
+from io import StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
@@ -86,12 +88,46 @@ class P9BContractTests(unittest.TestCase):
         self.assertIn('no governed knowledge skill matched', NO_MATCH_DISCOVERY_ERROR)
         self.assertNotIn('match_count', NO_MATCH_DISCOVERY_ERROR)
 
+    def test_nonlinux_refuses_before_checking_checkout_or_spawning(self):
+        # The true E2E pilot uses POSIX bin/ Bash launchers. Native Windows
+        # must refuse at the entrypoint before inspecting checkout or running
+        # a tool. Simulate win32 on every CI OS so this contract is portable.
+        with patch('knowledge_forge.portable_acceptance_pilot.sys.platform', 'win32'), \
+             patch('knowledge_forge.portable_acceptance_pilot._check_repo',
+                   side_effect=AssertionError('checkout must not be inspected')) as check, \
+             patch('knowledge_forge.portable_acceptance_pilot.subprocess.run',
+                   side_effect=AssertionError('CLI must not spawn')) as spawn:
+            with self.assertRaisesRegex(AcceptancePilotError, 'P9B Dell/Linux pilot only'):
+                run_pilot(Path('/synthetic/no-repo'))
+        check.assert_not_called()
+        spawn.assert_not_called()
+
+    def test_nonlinux_mode_refusal_is_stderr_only(self):
+        out, err = StringIO(), StringIO()
+        with patch('knowledge_forge.portable_acceptance_pilot.sys.platform', 'win32'), \
+             patch('knowledge_forge.portable_acceptance_pilot._check_repo',
+                   side_effect=AssertionError('checkout must not be inspected')) as check, \
+             patch('knowledge_forge.portable_acceptance_pilot.subprocess.run',
+                   side_effect=AssertionError('CLI must not spawn')) as spawn, \
+             redirect_stdout(out), redirect_stderr(err):
+            rc = main(['--mode', 'SYNTHETIC_CLI_ONLY'])
+        self.assertEqual(rc, 2)
+        self.assertEqual(out.getvalue(), '')
+        self.assertEqual(err.getvalue(), 'Refused: synthetic acceptance pilot did not pass\n')
+        check.assert_not_called()
+        spawn.assert_not_called()
+
     def test_bad_checkout_refused_without_discovery(self):
         for bad in (Path('.'), Path('/tmp/not-a-checkout-for-p9b')):
             with self.assertRaises(AcceptancePilotError):
                 _check_repo(bad)
 
 
+@unittest.skipUnless(
+    sys.platform == 'linux',
+    'P9B E2E requires POSIX Bash launchers and Linux PATH; native Windows '
+    'fail-closed refusal is asserted separately by P9BContractTests',
+)
 class P9BRealOrdinaryCliTests(unittest.TestCase):
     """Real CLI subprocesses run ONCE per suite; no mocks for the happy path."""
 
