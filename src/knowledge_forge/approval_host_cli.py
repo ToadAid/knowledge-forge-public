@@ -90,16 +90,17 @@ def _read_host_key(path: Path) -> bytes:
         raise ApprovalHostCliError(f"host key file is missing: {path}") from exc
     if not stat.S_ISREG(key_stat.st_mode):
         raise ApprovalHostCliError("host key file must be a regular file")
-    if key_stat.st_mode & 0o077:
-        raise ApprovalHostCliError(
-            "host key file is readable by group or others; refusing (mode "
-            "must be 0600 and the file owned by this process account)"
-        )
-    if key_stat.st_uid != os.geteuid():
-        raise ApprovalHostCliError(
-            "host key file is not owned by this process account; the trusted "
-            "host alone may hold and use its own key"
-        )
+    if sys.platform != "win32":
+        if key_stat.st_mode & 0o077:
+            raise ApprovalHostCliError(
+                "host key file is readable by group or others; refusing (mode "
+                "must be 0600 and the file owned by this process account)"
+            )
+        if key_stat.st_uid != os.geteuid():
+            raise ApprovalHostCliError(
+                "host key file is not owned by this process account; the "
+                "trusted host alone may hold and use its own key"
+            )
     try:
         key = resolved.read_bytes()
     except OSError as exc:
