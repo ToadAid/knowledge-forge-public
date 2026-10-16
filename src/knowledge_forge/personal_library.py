@@ -27,7 +27,6 @@ from hashlib import sha256
 import json
 import os
 from pathlib import Path
-import re
 import stat
 import sys
 import tempfile
@@ -48,6 +47,7 @@ from .lifecycle import (
 from .retrieval import (
     HARD_MAX_UNITS_PER_TURN,
     RetrievalError,
+    question_rank_scores,
     route_question,
 )
 from .trust_wall import (
@@ -73,14 +73,6 @@ _PERSONAL_LOCK_TIMEOUT_SECONDS = 10.0
 _PERSONAL_SCAN_ENTRY_LIMIT = 4096
 _MAX_LIFECYCLE_RECORD_BYTES = 16 * 1024 * 1024
 _MAX_LIBRARY_BYTES = 64 * 1024 * 1024
-
-_TOKEN_RE = re.compile(r"[a-z0-9]+")
-_SPACE_RE = re.compile(r"\s+")
-_STOPWORDS = frozenset({
-    "a", "an", "and", "are", "as", "at", "be", "by", "do", "does", "for",
-    "from", "how", "in", "is", "it", "of", "on", "or", "the", "to", "what",
-    "when", "where", "which", "who", "why", "with",
-})
 
 _ENTRY_FIELDS = (
     "skill_id",
@@ -111,18 +103,6 @@ _ACCEPTANCE_FIELDS = (
 
 class PersonalLibraryError(ValueError):
     """Raised when a personal library operation would break the boundary."""
-
-
-def _normalized_phrase(value: str) -> str:
-    return _SPACE_RE.sub(" ", value.strip().lower())
-
-
-def _tokens(value: str) -> tuple[str, ...]:
-    return tuple(
-        token
-        for token in _TOKEN_RE.findall(value.lower())
-        if token not in _STOPWORDS
-    )
 
 
 def _now_stamp() -> str:
@@ -987,7 +967,10 @@ def lookup_personal(
         surviving.append((skill_id, revalidated))
 
     scored: list[
-        tuple[int, int, str, dict[str, Any], dict[str, Any], list[dict[str, Any]]]
+        tuple[
+            int, int, int, int,
+            str, dict[str, Any], dict[str, Any], list[dict[str, Any]],
+        ]
     ] = []
     for skill_id, revalidated in surviving:
         try:
@@ -999,28 +982,13 @@ def lookup_personal(
         except RetrievalError:
             continue
         entry = entries[skill_id]
-        query_phrase = _normalized_phrase(question)
-        query_tokens = set(_tokens(question))
-        exact_alias = max(
-            (
-                len(_tokens(alias))
-                for unit in routed
-                for alias in unit.get("aliases", [])
-                if isinstance(alias, str)
-                and alias
-                and _normalized_phrase(alias) in query_phrase
-            ),
-            default=0,
+        exact_alias, compound, prefix, overlap = question_rank_scores(
+            question, routed
         )
-        overlap = len(
-            query_tokens
-            & {
-                token
-                for unit in routed
-                for token in unit.get("terms", [])
-            }
+        scored.append(
+            (exact_alias, compound, prefix, overlap, skill_id, entry,
+             revalidated, routed)
         )
-        scored.append((exact_alias, overlap, skill_id, entry, revalidated, routed))
 
     if not scored:
         # Distinguish a fully-broken library from an honest no-match.
@@ -1036,13 +1004,15 @@ def lookup_personal(
             "no personal library entry matched the question"
         )
 
-    scored.sort(key=lambda item: (-item[0], -item[1], item[2]))
+    scored.sort(
+        key=lambda item: (-item[0], -item[1], -item[2], -item[3], item[4])
+    )
     selected = scored[:max_skills]
 
     reasoning_context: list[dict[str, Any]] = []
     loaded_unit_ids: list[str] = []
     selected_skills: list[dict[str, Any]] = []
-    for _, _, skill_id, entry, revalidated, routed in selected:
+    for _, _, _, _, skill_id, entry, revalidated, routed in selected:
         manifest = revalidated["manifest"]
         claim_index = revalidated["claim_index"]
         files = revalidated["files"]

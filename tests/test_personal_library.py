@@ -82,12 +82,32 @@ def claim_quorum():
     }
 
 
+def claim_clairdelune():
+    return {
+        "claim_key": "pond.clairdelune.prophecy",
+        "subject": "pond.clairdelune",
+        "predicate": "prophecy",
+        "value": True,
+        "qualifiers": {},
+        "scope": {},
+        "validity": {"as_of_source": "test-source"},
+        "executable": False,
+    }
+
+
 def _source_for(skill: str) -> str:
     if skill in ("liquidity", "two-unit"):
         return (
             "# Concentrated Liquidity\n"
             "Liquidity is active only while the current price is inside "
             "the position range.\n\n"
+            "# Other\n"
+            "Unrelated material.\n"
+        )
+    if skill == "lore":
+        return (
+            "# Clairdelune\n"
+            "The Clairdelune speaks of the moonlit pond.\n\n"
             "# Other\n"
             "Unrelated material.\n"
         )
@@ -124,6 +144,18 @@ _SKILLS = {
                 "title": "Approval quorum is exact",
                 "body": "Approval requires exactly seven reviewers.",
                 "claim": claim_quorum,
+            },
+        ],
+    },
+    "lore": {
+        "knowledge_id": "test:pond-lore",
+        "slug": "pond-lore",
+        "title": "Pond Lore",
+        "units": [
+            {
+                "title": "Clairdelune",
+                "body": "The Clairdelune speaks of the moonlit pond.",
+                "claim": claim_clairdelune,
             },
         ],
     },
@@ -634,6 +666,28 @@ class PersonalLibraryTests(unittest.TestCase):
             self.assertEqual(rc, 2)
             self.assertIsNone(out)
             self.assertIn("matched the question", err["error"])
+
+    def test_personal_lookup_compound_phrase_routes_to_lore_token(self):
+        # Natural phrasing hooks a lore-native single-token alias through the
+        # compound tier: "Clair de Lune" (three spaced words) routes to the
+        # "clairdelune" alias. No query token overlaps the index terms and the
+        # body text is never routing metadata, so only compound matching can
+        # produce this route.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _, added, _ = self._add(root, "lore")
+            rc, out, err = self._lookup(root, "Tell me about Clair de Lune")
+            self.assertEqual((rc, err), (0, None))
+            self.assertEqual(out["entry_errors"], [])
+            self.assertEqual(
+                [s["skill_id"] for s in out["selected_skills"]],
+                [added["skill_id"]],
+            )
+            unit = out["reasoning_context"][0]
+            self.assertEqual(unit["claim_key"], "pond.clairdelune.prophecy")
+            self.assertEqual(
+                out["selected_skills"][0]["knowledge_id"], "test:pond-lore"
+            )
 
     def test_personal_lookup_tampered_entry_skipped_good_entry_answers(self):
         with tempfile.TemporaryDirectory() as tmp:
