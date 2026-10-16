@@ -91,6 +91,14 @@ HOST_ADAPTER_PROFILES: Mapping[str, HostAdapterProfile] = MappingProxyType(
             authentication_mechanism="approval_transport",
             review_surface="HERMES_HOST_APPROVAL_UI",
         ),
+        "codex": HostAdapterProfile(
+            adapter_id="codex",
+            host_id="codex-desktop",
+            approval_decision="approve-once",
+            rejection_decision="deny",
+            authentication_mechanism="codex-user-verification",
+            review_surface="CODEX_NATIVE_USER_VERIFICATION",
+        ),
     }
 )
 

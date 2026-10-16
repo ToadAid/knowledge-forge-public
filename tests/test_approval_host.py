@@ -392,6 +392,68 @@ class ApprovalHostChainTests(unittest.TestCase):
         finally:
             ledger.close()
 
+    def test_ledger_refuses_same_nonce_with_a_new_signed_timestamp(self):
+        flow = self.flow
+        nonce = "05" * 16
+        first = flow.decision(nonce=nonce)
+        second = build_host_decision(
+            flow.request,
+            decision="APPROVED",
+            decided_by="toadaid-app:user:42",
+            host_id="toadaid-app",
+            decision_nonce=nonce,
+            decided_at="2026-10-16T13:01:00Z",
+            host_key=flow.host_key,
+        )
+        self.assertNotEqual(decision_sha256(first), decision_sha256(second))
+        ledger = ConsumedDecisionLedger(
+            flow.state / "approval-host-decisions.sqlite3"
+        )
+        try:
+            ledger.claim(
+                first,
+                principal_ref="approval-host:toadaid-app:principal:x",
+                consumed_at=APPROVE_AT,
+            )
+            with self.assertRaisesRegex(ApprovalHostError, "single-use"):
+                ledger.claim(
+                    second,
+                    principal_ref="approval-host:toadaid-app:principal:x",
+                    consumed_at="2026-10-16T13:01:00Z",
+                )
+        finally:
+            ledger.close()
+
+    def test_ledger_migrates_existing_schema_before_nonce_claim(self):
+        path = self.flow.state / "old-approval-host-decisions.sqlite3"
+        import sqlite3
+
+        with sqlite3.connect(path) as connection:
+            connection.execute(
+                "CREATE TABLE host_decisions ("
+                "decision_digest TEXT PRIMARY KEY NOT NULL, "
+                "request_sha256 TEXT NOT NULL, "
+                "principal_ref TEXT NOT NULL, "
+                "consumed_at TEXT NOT NULL)"
+            )
+        os.chmod(path, 0o600)
+        ledger = ConsumedDecisionLedger(path)
+        try:
+            ledger.claim(
+                self.flow.decision(nonce="06" * 16),
+                principal_ref="approval-host:toadaid-app:principal:x",
+                consumed_at=APPROVE_AT,
+            )
+            columns = {
+                row[1]
+                for row in ledger.connection.execute(
+                    "PRAGMA table_info(host_decisions)"
+                )
+            }
+            self.assertIn("decision_nonce", columns)
+        finally:
+            ledger.close()
+
     @skip_unless_symlinks
     def test_ledger_symlink_is_refused(self):
         target = self.flow.state / "real-ledger.sqlite3"
