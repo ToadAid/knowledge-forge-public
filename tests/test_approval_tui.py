@@ -88,7 +88,7 @@ class ApprovalTuiTests(unittest.TestCase):
                 request,
                 evidence,
                 binding,
-                ScriptedTerminal(["a", "yes", "no", "maybe", ""]),
+                ScriptedTerminal(["a", "yes", "a", "no", "a", "maybe"]),
             )
 
     def test_confirmation_token_derives_from_request_sha256(self):
@@ -106,7 +106,7 @@ class ApprovalTuiTests(unittest.TestCase):
 
     def test_confirmation_mismatch_retry_then_success_records_once(self):
         request, evidence, binding, _identity = fixture()
-        terminal = ScriptedTerminal(["a", "yes", "wrong", phrase_for(request)])
+        terminal = ScriptedTerminal(["a", "wrong", "a", phrase_for(request)])
         receipt = run_local_review_tui(request, evidence, binding, terminal)
         self.assertEqual(receipt["state"], "REVIEWED_APPROVED")
         rendered = "".join(terminal.output)
@@ -116,10 +116,18 @@ class ApprovalTuiTests(unittest.TestCase):
 
     def test_confirmation_mismatch_fails_closed_after_three_attempts(self):
         request, evidence, binding, _identity = fixture()
-        terminal = ScriptedTerminal(["a", "yes", "no", "maybe"])
+        terminal = ScriptedTerminal(["a", "yes", "a", "no", "a", "maybe"])
         with self.assertRaisesRegex(ApprovalContractError, "confirmation mismatch"):
             run_local_review_tui(request, evidence, binding, terminal)
         self.assertIn(f"Expected exactly: {phrase_for(request)}", "".join(terminal.output))
+
+    def test_confirmation_mismatch_then_quit_stays_pending(self):
+        request, evidence, binding, _identity = fixture()
+        terminal = ScriptedTerminal(["a", "wrong", "q"])
+        result = run_local_review_tui(request, evidence, binding, terminal)
+        self.assertEqual(result["state"], "PENDING")
+        self.assertIsNone(result["receipt"])
+        self.assertFalse(result["authorization_granted"])
 
     def test_confirmation_eof_fails_closed(self):
         request, evidence, binding, _identity = fixture()
