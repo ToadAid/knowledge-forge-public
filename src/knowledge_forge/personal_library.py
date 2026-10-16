@@ -264,7 +264,13 @@ def _read_bounded_bytes(path: Path, limit: int, label: str) -> bytes:
 
     if limit < 0:
         raise PersonalLibraryError(f"{label} exceeds byte limit: {path}")
-    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+    # Windows CRT defaults may translate CRLF without O_BINARY; byte-exact
+    # lifecycle/package digests and size checks must read original bytes.
+    flags = (
+        os.O_RDONLY
+        | getattr(os, "O_BINARY", 0)
+        | getattr(os, "O_NOFOLLOW", 0)
+    )
     try:
         descriptor = os.open(path, flags)
     except OSError as exc:
