@@ -51,11 +51,34 @@ class CiContractTests(unittest.TestCase):
         self.assertIn('@unittest.skipUnless(', capsule)
 
     def test_stable_fail_closed_aggregate_gate(self):
+        # P3B-CP1: the unchanged required check now also requires native Windows.
         source = self.source
         self.assertIn('name: Knowledge Forge CI / required', source)
-        self.assertIn('needs: [regression]', source)
+        self.assertIn('needs: [regression, windows]', source)
         self.assertIn('if: always()', source)
-        self.assertIn("run: test \"$REGRESSION_RESULT\" = 'success'", source)
+        self.assertIn('REGRESSION_RESULT: ${{ needs.regression.result }}', source)
+        self.assertIn('WINDOWS_RESULT: ${{ needs.windows.result }}', source)
+        self.assertIn("test \"$REGRESSION_RESULT\" = 'success'", source)
+        self.assertIn("test \"$WINDOWS_RESULT\" = 'success'", source)
+
+    def test_native_windows_job_is_real_blocking_and_unprivileged(self):
+        source = self.source
+        self.assertIn('  windows:\n', source)
+        windows = source.split('  windows:\n', 1)[1].split('\n  required:\n', 1)[0]
+        self.assertIn('runs-on: windows-latest', windows)
+        self.assertIn('shell: cmd', windows)
+        self.assertIn("KF_REQUIRE_WINDOWS_E2E: '1'", windows)
+        self.assertIn('bin\\knowledge-forge-install-agent.cmd --check-only', windows)
+        self.assertIn('knowledge-forge.exe" --help', windows)
+        self.assertIn('knowledge-forge-authoring.exe" --help', windows)
+        self.assertIn('python -m unittest discover -s tests', windows)
+        self.assertIn('actions/checkout@11d5960a326750d5838078e36cf38b85af677262', windows)
+        self.assertIn('actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065', windows)
+        self.assertIn('persist-credentials: false', windows)
+        for forbidden in ('continue-on-error', 'wsl', 'bash', 'runas', 'Start-Process',
+                          'operator_cli', 'knowledge-forge-operator', 'secrets.'):
+            self.assertNotIn(forbidden, windows)
+        self.assertNotIn('continue-on-error', source)
 
     def test_no_operator_or_release_activation_step(self):
         # The runner must never install the privileged CLI or touch live state.

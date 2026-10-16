@@ -9,6 +9,7 @@ import sys
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
+from _platform_support import skip_posix_owner_fixture_on_windows, skip_unless_symlinks
 
 from knowledge_forge.portable_native_hook_fixture import (
     HANDLER_SOURCE, NativeHookFixtureError, replay_fixture, stage_fixture,
@@ -16,6 +17,7 @@ from knowledge_forge.portable_native_hook_fixture import (
 
 
 class NativeHookFixtureTests(unittest.TestCase):
+    @skip_posix_owner_fixture_on_windows
     def test_both_host_config_shapes_and_narrow_paths(self):
         for host in ("claude-code", "codex-cli"):
             with self.subTest(host=host), TemporaryDirectory(prefix="kf-native-hook-fixture-") as scratch:
@@ -32,6 +34,7 @@ class NativeHookFixtureTests(unittest.TestCase):
                 self.assertEqual(paths["config"].name, "settings.json" if host == "claude-code" else "hooks.json")
                 self.assertTrue(paths["config"].is_relative_to(paths["root"]))
 
+    @skip_posix_owner_fixture_on_windows
     def test_duplicate_synthetic_replay_is_metadata_only(self):
         for host in ("claude-code", "codex-cli"):
             result = replay_fixture(host)
@@ -43,6 +46,7 @@ class NativeHookFixtureTests(unittest.TestCase):
             self.assertEqual(result["all_stdout_bytes"], 0)
             self.assertEqual(result["tool_grants"], [])
 
+    @skip_posix_owner_fixture_on_windows
     def test_offline_subprocess_has_no_credentials_or_python_loader(self):
         # Probe subprocess env by patching subprocess.run. No native host process involved.
         from knowledge_forge import portable_native_hook_fixture as mod
@@ -73,6 +77,7 @@ class NativeHookFixtureTests(unittest.TestCase):
             with self.assertRaises(NativeHookFixtureError):
                 stage_fixture("claude-code", Path(scratch))
 
+    @skip_unless_symlinks
     def test_symlink_root_refused_without_touching_target(self):
         with TemporaryDirectory(prefix="kf-native-hook-fixture-") as scratch:
             p = Path(scratch) / "kf-native-hook-fixture-link"
@@ -80,6 +85,7 @@ class NativeHookFixtureTests(unittest.TestCase):
             with self.assertRaises(NativeHookFixtureError):
                 stage_fixture("claude-code", p)
 
+    @skip_posix_owner_fixture_on_windows
     def test_cli_offline_smoke_and_on_refusal(self):
         for host in ("claude-code", "codex-cli"):
             done = subprocess.run([sys.executable, "-m", "knowledge_forge.portable_native_hook_fixture",
@@ -93,6 +99,7 @@ class NativeHookFixtureTests(unittest.TestCase):
             self.assertEqual(on.returncode, 2)
             self.assertEqual(on.stdout, b"")
 
+    @skip_posix_owner_fixture_on_windows
     def test_handler_discards_bad_event_and_no_stdout(self):
         with TemporaryDirectory(prefix="kf-native-hook-fixture-") as scratch:
             fixture = stage_fixture("claude-code", Path(scratch))

@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
+from _platform_support import skip_unless_symlinks
 
 from knowledge_forge.lifecycle import SUSPENDED, transition_lifecycle
 from knowledge_forge.registry import (
@@ -214,6 +215,7 @@ class SkillIndexTests(unittest.TestCase):
             save_skill_index(index, path)
             self.assertEqual(load_skill_index(path), index)
 
+    @skip_unless_symlinks
     def test_save_refuses_symlink_ancestor(self):
         registry, _fees, _risk = self._registry()
         index = build_skill_index(registry)

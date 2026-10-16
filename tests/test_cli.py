@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from _platform_support import skip_unless_symlinks
 
 from knowledge_forge.cli import main
 from tests.test_trust_wall import _governed_package
@@ -139,6 +140,7 @@ class CliTests(unittest.TestCase):
         self.assertFalse(err["ok"])
         self.assertIn("registry validation failed", err["error"])
 
+    @skip_unless_symlinks
     def test_package_symlink_refuses_before_validation(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

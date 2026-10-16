@@ -10,6 +10,7 @@ import sys
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
+from _platform_support import skip_posix_executable_fixture_on_windows, skip_without_os_pread
 
 from knowledge_forge.portable_native_executable_inventory import MAX_BYTES
 from knowledge_forge.portable_native_dependency_evidence import (
@@ -26,6 +27,8 @@ class NativeDependencyEvidenceTests(unittest.TestCase):
         path.chmod(0o700)
         return path
 
+    @skip_without_os_pread
+    @skip_posix_executable_fixture_on_windows
     def test_oversized_sparse_binary_avoids_full_digest(self):
         with TemporaryDirectory() as scratch:
             path = self._file(Path(scratch))
@@ -44,6 +47,7 @@ class NativeDependencyEvidenceTests(unittest.TestCase):
             self.assertNotIn('executable_file_identity', result)
             self.assertNotIn('sha256', result['bounded_file_metadata'])
 
+    @skip_posix_executable_fixture_on_windows
     def test_bounded_small_script_header_only(self):
         with TemporaryDirectory() as scratch:
             path = self._file(Path(scratch), name='claude', data=b'#!/usr/bin/env node\n' + b'A' * 10000)
@@ -55,6 +59,7 @@ class NativeDependencyEvidenceTests(unittest.TestCase):
             self.assertEqual(meta['static_runtime_loader_hint']['kind'], 'SCRIPT')
             self.assertEqual(meta['static_runtime_loader_hint']['interpreter_basename_hint'], 'env')
 
+    @skip_posix_executable_fixture_on_windows
     def test_inferred_loader_hint_is_not_dependency_attestation(self):
         with TemporaryDirectory() as scratch:
             self._file(Path(scratch))
@@ -64,6 +69,7 @@ class NativeDependencyEvidenceTests(unittest.TestCase):
             self.assertFalse(r['complete_executable_sha256_verified_by_this_cut'])
             self.assertEqual(r['bounded_file_metadata']['static_runtime_loader_hint']['dependency_tree_verified'], 'false')
 
+    @skip_posix_executable_fixture_on_windows
     def test_symlink_path_redaction(self):
         with TemporaryDirectory() as scratch:
             root = Path(scratch)
@@ -80,6 +86,7 @@ class NativeDependencyEvidenceTests(unittest.TestCase):
             self._file(Path(scratch), name='claude').chmod(0o600)
             self.assertEqual(evidence('claude-code', search_path=scratch)['state'], 'UNRESOLVED_NO_EXECUTION')
 
+    @skip_posix_executable_fixture_on_windows
     def test_world_writable_candidate_refused(self):
         with TemporaryDirectory() as scratch:
             self._file(Path(scratch)).chmod(0o707)
@@ -88,6 +95,7 @@ class NativeDependencyEvidenceTests(unittest.TestCase):
             self.assertEqual(r['refusal_category'], 'CANDIDATE_UNSAFE_MODE')
             self.assertNotIn('resolved_executable_path', r)
 
+    @skip_posix_executable_fixture_on_windows
     def test_missing_or_moving_candidate_fail_closed(self):
         with TemporaryDirectory() as scratch:
             self._file(Path(scratch))
@@ -100,6 +108,8 @@ class NativeDependencyEvidenceTests(unittest.TestCase):
                 r=evidence('codex-cli', search_path=scratch)
             self.assertEqual(r['refusal_category'], 'CANDIDATE_CHANGED_DURING_READ')
 
+    @skip_without_os_pread
+    @skip_posix_executable_fixture_on_windows
     def test_candidate_header_read_is_bounded_for_oversized_file(self):
         with TemporaryDirectory() as scratch:
             path = self._file(Path(scratch))

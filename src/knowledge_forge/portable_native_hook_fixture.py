@@ -64,9 +64,14 @@ def _root_check(root: Path) -> None:
         raise NativeHookFixtureError("fixture root refused")
     if not root.is_absolute() or root.is_symlink() or root.resolve() != root:
         raise NativeHookFixtureError("fixture root must be a real absolute directory")
+    getuid = getattr(os, "getuid", None)
+    if getuid is None:
+        # Native Windows has no POSIX owner id: refuse as a typed, path-free
+        # refusal instead of an unhandled AttributeError (P3B-CP1 R2).
+        raise NativeHookFixtureError("fixture root ownership cannot be verified on this platform")
     try:
         info = root.stat()
-        if (not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid() or
+        if (not stat.S_ISDIR(info.st_mode) or info.st_uid != getuid() or
                 stat.S_IMODE(info.st_mode) != 0o700 or any(root.iterdir())):
             raise NativeHookFixtureError("fixture root must be private and empty")
     except OSError:

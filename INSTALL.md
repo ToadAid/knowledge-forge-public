@@ -8,7 +8,9 @@ installation.
 
 - Python 3.10+
 - Git
-- POSIX shell (Linux, macOS, or WSL)
+- POSIX shell (Linux, macOS, or WSL), or native Windows 10/11 `cmd.exe`
+  for the ordinary consumer/authoring install (see
+  [INSTALL_AGENT.md](INSTALL_AGENT.md#native-windows-cmdexe))
 
 Optional adapters:
 
@@ -53,10 +55,31 @@ test ! -e "$INSTALL_ROOT/prefix/bin/knowledge-forge-operator"
 The generated shims point to the exact checkout. Keep that checkout in place, or
 perform a deliberate new installation after moving it.
 
+### Native Windows (cmd.exe)
+
+```bat
+py -3 --version
+bin\knowledge-forge-install-agent.cmd --check-only
+set PYTHONPATH=src
+py -3 -m unittest discover -s tests
+
+bin\knowledge-forge-install-agent.cmd --prefix "%USERPROFILE%\kf-try\prefix" --state-root "%USERPROFILE%\kf-try\state"
+"%USERPROFILE%\kf-try\prefix\bin\knowledge-forge.exe" --help
+"%USERPROFILE%\kf-try\prefix\bin\knowledge-forge-authoring.exe" --help
+if exist "%USERPROFILE%\kf-try\prefix\bin\knowledge-forge-operator*" echo UNEXPECTED
+```
+
+Destinations must be private to your Windows account; shared locations such
+as a drive root, `C:\Users\Public` or another account's folders are refused.
+See [INSTALL_AGENT.md](INSTALL_AGENT.md#native-windows-cmdexe) for the full
+native Windows policy.
+
 ## Ordinary-agent boundary
 
-The installer checks that the checkout-local operator CLI exists and starts, but
-does not install it into the ordinary agent prefix. It also does not install the
+The POSIX installer checks that the checkout-local operator CLI exists and
+starts, but does not install it into the ordinary agent prefix. The native
+Windows installer never runs the operator at all; its doctor runs only the two
+ordinary modules. It also does not install the
 review TUI. This prevents ordinary installation from widening the model-facing
 tool surface.
 

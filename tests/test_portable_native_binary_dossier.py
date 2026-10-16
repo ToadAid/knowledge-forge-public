@@ -10,6 +10,7 @@ import sys
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
+from _platform_support import skip_posix_executable_fixture_on_windows
 
 from knowledge_forge.portable_native_binary_dossier import (
     CHUNK_BYTES, LEGACY_HASH_LIMIT, P6_MAX_HASH_BYTES,
@@ -32,6 +33,7 @@ class BinaryDossierTests(unittest.TestCase):
         self.assertGreater(P6_MAX_HASH_BYTES, 292309256)
         self.assertLessEqual(CHUNK_BYTES, 1024*1024)
 
+    @skip_posix_executable_fixture_on_windows
     def test_both_hosts_digest_small_fixture_same_descriptor(self):
         for host, command in [('codex-cli','codex'),('claude-code','claude')]:
             with TemporaryDirectory() as directory:
@@ -50,6 +52,7 @@ class BinaryDossierTests(unittest.TestCase):
                     self.assertFalse(got[key], key)
                 self.assertEqual(got['tool_grants'], [])
 
+    @skip_posix_executable_fixture_on_windows
     def test_oversize_refuses_at_configured_bound_without_digest(self):
         with TemporaryDirectory() as directory:
             f = self._make(Path(directory))
@@ -71,6 +74,7 @@ class BinaryDossierTests(unittest.TestCase):
             self.assertGreater(f.stat().st_size, LEGACY_HASH_LIMIT)
             self.assertLess(f.stat().st_size, P6_MAX_HASH_BYTES)
 
+    @skip_posix_executable_fixture_on_windows
     def test_refuses_world_writable_candidate(self):
         with TemporaryDirectory() as directory:
             f = self._make(Path(directory))
@@ -79,6 +83,7 @@ class BinaryDossierTests(unittest.TestCase):
             self.assertEqual(r['refusal_category'], 'UNSAFE_EXECUTABLE_MODE')
             self.assertFalse(r['full_file_hash_snapshot_only'])
 
+    @skip_posix_executable_fixture_on_windows
     def test_direct_symlink_and_parent_group_mode_hints(self):
         with TemporaryDirectory() as directory:
             root = Path(directory)
@@ -95,6 +100,7 @@ class BinaryDossierTests(unittest.TestCase):
             self.assertNotIn('$HOME/.codex/packages/standalone/current', got['directory_mode_group_or_world_write_bits_observed'])
             self.assertFalse(got['effective_directory_write_access_verified'])
 
+    @skip_posix_executable_fixture_on_windows
     def test_symlink_swap_during_hash_is_refused(self):
         from knowledge_forge import portable_native_binary_dossier as mod
         with TemporaryDirectory() as directory:
@@ -114,6 +120,7 @@ class BinaryDossierTests(unittest.TestCase):
             self.assertEqual(result['refusal_category'], 'PATH_METADATA_CHANGED_DURING_OBSERVATION')
             self.assertNotIn('full_file_sha256_at_snapshot_only', result)
 
+    @skip_posix_executable_fixture_on_windows
     def test_file_swap_during_hash_refused(self):
         from knowledge_forge import portable_native_binary_dossier as mod
         with TemporaryDirectory() as directory:
@@ -129,6 +136,7 @@ class BinaryDossierTests(unittest.TestCase):
                 result = dossier('codex-cli', search_path=directory, home=directory)
             self.assertEqual(result['refusal_category'], 'FILE_METADATA_CHANGED_DURING_OBSERVATION')
 
+    @skip_posix_executable_fixture_on_windows
     def test_search_path_outside_home_refused_no_leak(self):
         with TemporaryDirectory() as directory:
             root = Path(directory)
@@ -165,6 +173,7 @@ class BinaryDossierTests(unittest.TestCase):
             self.assertEqual(done.returncode,2)
             self.assertEqual(done.stdout,b'')
 
+    @skip_posix_executable_fixture_on_windows
     def test_no_subprocess_or_credentials_when_dossier_called(self):
         with TemporaryDirectory() as directory:
             self._make(Path(directory))
@@ -178,6 +187,7 @@ class BinaryDossierTests(unittest.TestCase):
             self.assertNotIn('DO_NOT_READ_CANARY', json.dumps(result))
             self.assertEqual(secret.read_text(), 'DO_NOT_READ_CANARY')
 
+    @skip_posix_executable_fixture_on_windows
     def test_os_read_is_bounded_by_file_size_and_chunk(self):
         with TemporaryDirectory() as directory:
             data = b'\x7fELF' + bytes(200)

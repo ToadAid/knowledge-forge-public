@@ -10,6 +10,10 @@ import sys
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
+from _platform_support import (
+    NATIVE_WINDOWS, POSIX_PATH_LABEL_SKIP_REASON,
+    skip_posix_executable_fixture_on_windows, skip_without_os_pread,
+)
 
 from knowledge_forge.portable_native_provenance_hints import (
     MAX_EXECUTABLE_BYTES_READ, ProvenanceHintError, _elf_needed,
@@ -43,6 +47,7 @@ class ProvenanceHintTests(unittest.TestCase):
         b[0x300:0x300 + len(string_table)] = string_table
         return bytes(b)
 
+    @skip_posix_executable_fixture_on_windows
     def test_synthetic_elf_needed_names_not_resolution(self):
         with TemporaryDirectory() as folder:
             self._file(Path(folder), 'codex', self._synthetic_elf())
@@ -57,6 +62,8 @@ class ProvenanceHintTests(unittest.TestCase):
         self.assertFalse(result['package_provenance_verified'])
         self.assertFalse(result['native_launch_authorized'])
 
+    @skip_without_os_pread
+    @skip_posix_executable_fixture_on_windows
     def test_oversized_file_is_never_fully_read(self):
         with TemporaryDirectory() as folder:
             p = self._file(Path(folder), 'codex', self._synthetic_elf())
@@ -69,6 +76,7 @@ class ProvenanceHintTests(unittest.TestCase):
         self.assertLessEqual(sum(c.args[1] for c in calls.call_args_list), MAX_EXECUTABLE_BYTES_READ)
         self.assertFalse(got['full_executable_hash_verified'])
 
+    @skip_posix_executable_fixture_on_windows
     def test_no_dynamic_segment_never_implies_static_binary(self):
         with TemporaryDirectory() as folder:
             p = self._file(Path(folder), 'claude', b'\x7fELF' + bytes(60))
@@ -77,6 +85,7 @@ class ProvenanceHintTests(unittest.TestCase):
                       {'PROGRAM_HEADER_BOUND_REFUSED', 'NO_ELF_DEPENDENCY_HINT', 'UNSUPPORTED_ELF_HEADER'})
         self.assertFalse(got['transitive_dependency_tree_verified'])
 
+    @skip_posix_executable_fixture_on_windows
     def test_installation_layout_and_parent_metadata_only(self):
         with TemporaryDirectory() as folder:
             root = Path(folder)
@@ -94,6 +103,7 @@ class ProvenanceHintTests(unittest.TestCase):
             self.assertFalse(got['effective_directory_write_access_verified'])
             self.assertTrue(entry.is_symlink())
 
+    @skip_posix_executable_fixture_on_windows
     def test_intermediate_symlink_0777_not_reported_as_writable_directory(self):
         with TemporaryDirectory() as folder:
             root = Path(folder)
@@ -116,6 +126,7 @@ class ProvenanceHintTests(unittest.TestCase):
             self.assertFalse(got['installation_path_integrity_verified'])
             self.assertFalse(got['native_launch_authorized'])
 
+    @skip_posix_executable_fixture_on_windows
     def test_group_writable_directory_bits_are_a_hint_not_access_proof(self):
         with TemporaryDirectory() as folder:
             root = Path(folder)
@@ -136,6 +147,7 @@ class ProvenanceHintTests(unittest.TestCase):
             self.assertFalse(got['package_provenance_verified'])
             self.assertNotIn('group_or_world_writable', entry)
 
+    @skip_posix_executable_fixture_on_windows
     def test_non_symlink_install_path_still_not_attested(self):
         with TemporaryDirectory() as folder:
             self._file(Path(folder), 'codex')
@@ -145,6 +157,7 @@ class ProvenanceHintTests(unittest.TestCase):
             self.assertFalse(got['installation_path_integrity_verified'])
             self.assertFalse(got['safe_to_activate_hooks'])
 
+    @skip_posix_executable_fixture_on_windows
     def test_missing_and_unsafe_candidate_are_nonexecution(self):
         with TemporaryDirectory() as folder:
             self.assertEqual(provenance_hints('claude-code', search_path=folder)['state'],
@@ -157,6 +170,7 @@ class ProvenanceHintTests(unittest.TestCase):
             self.assertNotIn('resolved_executable_path', got)
             self.assertFalse(got['native_host_started'])
 
+    @skip_posix_executable_fixture_on_windows
     def test_malformed_elf_bounds_refuse_without_execution(self):
         blob = bytearray(self._synthetic_elf())
         struct.pack_into('<Q', blob, 32, 10**9)
@@ -178,6 +192,7 @@ class ProvenanceHintTests(unittest.TestCase):
             self.assertEqual((root / 'credentials.json').read_text(encoding='utf-8'),
                              'PRIVATE_CANARY_SECRET')
 
+    @skip_posix_executable_fixture_on_windows
     def test_file_change_fail_closed_no_paths(self):
         with TemporaryDirectory() as folder:
             self._file(Path(folder), 'codex')
@@ -210,8 +225,11 @@ class ProvenanceHintTests(unittest.TestCase):
                 provenance_hints(host)
         with self.assertRaises(ProvenanceHintError):
             provenance_hints('codex-cli', search_path=[])
-        self.assertEqual(_label('/home/tommy2/secrets', '/home/tommy'), 'OUTSIDE_HOME_REDACTED')
-        self.assertEqual(_label('/home/tommy/bin/a', '/home/tommy'), '$HOME/bin/a')
+        with self.subTest('POSIX $HOME path labels'):
+            if NATIVE_WINDOWS:
+                self.skipTest(POSIX_PATH_LABEL_SKIP_REASON)
+            self.assertEqual(_label('/home/tommy2/secrets', '/home/tommy'), 'OUTSIDE_HOME_REDACTED')
+            self.assertEqual(_label('/home/tommy/bin/a', '/home/tommy'), '$HOME/bin/a')
 
 
 if __name__ == '__main__':

@@ -8,6 +8,9 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
+from _platform_support import skip_linux_account_module_on_windows
+skip_linux_account_module_on_windows('provision_review')
+
 from knowledge_forge.provision_review import (
     EXPECTED_HOST, PATHS, PLAN_KIND, ProvisionReviewError,
     inspect_tng_provisioning_plan,

@@ -9,6 +9,7 @@ import sys
 from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
+from _platform_support import skip_posix_executable_fixture_on_windows, skip_posix_path_labels_on_windows, skip_unless_symlinks
 
 from knowledge_forge.portable_native_executable_inventory import (
     MAX_BYTES, NativeExecutableInventoryError, _display, inventory, main,
@@ -23,6 +24,7 @@ class NativeExecutableInventoryTests(unittest.TestCase):
         file.chmod(0o700)
         return file
 
+    @skip_posix_executable_fixture_on_windows
     def test_both_hosts_passive_identity_and_hash(self):
         import hashlib
         with TemporaryDirectory() as scratch:
@@ -43,6 +45,7 @@ class NativeExecutableInventoryTests(unittest.TestCase):
                 self.assertEqual(result['tool_grants'], [])
                 self.assertTrue(file.exists())
 
+    @skip_posix_executable_fixture_on_windows
     def test_symlink_chain_is_bounded_and_read_only(self):
         with TemporaryDirectory() as scratch:
             root = Path(scratch)
@@ -54,6 +57,7 @@ class NativeExecutableInventoryTests(unittest.TestCase):
             self.assertEqual(len(result['symlink_chain']), 2)
             self.assertEqual(result['resolved_executable_path'], '$HOME/real-binary')
 
+    @skip_unless_symlinks
     def test_symlink_cycle_refused(self):
         with TemporaryDirectory() as scratch:
             root = Path(scratch)
@@ -70,6 +74,7 @@ class NativeExecutableInventoryTests(unittest.TestCase):
                 self.assertFalse(result['native_launch_authorized'])
                 self.assertNotIn('executable_file_identity', result)
 
+    @skip_posix_executable_fixture_on_windows
     def test_size_cap_and_non_executable_file_refuse(self):
         with TemporaryDirectory() as scratch:
             root = Path(scratch)
@@ -78,6 +83,7 @@ class NativeExecutableInventoryTests(unittest.TestCase):
             file.chmod(0o600)
             self.assertEqual(inventory('claude-code', search_path=scratch)['state'], 'UNRESOLVED_NO_EXECUTION')
 
+    @skip_posix_executable_fixture_on_windows
     def test_oversized_candidate_classified_without_hash_or_path(self):
         with TemporaryDirectory() as scratch:
             root = Path(scratch)
@@ -89,6 +95,7 @@ class NativeExecutableInventoryTests(unittest.TestCase):
             self.assertNotIn('resolved_executable_path', result)
             self.assertFalse(result['native_launch_authorized'])
 
+    @skip_posix_executable_fixture_on_windows
     def test_empty_candidate_classified_no_native_execution(self):
         with TemporaryDirectory() as scratch:
             self._make_candidate(Path(scratch), 'codex', b'')
@@ -96,6 +103,7 @@ class NativeExecutableInventoryTests(unittest.TestCase):
             self.assertEqual(result['state'], 'BLOCKED_CANDIDATE_NOT_PROVEN')
             self.assertEqual(result['refusal_category'], 'EMPTY_FILE')
 
+    @skip_unless_symlinks
     def test_symlink_cycle_category_without_path_disclosure(self):
         with TemporaryDirectory() as scratch:
             root = Path(scratch)
@@ -108,6 +116,7 @@ class NativeExecutableInventoryTests(unittest.TestCase):
             self.assertEqual(result['refusal_category'], 'SYMLINK_CYCLE')
             self.assertNotIn(scratch, json.dumps(result))
 
+    @skip_unless_symlinks
     def test_symlink_depth_category(self):
         with TemporaryDirectory() as scratch:
             root = Path(scratch)
@@ -119,6 +128,7 @@ class NativeExecutableInventoryTests(unittest.TestCase):
                 result = inventory('codex-cli', search_path=scratch)
             self.assertEqual(result['refusal_category'], 'SYMLINK_DEPTH_LIMIT')
 
+    @skip_posix_executable_fixture_on_windows
     def test_unavailable_file_and_link_are_distinct_safe_categories(self):
         from knowledge_forge import portable_native_executable_inventory as mod
         with TemporaryDirectory() as scratch:
@@ -132,6 +142,7 @@ class NativeExecutableInventoryTests(unittest.TestCase):
             self.assertNotIn('/private/secret', json.dumps(result))
             self.assertTrue(found.exists())
 
+    @skip_posix_executable_fixture_on_windows
     def test_changed_during_digest_distinct_and_not_success(self):
         from knowledge_forge import portable_native_executable_inventory as mod
         with TemporaryDirectory() as scratch:
@@ -178,6 +189,7 @@ class NativeExecutableInventoryTests(unittest.TestCase):
             self.assertEqual(done.returncode, 2)
             self.assertEqual(done.stdout, b'')
 
+    @skip_posix_path_labels_on_windows
     def test_path_redaction_is_boundary_aware(self):
         self.assertEqual(_display('/home/example/a', '/home/example'), '$HOME/a')
         self.assertEqual(_display('/home/example2/a', '/home/example'), '/home/example2/a')

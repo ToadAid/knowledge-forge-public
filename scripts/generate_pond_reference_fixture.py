@@ -184,9 +184,10 @@ def main():
         },
         "abi": {"path": "abi.json", "sha256": hashlib.sha256(abi_bytes).hexdigest()},
     }
-    (root / "runtime-code.hex").write_text(code_text, encoding="utf-8")
+    # newline="\n": byte-identical fixtures on every OS (Windows would write CRLF).
+    (root / "runtime-code.hex").write_text(code_text, encoding="utf-8", newline="\n")
     (root / "abi.json").write_bytes(abi_bytes)
-    (root / "contract-pin.json").write_text(json.dumps(pin, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    (root / "contract-pin.json").write_text(json.dumps(pin, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
     print(json.dumps({"runtime_code_bytes": len(runtime), "runtime_sha256": sha, "abi_sha256": pin["abi"]["sha256"],"fixture":str(root)},sort_keys=True))
 
 if __name__ == "__main__":

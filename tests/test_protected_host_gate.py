@@ -11,6 +11,9 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
+from _platform_support import skip_linux_account_module_on_windows
+skip_linux_account_module_on_windows('protected_host_gate')
+
 from knowledge_forge.protected_host_gate import (
     ProtectedHostGateError, ProtectedHostLayout,
     inspect_prospective_operator_boundary,

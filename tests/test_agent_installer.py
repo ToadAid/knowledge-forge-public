@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from _platform_support import skip_bash_launcher_on_windows
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -23,6 +24,7 @@ def _run(*args: str, env: dict[str, str]) -> subprocess.CompletedProcess[str]:
     )
 
 
+@skip_bash_launcher_on_windows
 class AgentInstallerTests(unittest.TestCase):
     def _env(self, root: Path) -> dict[str, str]:
         env = dict(os.environ)

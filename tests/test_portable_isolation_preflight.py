@@ -7,6 +7,7 @@ import subprocess
 import sys
 import unittest
 from unittest.mock import patch
+from _platform_support import skip_linux_proc_namespaces_on_windows
 
 from knowledge_forge.portable_isolation_preflight import (
     IsolationPreflightError, preflight, sandbox_command,
@@ -56,6 +57,7 @@ class IsolationPreflightTests(unittest.TestCase):
         self.assertEqual(result['state'], 'BLOCKED_ISOLATION_NOT_PROVEN')
         self.assertFalse(result['network_namespace_verified'])
 
+    @skip_linux_proc_namespaces_on_windows
     def test_positive_synthetic_result_cannot_attest_host(self):
         # Synthetic runner result DOES NOT count as native dispatch verification.
         import os
@@ -71,6 +73,7 @@ class IsolationPreflightTests(unittest.TestCase):
         self.assertFalse(result['safe_to_activate_hooks'])
         self.assertEqual(called.call_args.kwargs['env'], {'PATH': '/usr/bin:/bin', 'LANG': 'C.UTF-8'})
 
+    @skip_linux_proc_namespaces_on_windows
     def test_fake_shared_network_rejected(self):
         import os
         record = {'net_namespace_inode': os.stat('/proc/self/ns/net').st_ino,
