@@ -19,10 +19,20 @@ from tests.test_trust_wall import _governed_package
 CLOCK = "2026-10-14T05:20:00Z"
 
 
-def fixture():
+def fixture(
+    *,
+    knowledge_id: str = "handbook:governance",
+    slug: str = "governance-handbook",
+    title: str = "Governance Handbook",
+):
     sandbox = tempfile.TemporaryDirectory()
     root = Path(sandbox.name)
-    skill_root, _registry, manifest, promoted = _governed_package(root)
+    skill_root, _registry, manifest, promoted = _governed_package(
+        root,
+        knowledge_id=knowledge_id,
+        slug=slug,
+        title=title,
+    )
     validated = deepcopy(promoted)
     validated["events"] = validated["events"][:-1]
     validated["state"] = "VALIDATED"

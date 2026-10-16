@@ -23,7 +23,7 @@ import sys
 import tempfile
 import unittest
 
-from _platform_support import skip_posix_file_modes_on_windows
+from _platform_support import skip_posix_file_modes_on_windows, skip_unless_symlinks
 
 from knowledge_forge.approval import (
     ApprovalContractError,
@@ -78,20 +78,25 @@ def _sha_ref(value: bytes) -> str:
 class _Flow:
     """One staged candidate + contract artifacts + host key + registry."""
 
-    def __init__(self) -> None:
+    def __init__(self, *, variant: str = "governance") -> None:
         self._sandbox = tempfile.TemporaryDirectory(prefix="kf-approval-host-")
         self.root = Path(self._sandbox.name)
         self.state = self.root / "host-state"
         self.state.mkdir(parents=True, exist_ok=True)
+        os.chmod(self.state, 0o700)
         self.from_dir = self.root / "approval"
         self.bundle = self.root / "bundle"
         self.registry_path = self.state / "registry.json"
         self.host_key_path = self.root / "host-key.bin"
         self.host_key = secrets.token_bytes(32)
 
-        _sandbox, self.skill_root, _lifecycle_path, self.files, (
+        self._fixture_sandbox, self.skill_root, _lifecycle_path, self.files, (
             self.validated
-        ), self.manifest = fixture()
+        ), self.manifest = fixture(
+            knowledge_id=f"handbook:{variant}",
+            slug=f"{variant}-handbook",
+            title=f"{variant.title()} Handbook",
+        )
         self.host_key_path.write_bytes(self.host_key)
         os.chmod(self.host_key_path, 0o600)
 
@@ -144,6 +149,7 @@ class _Flow:
         )
 
     def teardown(self) -> None:
+        self._fixture_sandbox.cleanup()
         self._sandbox.cleanup()
 
     def decision(self, *, decision="APPROVED", nonce="ab" * 16):
@@ -386,6 +392,16 @@ class ApprovalHostChainTests(unittest.TestCase):
         finally:
             ledger.close()
 
+    @skip_unless_symlinks
+    def test_ledger_symlink_is_refused(self):
+        target = self.flow.state / "real-ledger.sqlite3"
+        target.write_bytes(b"")
+        os.chmod(target, 0o600)
+        linked = self.flow.state / "linked-ledger.sqlite3"
+        linked.symlink_to(target)
+        with self.assertRaisesRegex(ApprovalHostError, "symlink"):
+            ConsumedDecisionLedger(linked)
+
     @skip_posix_file_modes_on_windows
     def test_host_key_construction_rules(self):
         import tempfile as _tempfile
@@ -413,8 +429,9 @@ class ApprovalHostCliTests(unittest.TestCase):
 
     def test_single_action_cli_promotes_via_signed_decision(self):
         flow = self.flow
+        decision_path = flow.state / "decisions" / "decision.json"
         _write_json(
-            flow.from_dir / "approval-host-decision.json",
+            decision_path,
             flow.decision(nonce="05" * 16),
         )
         out = StringIO()
@@ -426,6 +443,7 @@ class ApprovalHostCliTests(unittest.TestCase):
         with redirect_stdout(out):
             code = main([
                 str(flow.from_dir),
+                "--decision", str(decision_path),
                 "--bundle", str(flow.bundle),
                 "--registry", str(flow.registry_path),
                 "--host-key", str(flow.host_key_path),
@@ -446,15 +464,17 @@ class ApprovalHostCliTests(unittest.TestCase):
 
     def test_cli_refuses_before_promotion_on_bad_host_key(self):
         flow = self.flow
+        decision_path = flow.state / "decisions" / "decision.json"
         _write_json(
-            flow.from_dir / "approval-host-decision.json",
-            {"bogus": True},
+            decision_path,
+            flow.decision(nonce="06" * 16),
         )
         out, err = StringIO(), StringIO()
         from contextlib import redirect_stderr
         with redirect_stdout(out), redirect_stderr(err):
             code = main([
                 str(flow.from_dir),
+                "--decision", str(decision_path),
                 "--bundle", str(flow.bundle),
                 "--registry", str(flow.registry_path),
                 "--host-key", str(flow.root / "missing-key.bin"),
@@ -467,6 +487,27 @@ class ApprovalHostCliTests(unittest.TestCase):
         self.assertFalse(payload["ok"])
         self.assertFalse(payload["promoted"])
         self.assertIn("host key", payload["error"])
+
+    def test_cli_refuses_agent_staged_decision_path(self):
+        flow = self.flow
+        decision_path = flow.from_dir / "approval-host-decision.json"
+        _write_json(decision_path, flow.decision(nonce="07" * 16))
+        out = StringIO()
+        with redirect_stdout(out):
+            code = main([
+                str(flow.from_dir),
+                "--decision", str(decision_path),
+                "--bundle", str(flow.bundle),
+                "--registry", str(flow.registry_path),
+                "--host-key", str(flow.host_key_path),
+                "--promoted-lifecycle-out", str(flow.state / "l.json"),
+                "--receipt-out", str(flow.state / "r.json"),
+                "--now", APPROVE_AT,
+            ])
+        self.assertEqual(code, 2)
+        payload = json.loads(out.getvalue())
+        self.assertFalse(payload["promoted"])
+        self.assertIn("must not be stored", payload["error"])
 
     def test_module_entrypoint_actually_executes(self):
         # The trusted host invokes the CLI as

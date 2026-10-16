@@ -1,7 +1,8 @@
 """Single-action approval host CLI for real, authenticated promotion.
 
-`knowledge-forge-approve <from-dir> --bundle <dir> --registry <path>
---host-key <keyfile> --promoted-lifecycle-out <path> --receipt-out <path>`
+`knowledge-forge-approve <from-dir> --decision <host-owned-json>
+--bundle <dir> --registry <path> --host-key <keyfile>
+--promoted-lifecycle-out <path> --receipt-out <path>`
 
 This is the trusted-host surface: the process (ToadAid-app backend or the
 human administrator's shell) owns the host key and the ledger directory and
@@ -15,10 +16,13 @@ fails, nothing is promoted and the error says which dependency is missing.
 from __future__ import annotations
 
 from argparse import ArgumentParser
+from contextlib import contextmanager
 from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
+import sqlite3
+import stat
 from typing import Any, Mapping
 
 from .lifecycle import evidence_sha256
@@ -41,15 +45,18 @@ from .approval_host import (
     read_host_key_file,
 )
 from .registry import SkillRegistryError, load_skill_registry
+from .secure_io import (
+    SecureIOError,
+    prepare_private_regular_file,
+    read_bounded_bytes,
+    snapshot_regular_tree,
+)
 from .trust_wall import MAX_PACKAGE_BYTES, MAX_PACKAGE_FILES
 from .validate import PackageValidationError, validate_or_raise
 
-_APPROVE_FROM_DIR_FILES = (
-    "approval-request.json",
-    "approval-evidence.json",
-    "current-candidate.json",
-    "approval-host-decision.json",
-)
+MAX_APPROVAL_JSON_BYTES = 1024 * 1024
+MAX_LIFECYCLE_JSON_BYTES = 16 * 1024 * 1024
+MAX_PACKAGE_ENTRIES = 4096
 
 
 class ApprovalHostCliError(ValueError):
@@ -60,14 +67,13 @@ def _emit(payload: Mapping[str, Any]) -> None:
     print(json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False))
 
 
-def _read_json_object(path: Path, label: str) -> dict[str, Any]:
-    if not path.is_file() or any(
-        part.is_symlink() for part in path.absolute().parents
-    ) or path.is_symlink():
-        raise ApprovalHostCliError(f"{label} is missing or not a regular file: {path}")
+def _read_json_object(
+    path: Path, label: str, *, maximum_bytes: int = MAX_APPROVAL_JSON_BYTES
+) -> dict[str, Any]:
     try:
-        payload = json.loads(path.read_bytes().decode("utf-8"))
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raw = read_bounded_bytes(path, maximum_bytes, label)
+        payload = json.loads(raw.decode("utf-8"))
+    except (SecureIOError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise ApprovalHostCliError(f"{label} is not readable JSON: {path}") from exc
     if not isinstance(payload, dict):
         raise ApprovalHostCliError(f"{label} must contain a JSON object: {path}")
@@ -79,31 +85,16 @@ def _read_host_key(path: Path) -> bytes:
 
 
 def _snapshot_package(root: Path) -> dict[str, bytes]:
-    files: dict[str, bytes] = {}
-    total = 0
-    for path in sorted(root.rglob("*")):
-        if path.is_symlink():
-            raise ApprovalHostCliError(
-                f"package artifact may not be a symlink: {path.relative_to(root)}"
-            )
-        if not path.is_file():
-            continue
-        size = path.stat().st_size
-        if size > MAX_PACKAGE_BYTES or total + size > MAX_PACKAGE_BYTES:
-            raise ApprovalHostCliError("package exceeds byte limit")
-        total += size
-        payload = path.read_bytes()
-        relative = path.relative_to(root).as_posix()
-        if len(payload) != size:
-            raise ApprovalHostCliError(
-                f"package artifact changed while being read: {relative}"
-            )
-        files[relative] = payload
-        if len(files) > MAX_PACKAGE_FILES:
-            raise ApprovalHostCliError("package exceeds file limit")
-    if not files:
-        raise ApprovalHostCliError("package contains no regular files")
-    return files
+    try:
+        return snapshot_regular_tree(
+            root,
+            maximum_files=MAX_PACKAGE_FILES,
+            maximum_bytes=MAX_PACKAGE_BYTES,
+            maximum_entries=MAX_PACKAGE_ENTRIES,
+            label="package",
+        )
+    except SecureIOError as exc:
+        raise ApprovalHostCliError(str(exc)) from exc
 
 
 def _mapping_from_bytes(files: Mapping[str, bytes], path: str) -> dict[str, Any]:
@@ -148,21 +139,46 @@ def _bind_candidate_to_request(
         )
 
 
-def _load_json(path: Path, label: str) -> dict[str, Any]:
-    if not path.is_file() or path.is_symlink():
-        raise ApprovalHostCliError(f"{label} is missing or not a regular file: {path}")
+@contextmanager
+def _registry_promotion_lock(registry_path: Path):
+    """Serialize host promotions across processes next to protected registry."""
+
+    lock_path = registry_path.absolute().parent / "approval-host-promotion-lock.sqlite3"
     try:
-        value = json.loads(path.read_bytes().decode("utf-8"))
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise ApprovalHostCliError(f"{label} is not readable JSON: {path}") from exc
-    if not isinstance(value, dict):
-        raise ApprovalHostCliError(f"{label} must contain a JSON object")
-    return value
+        lock_path = prepare_private_regular_file(lock_path, "promotion lock")
+    except SecureIOError as exc:
+        raise ApprovalHostCliError(str(exc)) from exc
+    connection = sqlite3.connect(str(lock_path), timeout=10, isolation_level=None)
+    try:
+        info = lock_path.lstat()
+        if not stat.S_ISREG(info.st_mode):
+            raise ApprovalHostCliError("promotion lock must be a regular file")
+        if os.name == "posix" and (
+            info.st_uid != os.geteuid() or stat.S_IMODE(info.st_mode) != 0o600
+        ):
+            raise ApprovalHostCliError("promotion lock owner/mode mismatch")
+        connection.execute("PRAGMA busy_timeout=10000")
+        connection.execute("PRAGMA journal_mode=DELETE")
+        connection.execute("PRAGMA synchronous=FULL")
+        connection.execute(
+            "CREATE TABLE IF NOT EXISTS promotion_lock "
+            "(singleton INTEGER PRIMARY KEY CHECK(singleton=1))"
+        )
+        connection.execute("BEGIN IMMEDIATE")
+        yield
+        connection.commit()
+    except Exception:
+        if connection.in_transaction:
+            connection.rollback()
+        raise
+    finally:
+        connection.close()
 
 
 def run_approval(
     from_dir: Path,
     *,
+    decision: Mapping[str, Any],
     bundle: Path,
     registry_path: Path,
     host_key_path: Path,
@@ -175,9 +191,11 @@ def run_approval(
     binding = _read_json_object(
         from_dir / "current-candidate.json", "current candidate binding"
     )
-    decision = _read_json_object(
-        from_dir / "approval-host-decision.json", "approval host decision"
-    )
+    if not isinstance(decision, Mapping):
+        raise ApprovalHostCliError(
+            "approval host decision must be supplied directly by the trusted host"
+        )
+    decision = dict(decision)
 
     # Validate request/evidence/binding and refuse stale candidates.
     _, _ = bind_request_evidence(request, evidence)
@@ -193,42 +211,42 @@ def run_approval(
             "host must provide an initialized registry; promotion cannot "
             "create one"
         )
-    registry = load_skill_registry(registry_path)
-
     files = _snapshot_package(bundle / "package")
     validate_or_raise(files)
     manifest = _mapping_from_bytes(files, "manifest.json")
     claim_index = _mapping_from_bytes(files, "claim-index.json")
     source_receipt = _mapping_from_bytes(files, "SOURCE_RECEIPT.json")
     validated_lifecycle = _read_json_object(
-        bundle / "lifecycle.validated.json", "validated lifecycle"
+        bundle / "lifecycle.validated.json", "validated lifecycle",
+        maximum_bytes=MAX_LIFECYCLE_JSON_BYTES,
     )
     _bind_candidate_to_request(manifest, validated_lifecycle, source_receipt, request)
-
-    authorization = authorize_from_host_decision(
-        request,
-        decision,
-        host_key=host_key,
-        ledger_path=ledger_path,
-        as_of=now,
-    )
-    digest = decision_sha256(decision)
-    result = promote_validated_skill(
-        registry,
-        manifest,
-        validated_lifecycle,
-        claim_index,
-        source_receipt,
-        authorization=authorization,
-        decision_ref=f"approval-host-decision:{digest}",
-        occurred_at=now,
-    )
-    paths = persist_operator_promotion(
-        result,
-        registry_path=registry_path,
-        promoted_lifecycle_path=promoted_lifecycle_out,
-        receipt_path=receipt_out,
-    )
+    with _registry_promotion_lock(Path(registry_path)):
+        registry = load_skill_registry(registry_path)
+        authorization = authorize_from_host_decision(
+            request,
+            decision,
+            host_key=host_key,
+            ledger_path=ledger_path,
+            as_of=now,
+        )
+        digest = decision_sha256(decision)
+        result = promote_validated_skill(
+            registry,
+            manifest,
+            validated_lifecycle,
+            claim_index,
+            source_receipt,
+            authorization=authorization,
+            decision_ref=f"approval-host-decision:{digest}",
+            occurred_at=now,
+        )
+        paths = persist_operator_promotion(
+            result,
+            registry_path=registry_path,
+            promoted_lifecycle_path=promoted_lifecycle_out,
+            receipt_path=receipt_out,
+        )
     receipt = result["receipt"]
     return {
         "schema_version": OPERATOR_PROMOTION_SCHEMA_VERSION,
@@ -256,6 +274,7 @@ def build_parser() -> ArgumentParser:
         ),
     )
     parser.add_argument("from_dir", help="directory holding the approval contract artifacts")
+    parser.add_argument("--decision", required=True, help="host-owned signed decision JSON; never an agent-staged path")
     parser.add_argument("--bundle", required=True, help="validated bundle (package/ + lifecycle.validated.json)")
     parser.add_argument("--registry", required=True, help="governed registry.json (initialized by the administrator)")
     parser.add_argument("--host-key", required=True, help="0600 host-owned HMAC key file")
@@ -273,8 +292,22 @@ def main(argv: list[str] | None = None) -> int:
     else:
         now = args.now
     try:
+        decision_path = Path(args.decision).absolute()
+        staged_root = Path(args.from_dir).absolute()
+        try:
+            decision_path.relative_to(staged_root)
+        except ValueError:
+            pass
+        else:
+            raise ApprovalHostCliError(
+                "approval host decision must not be stored in the agent-staged request directory"
+            )
+        decision = _read_json_object(
+            decision_path, "approval host decision"
+        )
         payload = run_approval(
             Path(args.from_dir),
+            decision=decision,
             bundle=Path(args.bundle),
             registry_path=Path(args.registry),
             host_key_path=Path(args.host_key),

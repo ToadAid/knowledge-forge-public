@@ -41,6 +41,11 @@ from .approval import (
     validate_approval_request,
 )
 from .operator_promotion import OperatorAuthorization
+from .secure_io import (
+    SecureIOError,
+    prepare_private_regular_file,
+    read_bounded_bytes,
+)
 
 APPROVAL_HOST_DECISION_SCHEMA_VERSION = "0.1"
 APPROVAL_HOST_DECISION_KIND = "KNOWLEDGE_FORGE_APPROVAL_HOST_DECISION"
@@ -112,10 +117,10 @@ def read_host_key_file(path: Path) -> bytes:
                 "trusted host alone may hold and use its own key"
             )
     try:
-        key = resolved.read_bytes()
-    except OSError as exc:
-        raise ApprovalHostError(f"host key file is unreadable: {path}") from exc
-    if not key or len(key) > MAX_HOST_KEY_BYTES:
+        key = read_bounded_bytes(resolved, MAX_HOST_KEY_BYTES, "host key file")
+    except SecureIOError as exc:
+        raise ApprovalHostError(str(exc)) from exc
+    if not key:
         raise ApprovalHostError(
             "host key file must be 1..4096 bytes of secret material"
         )
@@ -321,12 +326,28 @@ class ConsumedDecisionLedger:
     """
 
     def __init__(self, path: str | Path) -> None:
-        self.path = Path(path)
+        try:
+            self.path = prepare_private_regular_file(
+                path, "approval decision ledger"
+            )
+        except SecureIOError as exc:
+            raise ApprovalHostError(str(exc)) from exc
         self.connection = sqlite3.connect(
             self.path, isolation_level=None
         )
         try:
-            os.chmod(self.path, 0o600)
+            ledger_stat = self.path.lstat()
+            if not stat.S_ISREG(ledger_stat.st_mode):
+                raise ApprovalHostError(
+                    "approval decision ledger must be a regular file"
+                )
+            if sys.platform != "win32" and (
+                ledger_stat.st_uid != os.geteuid()
+                or stat.S_IMODE(ledger_stat.st_mode) != 0o600
+            ):
+                raise ApprovalHostError(
+                    "approval decision ledger owner/mode mismatch"
+                )
             self.connection.execute(
                 "PRAGMA journal_mode=DELETE"
             )
