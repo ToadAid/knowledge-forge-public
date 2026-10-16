@@ -375,6 +375,21 @@ class ZenityCard:
             input=text_input,
             capture_output=True,
         )
+        diagnostic = proc.stderr.decode("utf-8", errors="replace").strip()
+        if diagnostic:
+            # Zenity uses exit 1 both for a human pressing the cancel button
+            # and for some GTK startup failures.  A subprocess diagnostic is
+            # therefore not a trustworthy human Reject/Cancel event.  Refuse
+            # before the caller can create or sign a host decision.
+            bounded = diagnostic[:500]
+            raise ApproveCardError(
+                "approval window failed before a human decision: " + bounded
+            )
+        if proc.returncode not in (0, 1):
+            raise ApproveCardError(
+                "approval window failed before a human decision "
+                f"(zenity exit {proc.returncode})"
+            )
         return proc.returncode
 
     def show(self, text: str) -> None:

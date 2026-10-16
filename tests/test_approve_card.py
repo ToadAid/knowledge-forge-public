@@ -144,6 +144,22 @@ class ApproveCardTests(unittest.TestCase):
                 ZenityCard()
         self.assertIn("graphical session", str(ctx.exception))
 
+    def test_zenity_startup_failure_is_not_a_human_reject(self) -> None:
+        from knowledge_forge.approve_card import ZenityCard
+
+        completed = mock.Mock(
+            returncode=1,
+            stderr=b"Gtk-WARNING: Failed to open display",
+        )
+        with mock.patch.dict(os.environ, {"DISPLAY": ":0"}, clear=True), \
+             mock.patch("shutil.which", return_value="/usr/bin/zenity"), \
+             mock.patch("subprocess.run", return_value=completed):
+            card = ZenityCard()
+            with self.assertRaisesRegex(
+                ApproveCardError, "failed before a human decision"
+            ):
+                card.ask_decision("Approve this promotion?")
+
     def test_claude_profile_is_registered(self) -> None:
         profile = HOST_ADAPTER_PROFILES.get("claude")
         self.assertIsNotNone(profile)
