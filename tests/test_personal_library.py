@@ -1087,17 +1087,36 @@ class PersonalLibraryReliabilityTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             out_root = _finalize_skill(root, "liquidity")
-            original = Path.read_bytes
+            original = os.read
 
-            def inflated(self):
-                return original(self) + b"tampered\n"
+            def inflated(descriptor, count):
+                return original(descriptor, count) + b"tampered\n"
 
-            with mock.patch.object(Path, "read_bytes", inflated):
+            with mock.patch.object(personal_library.os, "read", inflated):
                 with self.assertRaisesRegex(
                     PersonalLibraryError,
                     "changed while being",
                 ):
                     personal_library._snapshot_package(out_root / "package")
+
+    def test_bounded_reader_caps_growth_after_initial_file_stat(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "candidate"
+            path.write_bytes(b"abc")
+            requests = []
+
+            def simulated_growth(descriptor, count):
+                requests.append(count)
+                return b"abcde"  # up to limit + 1, never unlimited data
+
+            with mock.patch.object(personal_library.os, "read", simulated_growth):
+                with self.assertRaisesRegex(
+                    PersonalLibraryError, "exceeds 4 byte limit"
+                ):
+                    personal_library._read_bounded_bytes(
+                        path, 4, "candidate"
+                    )
+            self.assertEqual(requests, [5])
 
     def test_add_refuses_oversized_lifecycle_record(self):
         with tempfile.TemporaryDirectory() as tmp:
