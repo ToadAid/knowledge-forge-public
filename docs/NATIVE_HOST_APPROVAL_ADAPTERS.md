@@ -30,12 +30,19 @@ protected deployment boundary below.
 | `generic-native-host` | host-owned approval UI | `approve-once` | reusable approval, bypass, chat text |
 | `openclaw` | OpenClaw plugin approval | `allow-once` | `allow-always`, bypass, chat text |
 | `hermes` | Hermes approval transport | `once` | `session`, `always`, YOLO/bypass, chat text |
+| `codex` | Codex native user verification | `approve-once` | MCP confirmation, chat text, unverifiable device proof |
 
 The OpenClaw mapping was checked against upstream commit
 `4881c9bbda01cb300680a09847e0895a0bcf492c`. The Hermes mapping was checked
 against upstream commit `e5eb6b36fe78eb012cefd1f5f436cd458411b8b3`.
 Those pins document the reviewed APIs; they are not a claim that future host
 versions are compatible. Re-review the host on upgrade.
+
+The Codex profile has a dedicated bridge for the experimental app-server
+`userVerification/verify` protocol. See
+[Codex native approval](CODEX_NATIVE_APPROVAL.md) for its exact readiness and
+deployment boundary. It is repository support, not an assertion that the
+currently running Codex client has installed or enabled the bridge.
 
 ## Integration sequence
 
@@ -112,13 +119,30 @@ or translate its UI labels in host code, but do not broaden the accepted event
 contract. A terminal line or chat message saying `APPROVE` is not a native host
 event.
 
+## Codex wiring
+
+Use `prepare_codex_native_approval(...)` to create the bounded challenge and
+native verification request. The host may present the approval control beside
+the conversation. A human can click it, or focus it and press Enter. Keyboard
+activation is valid only because it activates the trusted native control; text
+entered into the conversation is still ordinary model input.
+
+The host backend must verify the returned device signature against an enrolled
+credential and authenticated Codex account, then map that account to a bounded
+reviewer principal before calling `complete_codex_native_approval(...)`.
+Cancellation or failed verification produces no proof and no promotion. Keep
+the proof verifier, credential registry, host key, decision ledger, registry,
+and completion call outside model permissions.
+
 ## Verification included here
 
-The regression suite covers successful OpenClaw/Hermes one-shot promotion,
+The regression suite covers successful OpenClaw/Hermes/Codex one-shot promotion,
 denial without mutation, persistent/session/always refusal, YOLO/bypass
 refusal, request-digest mismatch, adapter substitution, request swapping after
-review, extra-field refusal, chat-text refusal, and the non-authorizing card.
+review, extra-field refusal, chat-text refusal, changed Codex challenge/display,
+failed device-proof verification, expiry, and the non-authorizing card.
 
-These tests validate the Knowledge Forge seam with synthetic host events. They
-do not certify a deployed OpenClaw or Hermes instance, its human identity, its
-filesystem isolation, or its current plugin implementation.
+These tests validate the Knowledge Forge seam with synthetic host events and a
+stubbed Codex proof verifier. They do not certify a deployed OpenClaw, Hermes,
+or Codex instance, its human identity, its filesystem isolation, its credential
+backend, or its current host implementation.

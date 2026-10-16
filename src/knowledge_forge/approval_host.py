@@ -358,11 +358,28 @@ class ConsumedDecisionLedger:
                 """
                 CREATE TABLE IF NOT EXISTS host_decisions (
                     decision_digest TEXT PRIMARY KEY NOT NULL,
+                    decision_nonce TEXT UNIQUE,
                     request_sha256 TEXT NOT NULL,
                     principal_ref TEXT NOT NULL,
                     consumed_at TEXT NOT NULL
                 )
                 """
+            )
+            columns = {
+                row[1]
+                for row in self.connection.execute(
+                    "PRAGMA table_info(host_decisions)"
+                )
+            }
+            if "decision_nonce" not in columns:
+                self.connection.execute(
+                    "ALTER TABLE host_decisions ADD COLUMN decision_nonce TEXT"
+                )
+            self.connection.execute(
+                "CREATE UNIQUE INDEX IF NOT EXISTS "
+                "host_decisions_nonce_unique "
+                "ON host_decisions(decision_nonce) "
+                "WHERE decision_nonce IS NOT NULL"
             )
             self.connection.commit()
         except Exception:
@@ -385,11 +402,13 @@ class ConsumedDecisionLedger:
             self.connection.execute(
                 """
                 INSERT INTO host_decisions
-                    (decision_digest, request_sha256, principal_ref, consumed_at)
-                VALUES (?, ?, ?, ?)
+                    (decision_digest, decision_nonce, request_sha256,
+                     principal_ref, consumed_at)
+                VALUES (?, ?, ?, ?, ?)
                 """,
                 (
                     digest,
+                    decision["decision_nonce"],
                     decision["request_sha256"],
                     principal_ref,
                     consumed_at,
