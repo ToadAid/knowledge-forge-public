@@ -2,6 +2,15 @@
 
 ## Unreleased — initial open-source source snapshot
 
+- Fix the zenity approval card failing before any decision on Linux:
+  zenity/GTK renders dialog text as Pango markup, and the decision dialogs
+  sent raw text containing `&` (e.g. "Approve this promotion? [Approve &
+  Promote] or [Reject]"), which is invalid markup — the window errored and
+  the card refused fail-closed on every approval. Dialog text is now
+  markup-escaped (`html.escape`); decision capture, host key signing,
+  single-use decision consumption and the registry transition are unchanged.
+  Deterministic tests cover both dialog texts.
+
 - Make the agent ask before anything lands after validation (docs only, no
   runtime change): after showing VALIDATED results the agent asks
   **library, governed promotion, or both** — a chat yes to the library

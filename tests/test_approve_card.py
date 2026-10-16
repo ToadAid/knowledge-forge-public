@@ -160,6 +160,52 @@ class ApproveCardTests(unittest.TestCase):
             ):
                 card.ask_decision("Approve this promotion?")
 
+    def test_zenity_dialog_text_is_markup_escaped(self) -> None:
+        from knowledge_forge.approve_card import ZenityCard
+
+        captured = {}
+
+        def fake_run(argv, **kwargs):
+            captured.update(argv=argv)
+            return mock.Mock(returncode=0, stderr=b"")
+
+        with mock.patch.dict(os.environ, {"DISPLAY": ":0"}, clear=True), \
+             mock.patch("shutil.which", return_value="/usr/bin/zenity"), \
+             mock.patch("subprocess.run", side_effect=fake_run):
+            card = ZenityCard()
+            self.assertEqual(
+                card.ask_decision(
+                    "Approve this promotion? [Approve & Promote] or [Reject]"
+                ),
+                "APPROVE",
+            )
+
+        self.assertIn(
+            "--text=Approve this promotion? [Approve &amp; Promote] or [Reject]",
+            captured["argv"],
+        )
+
+    def test_zenity_confirm_dialog_text_is_markup_escaped(self) -> None:
+        from knowledge_forge.approve_card import ZenityCard
+
+        captured = {}
+
+        def fake_run(argv, **kwargs):
+            captured.update(argv=argv)
+            return mock.Mock(returncode=0, stderr=b"")
+
+        with mock.patch.dict(os.environ, {"DISPLAY": ":0"}, clear=True), \
+             mock.patch("shutil.which", return_value="/usr/bin/zenity"), \
+             mock.patch("subprocess.run", side_effect=fake_run):
+            card = ZenityCard()
+            self.assertIs(
+                card.ask_confirm("Confirm promotion? (yes & only yes)"), True
+            )
+
+        self.assertIn(
+            "--text=Confirm promotion? (yes &amp; only yes)", captured["argv"]
+        )
+
     def test_claude_profile_is_registered(self) -> None:
         profile = HOST_ADAPTER_PROFILES.get("claude")
         self.assertIsNotNone(profile)

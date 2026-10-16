@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 import getpass
+import html
 import json
 import os
 from pathlib import Path
@@ -408,7 +409,7 @@ class ZenityCard:
             [
                 "--question",
                 "--title=Approve promotion?",
-                f"--text={text}",
+                f"--text={html.escape(text)}",
                 "--ok-label=Approve && Promote",
                 "--cancel-label=Reject",
                 "--width=560",
@@ -425,7 +426,7 @@ class ZenityCard:
             [
                 "--question",
                 "--title=Confirm promotion",
-                f"--text={text}",
+                f"--text={html.escape(text)}",
                 "--ok-label=Confirm && Promote",
                 "--cancel-label=Cancel",
                 "--width=600",
