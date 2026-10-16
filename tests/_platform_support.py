@@ -132,3 +132,9 @@ POSIX_PATH_LABEL_SKIP_REASON = (
 )
 
 skip_posix_path_labels_on_windows = unittest.skipIf(NATIVE_WINDOWS, POSIX_PATH_LABEL_SKIP_REASON)
+
+skip_posix_file_modes_on_windows = unittest.skipIf(
+    NATIVE_WINDOWS,
+    "asserts POSIX file-mode bits (0700 directory / 0600 file) for the personal library state "
+    "file, which native Windows cannot represent (chmod maps to a read-only attribute there)",
+)

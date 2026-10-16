@@ -2,6 +2,16 @@
 
 ## Unreleased — initial open-source source snapshot
 
+- Added Personal Forge P1: an ordinary-user-local personal knowledge library
+  (`knowledge-forge personal add/list/lookup/remove`) that accepts only fully
+  VALIDATED packages with exact receipt/identity binding, revalidates every
+  package and stored lifecycle copy on every lookup, returns bounded
+  source-grounded units stamped as untrusted local personal knowledge, and
+  grants no tools, promotion or operator surface. Writers serialize through a
+  portable advisory lock covering the whole read-modify-write (concurrent
+  writers refuse instead of silently losing updates), and all package /
+  lifecycle / library reads are size-bounded before reading. Governed Mode is
+  unchanged and remains the only path to PROMOTED.
 - Added a Linux/systemd protected-promotion reference: kernel Unix peer
   credentials, separate operator state, bounded candidate transport, exact
   package/registry binding, serialized registry mutation, five-minute one-use SQLite challenges, and a
