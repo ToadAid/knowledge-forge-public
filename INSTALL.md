@@ -17,17 +17,19 @@ Optional adapters:
 - Poppler for PDF text extraction
 - Poppler plus Tesseract for explicitly requested OCR
 
-## Installing for Claude Code or Codex?
+## Installing for your AI agent?
 
-See [the newcomer guide](docs/NEWCOMER_GUIDE.md) for a copy-and-paste
-installation prompt and a file-to-knowledge example.
+Start with the [personal newcomer guide](docs/NEWCOMER_GUIDE.md):
+**Forge → Accept → Ask.** This installs ordinary commands, not an automatic
+Claude/Codex chat hook or an authenticated native approval card.
 
-**This installation creates CLIs, not automatic question-answer routing.**
-A `VALIDATED` skill is not `PROMOTED` and cannot be consumed through governed
-`discover` / `load-current` until a separately authenticated human/operator
-host promotes it and a host-owned adapter is tested and enabled. Reading a
-package file manually is only an explicitly labeled preview, not a governed
-consumer integration.
+A capable terminal agent can follow the runbook to create and validate a
+package, request your explicit local acceptance, use `personal add --accept`,
+and query `personal lookup` for source-linked knowledge. This does **not**
+require a PROMOTED registry or separate protected operator.
+
+If you are implementing independently authenticated *governed* consumption,
+see [advanced generic host integration](docs/GENERIC_AGENT_INTEGRATION.md).
 
 ## Verify the checkout
 

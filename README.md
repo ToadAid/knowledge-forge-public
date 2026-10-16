@@ -7,51 +7,74 @@ without confusing knowledge with execution authority.
 It runs from a local checkout. No hosted service, VPS, account, remote approval
 server, or production connection is required.
 
-## Just want to turn a file into a skill?
+## Forge → Accept → Ask
 
-**You should not need to know the Forge commands.** After your agent has the
-file-to-skill guide available, tell it:
-
-> Make `~/Downloads/my-document.pdf` into knowledge skills and prepare them
-> for human approval.
-
-The agent should inspect the source, explain coverage and omissions, forge and
-validate the package(s), then prepare a review handoff. **The agent may request
-promotion; it may not approve its own work.** A generic install has no
-automatic approval delivery, reviewer authentication, or native agent hooks.
-Until an approved host transport exists, the honest result is
-**review handoff ready — not sent, and not promoted**.
-
-**[Read the simple user manual](USER_MANUAL.md)** ·
-[Agent-facing one-sentence workflow](docs/FILE_TO_SKILL_AGENT_GUIDE.md) ·
-[Command-free approval integration](docs/INLINE_APPROVAL.md) ·
-[OpenClaw, Hermes, Codex, and generic native hosts](docs/NATIVE_HOST_APPROVAL_ADAPTERS.md)
-
-## New here? Install, forge, and ask
-
-**Using Claude Code, Codex, or another terminal agent?** Start with
-[**the newcomer guide**](docs/NEWCOMER_GUIDE.md), including copy-and-paste
-prompts for a fresh installation, creating a source-grounded knowledge skill,
-and checking answers.
-
-> **What installing does not do:** the generic installer provides the consumer
-> and authoring command shims; it does **not** automatically connect knowledge
-> retrieval to Claude/Codex. A forged `VALIDATED` skill is **not** current
-> `PROMOTED` knowledge. The guide explains a labeled read-only preview and
-> the separate human-authorized steps needed for real governed question answering.
-> **Do not mistake an answer from a raw file or general model knowledge for a
-> Knowledge Forge `discover` + `load-current` result.**
-
-### Copy this into your coding agent
+**Turn your own document into source-grounded knowledge for your AI agent.**
+Personal Forge needs no account, Docker, systemd service, separate operator,
+or governed promotion.
 
 ```text
-Install ToadAid Knowledge Forge from
-https://github.com/ToadAid/knowledge-forge-public.
-Follow README.md and docs/NEWCOMER_GUIDE.md. Use workspace-local paths,
-run the tests, and report the installed command surfaces.
-Do not modify my existing agent configuration, expose the operator,
-promote a skill, or activate knowledge consumption.
+You:   Brother, turn my notes into a knowledge skill.
+Agent: I created a VALIDATED package. I covered 12 of 13 sections;
+       one was omitted (details available). Add it to your personal library?
+You:   Yes, add it.
+Agent: Added to your PERSONAL library (not promoted).
+You:   What do my notes say about patience?
+Agent: [Uses personal lookup and cites only returned source bindings.]
 ```
+
+This is a **guided agent workflow**: a terminal-capable agent must follow the
+instructions and run the existing commands. Installing the CLI **does not**
+automatically register a Claude/Codex skill, intercept every question, or
+display a native approval card. No claim of universal agent compatibility is
+made until a real host test demonstrates it.
+
+### Copy this into your terminal-capable AI agent
+
+```text
+Use https://github.com/ToadAid/knowledge-forge-public.
+Follow docs/NEWCOMER_GUIDE.md and docs/FILE_TO_SKILL_AGENT_GUIDE.md.
+Install the ordinary commands in my private workspace; don't change my
+existing agent settings. Forge <path-to-my-document> into VALIDATED
+source-grounded knowledge. Show the included and omitted content, source
+references and validation findings. Ask me before adding the package to my
+PERSONAL library. If I agree, use knowledge-forge personal add.
+When I ask about it, use knowledge-forge personal lookup and cite only
+the source bindings actually returned. Do not perform governed promotion.
+```
+
+[Start here: newcomer guide](docs/NEWCOMER_GUIDE.md) ·
+[User manual](USER_MANUAL.md) ·
+[Personal Forge reference](docs/PERSONAL_FORGE.md) ·
+[What is implemented?](docs/FEATURE_STATUS.md)
+
+### The commands underneath (for agents and developers)
+
+```bash
+knowledge-forge-authoring prepare --help
+knowledge-forge-authoring finalize --help
+knowledge-forge validate-package /path/to/output/package
+
+# Only after explicit user acceptance of a VALIDATED package:
+knowledge-forge personal add /path/to/output/package \
+  --validated-lifecycle /path/to/output/lifecycle.validated.json --accept
+knowledge-forge personal list
+knowledge-forge personal lookup "What does my document say about patience?"
+knowledge-forge personal remove <skill-id>
+```
+
+Authoring requires a source-bound structured draft and a model-judged support
+plan; it is **not** a single automatic document-to-skill CLI command. Package
+validation checks evidence and integrity rules, not the independent truth of
+every model-written claim. The agent must report real coverage and omissions
+and preserve source evidence. The package files must remain accessible for
+revalidation. A no-match must be reported, not invented away.
+
+**Want advanced, independently authenticated PROMOTED knowledge?** See
+[optional governed promotion](#advanced-optional-human-review-and-governed-promotion).
+The experimental [Codex native verification bridge](docs/CODEX_NATIVE_APPROVAL.md)
+is included as a host integration component, not an installed approval screen.
+This advanced path is separate from the personal-library workflow.
 
 ## ToadAid community
 
@@ -81,11 +104,12 @@ VALIDATED != PROMOTED
 REVIEWED != AUTHENTICATED != AUTHORIZED != EXECUTED
 ```
 
-A source may become a validated candidate only through explicit normalization,
+A source becomes a validated candidate only through explicit normalization,
 compilation, provenance, faithfulness, and validation checks. A validated
-candidate is not current registry truth until a separate local operator action
-promotes it. Loaded knowledge remains untrusted data with no tool, identity,
-memory, or execution authority.
+package can be **personally accepted without promotion**, but is not current
+*governed* registry truth until a separately authorized operator promotes it.
+Retrieved knowledge remains untrusted data without tool, identity, memory,
+or execution authority.
 
 ## What is included
 
@@ -96,6 +120,8 @@ memory, or execution authority.
   conflict, incident, temporal, and consumption evidence;
 - bounded discovery and current-skill loading for generic agent hosts;
 - consumer and zero-promotion authoring CLIs;
+- local Personal Forge add/list/lookup/remove of validated knowledge, without
+  governed promotion or tool grants;
 - an explicit checkout-local operator CLI that the generic installer never puts
   on an ordinary agent's `PATH`;
 - the P2B0 provider-neutral approval request contract and review-only terminal
@@ -164,20 +190,21 @@ isolated-prefix example and the complete installation boundary.
 
 ## Use with agents
 
-Knowledge Forge exposes provider-neutral discovery and loading contracts suitable
-for Codex, Claude, Agent0, and other terminal agents. The generic integration
-procedure is documented in
-[docs/GENERIC_AGENT_INTEGRATION.md](docs/GENERIC_AGENT_INTEGRATION.md).
+Generic installation supplies ordinary authoring and consumer commands for
+Linux and native Windows. With the
+[file-to-skill runbook](docs/FILE_TO_SKILL_AGENT_GUIDE.md), a capable agent
+can forge, validate, seek your acceptance, and query your local personal
+library. Personal lookup returns bounded, revalidated `reasoning_context`
+with real source bindings and `KNOWLEDGE_ONLY` trust stamps.
 
-The source distribution and generic installer are locally tested. **Installation
-alone does not make Claude/Codex automatically use the skills you forge.** This
-initial release does not claim independently certified end-to-end adapters for
-every named agent host. A host must preserve Knowledge Forge output as untrusted
-knowledge data and retain its own identity, memory, policy, tools, and authority.
+**Not automatic:** the installer does not register a Claude/Codex plugin,
+activate a native approval screen, or hook new conversations to your library.
+For a fresh conversation, tell the agent to run `personal lookup`.
+Reading a raw source file or relying on general model memory is not a
+Knowledge Forge lookup.
 
-For a first-time file-to-answer workflow and an honest distinction between
-`VALIDATED` package inspection and actual governed consumption, see
-[the newcomer guide](docs/NEWCOMER_GUIDE.md).
+Advanced host-controlled, `PROMOTED` retrieval is a *different* path.
+See [generic agent integration](docs/GENERIC_AGENT_INTEGRATION.md).
 
 ## Create and validate skills
 
@@ -202,7 +229,7 @@ bin/knowledge-forge validate-package /path/to/package
 All examples and tests use synthetic or explicitly attributed fixtures. Do not
 ingest material you lack rights to process or redistribute.
 
-## Discover and load current knowledge
+## Advanced: governed discovery and loading
 
 Discovery reads validated registry truth and returns bounded identity metadata:
 
@@ -215,7 +242,7 @@ temporal applicability, and allowed tool intersection before returning bounded
 reasoning context. See the CLI help and generic integration guide for the full
 `load-current` arguments.
 
-## Human review and promotion
+## Advanced: optional human review and governed promotion
 
 The P2B0 terminal interface records review decisions only:
 
@@ -237,14 +264,15 @@ review output.
 
 ### Command-free product integration
 
-The intended ordinary-user flow is conversational: ask the agent to forge the
-document, say “promote it,” inspect a native **Approve & Promote** card, and
-click once. The user runs no command and handles no path, key, or digest. The
+For an **advanced governed host**, the intended flow is conversational:
+request promotion, review a native **Approve & Promote** card, and activate
+it once. The user runs no command and handles no path, key, or digest. The
 repository provides the bounded card and protected-completion adapter for a
 product host to implement that flow; see
 [docs/INLINE_APPROVAL.md](docs/INLINE_APPROVAL.md).
 
-This is an integration contract, not a deployed approval service. Chat text is
+This is an integration contract, **not** a deployed approval service and
+not a Personal Forge prerequisite. Chat text is
 intent only. Until the surrounding product supplies an independently
 authenticated native UI event and keeps its signing key and protected registry
 outside agent permissions, the request remains pending and nothing is

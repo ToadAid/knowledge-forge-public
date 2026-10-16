@@ -2,6 +2,14 @@
 
 ## Unreleased — initial open-source source snapshot
 
+- Make existing Personal Forge the default newcomer workflow:
+  Forge → Accept → Ask. Align user manual, install guides, agent runbook,
+  and advanced-doc entry points without changing any runtime policy.
+- Add `docs/FEATURE_STATUS.md` distinguishing implemented/tested
+  capabilities from agent-specific integration and deployment gaps,
+  including the merged PR #50 Codex native bridge (code present; live
+  native UI and protected deployment not established).
+
 - Added the command-free inline approval adapter for trusted hosts. Agents can
   prepare a bounded review card, but ordinary chat and agent-created TTYs
   cannot authorize or promote. A native host Approve event produces the
