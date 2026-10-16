@@ -22,7 +22,7 @@ OS boundary below and verifies it with the actual agent and human accounts.
 The reference deployment uses:
 
 - `kf-agent`: the only account allowed to run model/agent processes; no sudo,
-  Docker, reviewer socket, human credentials, or operator-state access;
+  Docker, human-reviewer socket, human credentials, or operator-state access;
 - `kf-operator`: non-login service account owning mode-0700 state;
 - `kf-reviewers`: human-only group allowed to connect to the systemd-owned Unix
   socket; `kf-agent` and `kf-operator` must not be members;
@@ -37,6 +37,12 @@ the typed phrase is an attention/intent ceremony, not a password. This is safe
 only if the model really runs as `kf-agent` and cannot invoke commands as a
 human reviewer, use sudo/polkit/container sockets, inherit reviewer file
 descriptors, or modify the installed client/service.
+
+An optional second socket supports the Codex native-proof flow documented in
+[Codex native MCP promotion deployment](CODEX_NATIVE_MCP_DEPLOYMENT.md). It is
+accessible to `kf-agent`, but its protocol accepts only a signed native
+user-verification proof; it cannot run the typed human ceremony. The protected
+service checks the exact peer UID before selecting either protocol.
 
 ## Candidate bundle
 
@@ -85,13 +91,17 @@ socket policy, or services. At minimum, independently verify:
    valid initially empty registry and initialized authorization ledger.
 4. `/etc/toadaid-kf/operator.json` matches the reviewed example, is root-owned,
    and is not group/other writable.
-5. The two supplied systemd units are root-owned, reviewed, daemon-reloaded and
-   socket-activated only after adversarial UID/ACL tests.
+5. The supplied service and socket units are root-owned, reviewed,
+   daemon-reloaded and socket-activated only after adversarial UID/ACL tests.
+   Enable the optional Codex socket only after completing its separate native
+   credential enrollment and proof-path tests.
 6. The root-owned human client is available to reviewers but not installed in
    the ordinary agent command prefix.
-7. `kf-agent` cannot connect to the socket, read operator state/code internals,
-   access human TTYs or credentials, invoke sudo/polkit, or write a container
-   daemon socket. Test these properties as the actual launched agent process.
+7. `kf-agent` cannot connect to the human-reviewer socket, read operator
+   state/code internals, access human TTYs or credentials, invoke sudo/polkit,
+   or write a container daemon socket. If the Codex socket is enabled, verify
+   that it accepts only the native-proof protocol from the exact agent UID.
+   Test these properties as the actual launched agent process.
 
 The administrator must copy the reviewed tree and adapt the launchers so they
 use an absolute trusted Python interpreter with isolated mode (`-I`) and import

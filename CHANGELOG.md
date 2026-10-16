@@ -11,6 +11,13 @@
   `docs/FILE_TO_SKILL_AGENT_GUIDE.md` (new "The ask" section, routing
   reply template).
 
+- Added a Codex stdio MCP promotion transport using native
+  `openai/userVerification`, with P-256 proof verification and completion kept
+  inside the Linux protected operator boundary. A separate proof-only systemd
+  socket admits only the configured agent UID; the existing human TTY socket
+  remains agent-inaccessible. Added one-time Codex reviewer credential
+  enrollment with strict create-new 0600 registry handling.
+
 - Make existing Personal Forge the default newcomer workflow:
   Forge → Accept → Ask. Align user manual, install guides, agent runbook,
   and advanced-doc entry points without changing any runtime policy.

@@ -44,9 +44,11 @@ The Codex profile has a dedicated bridge for the experimental app-server
 [Codex native approval](CODEX_NATIVE_APPROVAL.md) for its exact readiness and
 deployment boundary, and
 [Codex MCP native-approval integration](CODEX_MCP_HOST_INTEGRATION.md) for the
-`openai/userVerification` elicitation transport. It is repository support, not
-an assertion that the currently running Codex client has installed or enabled
-the bridge.
+`openai/userVerification` elicitation transport. The stdio server and protected
+proof-only operator socket are covered by
+[Codex native MCP promotion deployment](CODEX_NATIVE_MCP_DEPLOYMENT.md). Their
+presence in source is not an assertion that the current client has installed,
+enrolled, or enabled them.
 
 ## Integration sequence
 
