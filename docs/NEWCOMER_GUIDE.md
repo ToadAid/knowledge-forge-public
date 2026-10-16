@@ -69,6 +69,12 @@ administrator handoff; it does not create accounts, enable services, change
 agent settings or approve packages. The protected daemon reference is currently
 Linux/systemd only; ordinary Windows/macOS installation remains available.
 
+For a shell convenience entry point, see [install.sh instructions](INSTALL_SH.md).
+The default runs ordinary installation plus the diagnostic helper. Its separate
+Linux administrator mode creates locked non-login accounts only, with no
+services enabled. A successful account-creation message does not mean approval
+popups are ready; follow the independent deployment and verification steps.
+
 ## 2. Forge and validate a document
 
 Choose a file you are authorized to process. Give your agent its **real**
