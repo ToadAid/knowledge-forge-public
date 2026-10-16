@@ -4,14 +4,14 @@
 
 ## Who this is for
 
-The governed path (VALIDATED → review → authenticated operator → PROMOTED
-registry → trust-walled `load-current`) is the full-strength route, and it
-needs dedicated accounts, a systemd service, and a human operator ceremony.
-Ordinary users just want: *turn my document into skills, keep them locally,
-and answer questions from them.* Personal Mode is that second, low-ceremony
-consumption surface — it reuses the entire existing authoring and validation
-engine and adds a ordinary-user-local library with **no** privileged
-installation of any kind:
+**Personal Forge is the default ordinary-user path:** turn a document into
+validated skills, accept them locally, and retrieve source-linked answers.
+The separately governed route (VALIDATED → independently authenticated
+operator → PROMOTED registry → trust-walled `load-current`) is optional and
+requires an enforcing protected host. Some deployments use separate OS
+accounts and services; they are **not** required for personal use.
+Personal Mode reuses the authoring and validation engine and provides a
+local library with no privileged installation:
 
 - No sudo, no Docker, no background services, no `knowledge-forge-operator`.
 - No accounts, groups, socket files, or approval ceremonies. Everything runs
@@ -20,6 +20,8 @@ installation of any kind:
 - Governed Mode is unchanged and is **not** a prerequisite: nothing in
   `registry.py`, `trust_wall.py`, the operator surface, or the promotion
   path was altered. There is no `promote` word in the read-only CLI.
+
+[Start here](NEWCOMER_GUIDE.md) · [Feature availability](FEATURE_STATUS.md)
 
 ## The four commands
 
@@ -183,6 +185,11 @@ returned `reasoning_context` through to the model clearly labeled as local
 personal, untrusted knowledge — never as promoted governed knowledge. The
 user-facing runbook is `docs/FILE_TO_SKILL_AGENT_GUIDE.md` ("Personal
 library (not promotion)").
+
+**The generic installer does not automatically register a host skill or
+intercept questions in new conversations.** An agent must run
+`personal lookup` explicitly and cite its actual output. Raw-file answers
+are not evidence of a Forge lookup.
 
 **Laws:** `VALIDATED != PROMOTED`, `KNOWLEDGE != AUTHORITY`,
 `ACCEPTED != AUTHENTICATED`.

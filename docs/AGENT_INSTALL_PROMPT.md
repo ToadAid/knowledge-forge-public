@@ -1,4 +1,9 @@
-# Agent Install Prompt
+# Agent Install Prompt (advanced governed host integration)
+
+**Not needed for ordinary Personal Forge.** For the local
+Forge → Accept → Ask flow, see
+[NEWCOMER_GUIDE.md](NEWCOMER_GUIDE.md). The instructions below are for
+advanced governed host integration with separate security requirements.
 
 Use this prompt with a coding agent that is installing Knowledge Forge into an
 unrelated host agent.

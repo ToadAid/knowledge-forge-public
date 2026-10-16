@@ -1,4 +1,9 @@
-# Generic-Agent Integration
+# Generic-Agent Integration (advanced governed mode)
+
+**Ordinary users do not need this adapter for Personal Forge.**
+See [NEWCOMER_GUIDE.md](NEWCOMER_GUIDE.md) and
+[PERSONAL_FORGE.md](PERSONAL_FORGE.md). The remainder of this guide covers
+advanced host-owned PROMOTED registry integration.
 
 Knowledge Forge can be integrated into an unrelated agent through a thin,
 host-owned adapter. The Forge supplies governed knowledge; it does not replace

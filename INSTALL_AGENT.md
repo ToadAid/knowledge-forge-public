@@ -10,11 +10,11 @@ The installation law is:
 ```text
 checkout stays canonical
         ↓
-read-only consumer CLI + zero-promotion authoring CLI
+ordinary consumer CLI + zero-promotion authoring CLI
         ↓
-host-owned adapter / state
-        ↓
-governed knowledge context
+PERSONAL: explicit user acceptance → personal library → lookup
+or
+ADVANCED: protected host → PROMOTED registry → governed context
 
 privileged operator promotion
         ≠
@@ -36,19 +36,21 @@ only discovers and loads already-built packages does not need those tools.
 
 ## What a newcomer should expect
 
-**Installation is not Claude Code/Codex knowledge integration.** This installer
-creates two ordinary commands and a manifest, but does not register agent
-hooks, create a promoted registry, load your forged skills into conversations,
-or make your agent search those skills automatically. A correctly
-`VALIDATED` package remains unavailable to governed `discover` /
-`load-current` until separately promoted by an authenticated human/operator
-host.
+**For ordinary users, start with
+[NEWCOMER_GUIDE.md](docs/NEWCOMER_GUIDE.md).** The installer provides
+`knowledge-forge` and `knowledge-forge-authoring`. A capable terminal agent
+follows the [agent runbook](docs/FILE_TO_SKILL_AGENT_GUIDE.md) to forge and
+validate, ask the user whether to accept the package, use
+`personal add --accept`, and answer via `personal lookup`.
 
-For a plain-language installation, authoring, and read-only **preview**
-workflow, follow [the newcomer guide](docs/NEWCOMER_GUIDE.md). That guide also
-explains how to distinguish raw-source answers, manual package inspection,
-and real governed retrieval. A manual preview is **not** a substitute for
-host-owned promotion, current-registry checks, and a tested host adapter.
+Installation does **not** automatically register a native Claude/Codex skill,
+approval card, or future-chat retrieval hook. A personal library entry stays
+`VALIDATED` and grants no tools. The explicit local acceptance flag is not
+independently authenticated human authorization.
+
+For separately governed `PROMOTED` registry consumption, a protected
+operator and tested host adapter remain necessary. See
+[GENERIC_AGENT_INTEGRATION.md](docs/GENERIC_AGENT_INTEGRATION.md).
 
 ## Quick install
 
@@ -279,15 +281,20 @@ Before `ON`, run the required host tests in
 
 ## After a skill reaches VALIDATED
 
-If you ask the agent a knowledge question immediately after authoring, the
-generic installer will **not** automatically intercept that question.
-A `VALIDATED` skill is not discoverable current truth. Do not let a host
-silently answer from the raw source and claim it used Knowledge Forge.
-The next governed step is a **separately approved human/operator promotion**
-and then a host-owned adapter built and tested in `OFF`, `DRY_RUN`, and
-deliberately authorized `ON` stages; consult the integration guide before
-starting that work. In `DRY_RUN`, zero current `PROMOTED` entries means an
-honest no-match result, **not** a simulated successful load.
+**Personal Forge (default for ordinary users):** Show exact validation status,
+source evidence, coverage and omissions. Wait for the user's explicit yes,
+then call `knowledge-forge personal add <package> --validated-lifecycle
+<lifecycle.validated.json> --accept`. On later questions, use
+`knowledge-forge personal lookup "question"` and cite only returned source
+bindings. No governed promotion, privileged operator or service is needed.
+
+**Advanced governed host:** `VALIDATED != PROMOTED`. Governed
+`discover`/`load-current` still needs separately authenticated promotion
+and a tested host-owned adapter with OFF/DRY_RUN/ON controls. A personal
+entry must never masquerade as current governed registry truth.
+
+Neither path is automatically activated merely because the CLI shims were
+installed. Reading the raw source is not a Forge lookup.
 
 ## Agent-assisted installation
 
