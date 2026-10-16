@@ -1088,9 +1088,15 @@ class PersonalLibraryReliabilityTests(unittest.TestCase):
             root = Path(tmp)
             out_root = _finalize_skill(root, "liquidity")
             original = os.read
+            first_read = True
 
             def inflated(descriptor, count):
-                return original(descriptor, count) + b"tampered\n"
+                nonlocal first_read
+                data = original(descriptor, count)
+                if first_read:
+                    first_read = False
+                    return data + b"tampered\n"
+                return data
 
             with mock.patch.object(personal_library.os, "read", inflated):
                 with self.assertRaisesRegex(
