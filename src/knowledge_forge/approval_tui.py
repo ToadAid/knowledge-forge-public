@@ -180,6 +180,7 @@ def _run_local_review_tui_at(
     if approval_request_state(request, as_of=reviewed_at) == "EXPIRED":
         raise ApprovalContractError("expired approval request refused")
     session = ledger or ReviewDecisionLedger()
+    approval_mismatches = 0
     while True:
         try:
             choice = terminal.read_line("Select V/A/R/C/Q > ").strip().lower()
@@ -200,23 +201,23 @@ def _run_local_review_tui_at(
         reason: str | None = None
         if choice in {"a", "approve"}:
             expected = f"APPROVE {_confirmation_token(projection['request_sha256'])}"
-            for _attempt in range(3):
-                try:
-                    phrase = terminal.read_line(f"Type {expected} to record review > ")
-                except (EOFError, KeyboardInterrupt) as exc:
-                    raise ApprovalContractError("terminal review cancelled") from exc
-                if phrase.strip() == expected:
-                    break
+            try:
+                phrase = terminal.read_line(f"Type {expected} to record review > ")
+            except (EOFError, KeyboardInterrupt) as exc:
+                raise ApprovalContractError("terminal review cancelled") from exc
+            if phrase.strip() != expected:
+                approval_mismatches += 1
+                if approval_mismatches >= 3:
+                    raise ApprovalContractError(
+                        "approval confirmation mismatch after 3 attempts; "
+                        f"expected exactly: {expected}"
+                    )
                 terminal.write(
                     "Mismatch: approval not recorded.\n"
                     f"Expected exactly: {expected} — also shown in the evidence view (V).\n"
                     "Type A to try again or Q to exit.\n"
                 )
-            else:
-                raise ApprovalContractError(
-                    "approval confirmation mismatch after 3 attempts; "
-                    f"expected exactly: {expected}"
-                )
+                continue
             decision = "APPROVE"
         elif choice in {"r", "reject"}:
             reason = terminal.read_line("Rejection reason > ").strip()
