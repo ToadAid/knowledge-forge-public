@@ -230,6 +230,24 @@ ordinary agent `PATH`. Read
 [docs/GENERIC_APPROVAL_TUI.md](docs/GENERIC_APPROVAL_TUI.md) before integrating
 review output.
 
+### Linux protected promotion reference
+
+The repository now includes a Linux/systemd reference for the intended simple
+human experience:
+
+```text
+knowledge-forge-promote /path/to/validated-bundle
+  -> type APPROVE <short challenge>
+```
+
+It authenticates through a systemd-owned Unix socket and kernel peer
+credentials, keeps one-use challenge state under a separate `kf-operator` UID,
+and independently revalidates the candidate and current registry. It is not
+installed by the generic installer and is not active merely because the source
+files exist. A separate administrator must first establish and adversarially
+verify the `kf-agent` / human reviewer / `kf-operator` OS boundary. See
+[docs/LINUX_PROTECTED_PROMOTION.md](docs/LINUX_PROTECTED_PROMOTION.md).
+
 ## Run tests
 
 From the checkout root:

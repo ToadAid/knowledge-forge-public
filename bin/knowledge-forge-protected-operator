@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+TRUSTED_ROOT=/opt/toadaid-kf-operator
+if [ ! -d "$TRUSTED_ROOT/src/knowledge_forge" ]; then
+  echo "protected operator is not installed at $TRUSTED_ROOT" >&2
+  exit 2
+fi
+
+exec /usr/bin/python3 -I -B -c \
+  'import sys; sys.path.insert(0,"/opt/toadaid-kf-operator/src"); from knowledge_forge.protected_operator_cli import main; raise SystemExit(main())' \
+  "$@"
