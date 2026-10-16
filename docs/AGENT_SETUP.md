@@ -95,6 +95,13 @@ console**. The agent may prepare the handoff but must not execute a root
 provisioning script, create the accounts itself, launch a reviewer as the human,
 or run a fake approval. There is no combined privileged installer in this flow.
 
+The administrator may review the account-only convenience script described in
+[INSTALL_SH.md](INSTALL_SH.md). Its `--create-protected-accounts --plan` mode is
+read-only; its explicit privileged mode is for the administrator's independent
+console only. It creates locked non-login accounts and an empty reviewer group,
+not services or a verified protected deployment. Ordinary installation remains
+unprivileged and Personal Forge needs no account provisioning.
+
 ## 5. Verify, then request the real package approval
 
 Re-run the helper after provisioning and show what changed. Existing account

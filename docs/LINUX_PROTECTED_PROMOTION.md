@@ -87,6 +87,12 @@ from a separate, agent-inaccessible console must review the exact commit and
 the existing machine state before creating accounts, groups, directories,
 socket policy, or services. At minimum, independently verify:
 
+For account preparation only, the administrator may review
+[`install.sh --create-protected-accounts`](INSTALL_SH.md). It creates locked
+non-login users and an empty reviewer group in a separate explicit mode.
+Agents must not execute it. It does not perform the remaining deployment steps
+or establish any of the guarantees below.
+
 1. `kf-agent`, `kf-operator`, and every human reviewer have distinct non-root
    UIDs; only humans belong to `kf-reviewers`.
 2. `/opt/toadaid-kf-operator` is a pinned copy owned by root, mode 0755, with no

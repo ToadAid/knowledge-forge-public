@@ -84,6 +84,22 @@ native Windows policy.
 
 ## Ordinary-agent boundary
 
+### Convenience wrapper and optional administrator account preparation
+
+On Linux/macOS/WSL, `./install.sh` delegates to the ordinary installer and then
+runs the read-only setup helper. Use `./install.sh --check-only` to inspect
+without installing. Native Windows users should keep using the `.cmd` installer.
+
+Personal Forge works without service accounts, approval popups or governed
+promotion. For optional Linux protected setup, a human administrator can review
+`./install.sh --create-protected-accounts --plan` and then run
+`sudo ./install.sh --create-protected-accounts` from a separate agent-inaccessible
+console. This separate mode creates only locked non-login accounts/groups;
+it does not deploy services or establish a verified approval system. See
+[the wrapper guide](docs/INSTALL_SH.md) for account restrictions, partial-failure
+handling and remaining deployment requirements. Agents must not execute the
+privileged mode or collect administrator passwords.
+
 The POSIX installer checks that the checkout-local operator CLI exists and
 starts, but does not install it into the ordinary agent prefix. The native
 Windows installer never runs the operator at all; its doctor runs only the two
