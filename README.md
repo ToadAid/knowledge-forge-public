@@ -72,7 +72,9 @@ revalidation. A no-match must be reported, not invented away.
 
 **Want advanced, independently authenticated PROMOTED knowledge?** See
 [optional governed promotion](#advanced-optional-human-review-and-governed-promotion).
-This is separate from the personal-library workflow.
+The experimental [Codex native verification bridge](docs/CODEX_NATIVE_APPROVAL.md)
+is included as a host integration component, not an installed approval screen.
+This advanced path is separate from the personal-library workflow.
 
 ## ToadAid community
 
@@ -125,7 +127,8 @@ or execution authority.
 - the P2B0 provider-neutral approval request contract and review-only terminal
   interface;
 - a command-free inline approval adapter for an independently trusted host;
-- strict one-shot native-host profiles for OpenClaw, Hermes, and generic hosts;
+- strict one-shot native-host profiles for OpenClaw, Hermes, Codex, and generic
+  hosts, including a bounded Codex native user-verification bridge;
 - deterministic schemas, synthetic fixtures, and the complete regression suite.
 
 ## Continuous integration

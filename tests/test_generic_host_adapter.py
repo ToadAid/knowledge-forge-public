@@ -24,6 +24,7 @@ def _event(flow: _Flow, adapter_id: str, decision: str) -> dict:
         "openclaw": "openclaw:operator.approvals",
         "hermes": "hermes:approval-transport-user",
         "generic-native-host": "native-host:user:42",
+        "codex": "codex:user:tommy",
     }
     return {
         "schema_version": GENERIC_HOST_ADAPTER_SCHEMA_VERSION,
@@ -86,6 +87,13 @@ class GenericHostAdapterTests(unittest.TestCase):
         )
         self.assertTrue(result["promoted"])
         self.assertEqual(result["adapter_id"], "generic-native-host")
+
+    def test_codex_verified_one_shot_approval_promotes(self):
+        result = self._complete(
+            "codex", _event(self.flow, "codex", "approve-once")
+        )
+        self.assertTrue(result["promoted"])
+        self.assertEqual(result["adapter_id"], "codex")
 
     def test_denial_is_terminal_without_promotion(self):
         result = self._complete(

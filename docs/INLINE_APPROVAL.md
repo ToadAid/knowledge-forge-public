@@ -48,6 +48,8 @@ the flow remains pending and fails closed.
 For concrete one-shot vocabulary and deployment requirements for OpenClaw,
 Hermes, and other native hosts, see
 [Native host approval adapters](NATIVE_HOST_APPROVAL_ADAPTERS.md).
+For the click-or-Enter Codex surface and its device-proof boundary, see
+[Codex native approval](CODEX_NATIVE_APPROVAL.md).
 
 The legacy review-only terminal remains non-authorizing for diagnostics. The
 Linux protected operator remains available as a hardened backend. Neither is

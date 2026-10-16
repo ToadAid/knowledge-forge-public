@@ -1,7 +1,7 @@
 # Knowledge Forge Public — feature availability
 
 **Snapshot:** public `main` at
-`be55c2f2985d4f734b2aabaab388e5b9e3a7ebda`
+`490da9ab3a6002eef2309e6a403d3ed797ebc2ce`
 (October 16, 2026). This document is a source-and-regression review,
 **not** certification of an independently deployed agent integration.
 
@@ -16,7 +16,7 @@
 | Auto lookup in fresh Claude/Codex conversations | Not included in generic installer | No native workflow/hook installed automatically |
 | Governed registry / operator | Advanced, optional | Existing code/reference deployment; independent protections required for activation |
 | OpenClaw / Hermes / generic native-host approval | Adapter contracts + synthetic tests | No proof of deployed host integration or protected principal |
-| Codex native device verification bridge | **PR #50 open at this snapshot** | [PR #50](https://github.com/ToadAid/knowledge-forge-public/pull/50) proposes experimental `userVerification/verify` bridge; code and test claims must be reviewed at exact PR head; not a live installed TUI |
+| Codex native device verification bridge | Merged code + synthetic tests, not deployed | [PR #50](https://github.com/ToadAid/knowledge-forge-public/pull/50) merged the experimental `userVerification/verify` bridge with test-verifier coverage; it does **not** install a live Codex approval UI, enroll device credentials, or activate a protected backend |
 | Claude native approval bridge | Not demonstrated | Do not infer from generic-host vocabulary or Codex bridge |
 | Universal native `Approve once` button | Not deployed by generic installer | Requires host-specific real integration and enforcement boundary |
 
