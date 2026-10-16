@@ -129,12 +129,18 @@ class LinuxHost:
         os.chown(path, uid, gid, follow_symlinks=False)
 
     def unit_load_state(self, name):
-        result = subprocess.run(['/usr/bin/systemctl', 'show', '--property=LoadState', '--value', name],
+        # systemctl show refuses an uninstantiated @.service template. A fixed
+        # probe instance resolves the same template without starting a service.
+        query = name.replace('@.', '@installer-check.')
+        result = subprocess.run(['/usr/bin/systemctl', 'show', '--property=LoadState', '--value', query],
                                 env=ENV, capture_output=True, text=True)
         value = result.stdout.strip()
-        if value == 'not-found':
+        if value == 'not-found' and result.returncode in (0, 4):
             return value
-        result.check_returncode()
+        if result.returncode != 0:
+            raise DeploymentError(f'Cannot inspect systemd unit {name}: {result.stderr.strip() or "systemctl show failed"}')
+        if value not in {'loaded', 'masked', 'error', 'bad-setting', 'merged', 'stub'}:
+            raise DeploymentError(f'Unexpected systemd LoadState for {name}: {value!r}')
         return value
 
 
@@ -252,7 +258,7 @@ def deployment_plan(commit, reviewer, enable):
             'existing_deployment_policy': 'Refuse; preserve state and review upgrades/recovery manually'}
 
 
-def deploy(host, files, commit, reviewer, *, enable=False):
+def deploy(host, files, commit, reviewer, *, enable=False, on_mutation=None):
     """Caller must perform root/TTY confirmation before entering mutation phase."""
     human = preflight(host, reviewer, mutation=True)
     # Check systemd availability before any account or filesystem changes.
@@ -260,6 +266,8 @@ def deploy(host, files, commit, reviewer, *, enable=False):
     for unit in UNITS:
         if host.unit_load_state(unit) != 'not-found':
             raise DeploymentError(f'Systemd already knows {unit}; inspect existing installation manually')
+    if on_mutation is not None:
+        on_mutation()
     for name in ('kf-agent', 'kf-operator'):
         if host.account(name) is None:
             host.run(['/usr/sbin/groupadd', '--system', name])
@@ -365,8 +373,11 @@ def main(argv=None):
         if input('Type DEPLOY PROTECTED FORGE to install: ') != 'DEPLOY PROTECTED FORGE':
             print('Cancelled; nothing changed.')
             return 1
-        mutated = True
-        print(json.dumps(deploy(host, files, args.commit, args.reviewer, enable=args.enable_services), indent=2))
+        def mark_mutation():
+            nonlocal mutated
+            mutated = True
+        print(json.dumps(deploy(host, files, args.commit, args.reviewer,
+                               enable=args.enable_services, on_mutation=mark_mutation), indent=2))
         print('INSTALLED, NOT CERTIFIED. No package submitted, approved or promoted.')
         return 0
     except (ValueError, KeyError, IndexError, tarfile.TarError, OSError,

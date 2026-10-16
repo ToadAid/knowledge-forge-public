@@ -58,6 +58,15 @@ missing protected code/state/configuration/sockets may remain. Do not rerun
 account creation to fix service blockers. The helper is diagnostic and never
 certifies a protected deployment.
 
+Older deployment helpers queried `knowledge-forge-operator@.service` directly
+with `systemctl show`. Systemd requires a concrete instance for this query; the
+fixed helper uses `knowledge-forge-operator@installer-check.service` only for
+read-only inspection and never starts that probe. This failure occurred before
+account/file/service mutation even if an older report conservatively said
+`partial_changes_possible=true`. Updated reports mark mutation only after the
+read-only systemd checks pass. Update to a reviewed fixed commit rather than
+creating a dummy service or deleting protected state.
+
 Account creation alone does not deliver protected approval: independently
 install pinned root-owned code, configure operator-owned state and socket ACLs,
 select a distinct human reviewer, arrange actual agent execution as kf-agent,

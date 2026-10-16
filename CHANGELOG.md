@@ -2,6 +2,11 @@
 
 ## Unreleased — initial open-source source snapshot
 
+- Fix the administrator installer's read-only systemd template check: inspect
+  a concrete probe instance without starting it, preserve refusal for existing
+  units and bus errors, and report no partial mutation for failures before
+  account/filesystem changes. Add direct systemctl-adapter regression tests.
+
 - Fix administrator deployment from a human-owned checkout under sudo: scope
   Git's safe-directory exception to the exact checkout for the two read-only
   snapshot commands, preserving global settings and commit/content checks.

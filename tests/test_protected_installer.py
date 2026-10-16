@@ -188,10 +188,54 @@ class ProtectedInstallerTests(unittest.TestCase):
 
     def test_preexisting_loaded_unit_refuses_before_mutation(self):
         self.host.loaded_unit = installer.UNITS[0]
+        mutations = []
         with self.assertRaisesRegex(installer.DeploymentError, 'Systemd already knows'):
-            installer.deploy(self.host, self.files, self.pin, 'human', enable=True)
+            installer.deploy(self.host, self.files, self.pin, 'human', enable=True,
+                             on_mutation=lambda: mutations.append(True))
         self.assertEqual(self.host.calls, [['/usr/bin/systemctl', 'show', '--property=Version', '--value']])
         self.assertFalse(installer.CODE.exists())
+        self.assertEqual(mutations, [])
+
+    def test_systemd_adapter_queries_instance_for_template_without_starting_it(self):
+        host = installer.LinuxHost()
+        for requested, expected in [('knowledge-forge-operator@.service',
+                                      'knowledge-forge-operator@installer-check.service'),
+                                     ('knowledge-forge-operator.socket', 'knowledge-forge-operator.socket')]:
+            with patch.object(installer.subprocess, 'run', return_value=subprocess.CompletedProcess(
+                    [], 0, stdout='not-found\n', stderr='')) as run:
+                self.assertEqual(host.unit_load_state(requested), 'not-found')
+                self.assertEqual(run.call_args.args[0], ['/usr/bin/systemctl', 'show',
+                                 '--property=LoadState', '--value', expected])
+        with patch.object(installer.subprocess, 'run', return_value=subprocess.CompletedProcess(
+                [], 0, stdout='loaded\n', stderr='')):
+            self.assertEqual(host.unit_load_state(installer.UNITS[0]), 'loaded')
+
+    def test_systemd_adapter_refuses_bus_errors_and_unknown_output(self):
+        for code, stdout, stderr in [(1, '', 'Failed to connect to bus'),
+                                     (0, '', ''), (0, 'unexpected-state\n', ''),
+                                     (1, 'not-found\n', 'Failed to connect to bus')]:
+            with self.subTest(code=code, stdout=stdout):
+                with patch.object(installer.subprocess, 'run', return_value=subprocess.CompletedProcess(
+                        [], code, stdout=stdout, stderr=stderr)):
+                    with self.assertRaises(installer.DeploymentError):
+                        installer.LinuxHost().unit_load_state(installer.UNITS[0])
+
+    def test_cli_read_only_systemd_failure_reports_no_partial_changes(self):
+        output, errors = io.StringIO(), io.StringIO()
+        self.host.unit_load_state = lambda name: (_ for _ in ()).throw(installer.DeploymentError('systemd read failed'))
+        with patch.object(installer, 'pinned_files', return_value=self.files), \
+             patch.object(installer, 'LinuxHost', return_value=self.host), \
+             patch.object(installer, 'preflight', return_value=self.host.account('human')), \
+             patch.object(installer.os, 'geteuid', return_value=0), \
+             redirect_stdout(output), redirect_stderr(errors), \
+             patch.object(installer.sys.stdin, 'isatty', return_value=True), \
+             patch.object(output, 'isatty', return_value=True), \
+             patch('builtins.input', return_value='DEPLOY PROTECTED FORGE'):
+            code = installer.main(['--source-root', str(REPO), '--reviewer', 'human', '--commit', self.pin])
+        self.assertEqual(code, 2)
+        self.assertFalse(json.loads(errors.getvalue())['partial_changes_possible'])
+        self.assertFalse(installer.CODE.exists())
+        self.assertEqual(self.host.calls, [['/usr/bin/systemctl', 'show', '--property=Version', '--value']])
 
     def test_write_new_refuses_overwrite(self):
         path = self.root / 'file'
