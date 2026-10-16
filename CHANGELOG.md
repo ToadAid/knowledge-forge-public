@@ -2,6 +2,10 @@
 
 ## Unreleased — initial open-source source snapshot
 
+- Review TUI ergonomics P1: confirmation phrase derives from the request
+  SHA-256 (with bounded mismatch recovery), `--from-dir` bundle loading,
+  evidence-view operator guidance, and fail-closed EOF handling. Review-only;
+  `approval.py` and the authority boundary are unchanged.
 - Prepared the complete local-first Knowledge Forge engine for an Apache-2.0
   source distribution.
 - Included generic consumer and authoring CLIs, checkout installer, schemas,

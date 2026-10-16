@@ -175,7 +175,7 @@ bin/knowledge-forge-review synthetic \
   --receipt-out /an/existing/real/directory/review-receipt.json
 ```
 
-Review supplied bounded JSON:
+Review supplied bounded JSON, either with three explicit input paths:
 
 ```bash
 bin/knowledge-forge-review review \
@@ -185,6 +185,20 @@ bin/knowledge-forge-review review \
   --receipt-out review-receipt.json
 ```
 
+or by pointing `--from-dir` at a bundle directory holding the three canonical
+filenames (`approval-request.json`, `approval-evidence.json`,
+`current-candidate.json`):
+
+```bash
+bin/knowledge-forge-review review \
+  --from-dir /path/to/approval-bundle \
+  --receipt-out review-receipt.json
+```
+
+The three canonical filenames are fixed; `--from-dir` cannot be combined with
+the three explicit flags, and every input still passes the same bounded-JSON
+checks (real non-symlink files, size cap, UTF-8 JSON objects).
+
 The command requires both stdin and stdout to be TTYs. Piped input, redirected
 output, EOF, Ctrl-C, wrong confirmation, stale evidence, expiry, malformed JSON,
 oversized files, symlinks, unknown fields, and an existing receipt target fail
@@ -193,7 +207,12 @@ closed. There is no `--approve`, environment approval, or batch-decision flag.
 The interface supports:
 
 - `V`: display exact bounded digest evidence;
-- `A`: type `APPROVE <request suffix>` to record approval review;
+- `A`: type `APPROVE <first 8 hex characters of the request SHA-256>` to record
+  approval review. The confirmation phrase is an attention aid, not a secret
+  and not proof of authenticity. A mismatch is not recorded and shows the exact
+  expected phrase; the operator can retry (`A`) or exit (`Q`) up to three
+  attempts, after which the review fails closed with exit code 2. EOF or Ctrl-C
+  during the confirmation prompt cancels the review without recording it;
 - `R`: record rejection with a required reason;
 - `C`: request changes with a required reason; and
 - `Q`: exit with the request still pending.
@@ -206,7 +225,8 @@ operator invocation are false.
 An interactive TTY is an ergonomics gate only. An agent can simulate a TTY or
 keyboard input. Consequently, a scripted `APPROVE` can produce only a
 non-authorizing review receipt and can never produce operator authorization or
-invoke promotion.
+invoke promotion. The review surface remains unauthenticated, and receipts
+grant no authority.
 
 ## Multi-surface compatibility
 

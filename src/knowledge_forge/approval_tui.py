@@ -58,9 +58,14 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
-def _suffix(request_id: str) -> str:
-    safe = "".join(char for char in request_id if char.isalnum())
-    return safe[-8:] or "request"
+def _confirmation_token(request_sha256: str) -> str:
+    """Neutral attention token: first 8 hex chars of the canonical request digest.
+
+    The phrase is an aid so a human must actually read the prompt before the
+    review is recorded. It is not a secret and not proof of authenticity; it is
+    never stored in receipts or the session ledger.
+    """
+    return request_sha256.split(":", 1)[1][:8]
 
 
 def _card(projection: Mapping[str, Any]) -> str:
@@ -107,6 +112,12 @@ def _evidence_text(projection: Mapping[str, Any]) -> str:
         f"package_receipt_sha256: {projection['package_receipt_sha256']}",
         f"validated_lifecycle_head_sha256: {projection['validated_lifecycle_head_sha256']}",
         f"evidence_digest: {projection['evidence_digest']}",
+        "Labels are opaque identifiers shown on purpose; this view contains hashes"
+        " only, no file contents or local paths.",
+        "Before approving, independently recompute and compare each sha256 against"
+        " the agent's artifacts in your own workspace.",
+        "Confirmation phrase: APPROVE plus the first 8 hex characters of"
+        " request_sha256 above.",
     ]
     for item in projection["evidence_items"]:
         lines.append(f"evidence.{item['label']}: {item['sha256']}")
@@ -188,11 +199,24 @@ def _run_local_review_tui_at(
         decision: str
         reason: str | None = None
         if choice in {"a", "approve"}:
-            phrase = terminal.read_line(
-                f"Type APPROVE {_suffix(request['request_id'])} to record review > "
-            )
-            if phrase.strip() != f"APPROVE {_suffix(request['request_id'])}":
-                raise ApprovalContractError("approval confirmation mismatch")
+            expected = f"APPROVE {_confirmation_token(projection['request_sha256'])}"
+            for _attempt in range(3):
+                try:
+                    phrase = terminal.read_line(f"Type {expected} to record review > ")
+                except (EOFError, KeyboardInterrupt) as exc:
+                    raise ApprovalContractError("terminal review cancelled") from exc
+                if phrase.strip() == expected:
+                    break
+                terminal.write(
+                    "Mismatch: approval not recorded.\n"
+                    f"Expected exactly: {expected} — also shown in the evidence view (V).\n"
+                    "Type A to try again or Q to exit.\n"
+                )
+            else:
+                raise ApprovalContractError(
+                    "approval confirmation mismatch after 3 attempts; "
+                    f"expected exactly: {expected}"
+                )
             decision = "APPROVE"
         elif choice in {"r", "reject"}:
             reason = terminal.read_line("Rejection reason > ").strip()
@@ -250,6 +274,40 @@ def _load_json(path_value: str, label: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ApprovalContractError(f"{label} must contain a JSON object")
     return value
+
+
+def _load_review_inputs(
+    request_value: str | None,
+    evidence_value: str | None,
+    current_binding_value: str | None,
+    from_dir_value: str | None,
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    """Resolve review inputs from explicit flags or one canonical bundle directory.
+
+    With --from-dir, exactly three canonical filenames are read from the given
+    directory through _load_json (same bounded checks). Validation fails closed
+    before any file read.
+    """
+    if from_dir_value is not None:
+        if any(value is not None for value in (request_value, evidence_value, current_binding_value)):
+            raise ApprovalContractError(
+                "--from-dir cannot be combined with --request/--evidence/--current-binding"
+            )
+        base = Path(from_dir_value)
+        if base.is_symlink() or not base.is_dir():
+            raise ApprovalContractError("--from-dir must be an existing real directory")
+        request_value = str(base / "approval-request.json")
+        evidence_value = str(base / "approval-evidence.json")
+        current_binding_value = str(base / "current-candidate.json")
+    elif any(value is None for value in (request_value, evidence_value, current_binding_value)):
+        raise ApprovalContractError(
+            "--request, --evidence and --current-binding are required unless --from-dir is given"
+        )
+    return (
+        _load_json(request_value, "approval request (approval-request.json)"),
+        _load_json(evidence_value, "approval evidence (approval-evidence.json)"),
+        _load_json(current_binding_value, "current candidate binding (current-candidate.json)"),
+    )
 
 
 def _write_receipt(path_value: str, receipt: Mapping[str, Any]) -> None:
@@ -321,9 +379,13 @@ def build_parser() -> argparse.ArgumentParser:
     preview.add_argument("--package-root", required=True)
     preview.add_argument("--validated-lifecycle", required=True)
     review = commands.add_parser("review")
-    review.add_argument("--request", required=True)
-    review.add_argument("--evidence", required=True)
-    review.add_argument("--current-binding", required=True)
+    review.add_argument("--request")
+    review.add_argument("--evidence")
+    review.add_argument("--current-binding")
+    review.add_argument(
+        "--from-dir",
+        help="directory holding approval-request.json, approval-evidence.json and current-candidate.json",
+    )
     review.add_argument("--receipt-out", required=True)
     synthetic = commands.add_parser("synthetic")
     synthetic.add_argument("--receipt-out", required=True)
@@ -382,9 +444,9 @@ def main(argv: Sequence[str] | None = None) -> int:
                 reviewed_at=synthetic_now,
             )
         else:
-            request = _load_json(args.request, "approval request")
-            evidence = _load_json(args.evidence, "approval evidence")
-            binding = _load_json(args.current_binding, "current candidate binding")
+            request, evidence, binding = _load_review_inputs(
+                args.request, args.evidence, args.current_binding, args.from_dir
+            )
             receipt = run_local_review_tui(
                 request,
                 evidence,

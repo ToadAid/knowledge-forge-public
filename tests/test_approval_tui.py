@@ -1,20 +1,36 @@
 from __future__ import annotations
 
+import contextlib
 from copy import deepcopy
+import io
 import json
 from pathlib import Path
 import subprocess
 import tempfile
 import unittest
-from _platform_support import skip_bash_launcher_on_windows
+from _platform_support import skip_bash_launcher_on_windows, skip_unless_symlinks
 from unittest.mock import patch
 
-from knowledge_forge.approval import ApprovalContractError, ReviewDecisionLedger
-from knowledge_forge.approval_tui import run_local_review_tui
+from knowledge_forge.approval import (
+    ApprovalContractError,
+    ReviewDecisionLedger,
+    approval_request_sha256,
+)
+from knowledge_forge.approval_tui import (
+    _confirmation_token,
+    _load_review_inputs,
+    main,
+    run_local_review_tui,
+)
 from test_approval import REVIEWED, fixture, sha
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def phrase_for(request):
+    """Confirmation phrase the polished TUI expects for this request."""
+    return "APPROVE " + approval_request_sha256(request).removeprefix("sha256:")[:8]
 
 
 class ScriptedTerminal:
@@ -51,7 +67,7 @@ class ApprovalTuiTests(unittest.TestCase):
 
     def test_scripted_approval_records_review_but_never_authority_or_promotion(self):
         request, evidence, binding, _identity = fixture()
-        terminal = ScriptedTerminal(["v", "a", "APPROVE etic0001"])
+        terminal = ScriptedTerminal(["v", "a", phrase_for(request)])
         receipt = run_local_review_tui(request, evidence, binding, terminal)
         self.assertEqual(receipt["state"], "REVIEWED_APPROVED")
         self.assertFalse(receipt["host_authentication_verified"])
@@ -72,7 +88,47 @@ class ApprovalTuiTests(unittest.TestCase):
                 request,
                 evidence,
                 binding,
-                ScriptedTerminal(["a", "yes"]),
+                ScriptedTerminal(["a", "yes", "no", "maybe", ""]),
+            )
+
+    def test_confirmation_token_derives_from_request_sha256(self):
+        request, _evidence, _binding, _identity = fixture()
+        digest = "sha256:" + "9f3ab2c1" + "0" * 56
+        self.assertEqual(_confirmation_token(digest), "9f3ab2c1")
+        self.assertEqual(_confirmation_token(digest), _confirmation_token(digest))
+        self.assertEqual(
+            phrase_for(request),
+            "APPROVE " + _confirmation_token(approval_request_sha256(request)),
+        )
+        import knowledge_forge.approval_tui as module
+
+        self.assertFalse(hasattr(module, "_suffix"))
+
+    def test_confirmation_mismatch_retry_then_success_records_once(self):
+        request, evidence, binding, _identity = fixture()
+        terminal = ScriptedTerminal(["a", "yes", "wrong", phrase_for(request)])
+        receipt = run_local_review_tui(request, evidence, binding, terminal)
+        self.assertEqual(receipt["state"], "REVIEWED_APPROVED")
+        rendered = "".join(terminal.output)
+        self.assertIn("Mismatch: approval not recorded.", rendered)
+        self.assertIn(f"Expected exactly: {phrase_for(request)}", rendered)
+        self.assertFalse(receipt["authorization_granted"])
+
+    def test_confirmation_mismatch_fails_closed_after_three_attempts(self):
+        request, evidence, binding, _identity = fixture()
+        terminal = ScriptedTerminal(["a", "yes", "no", "maybe"])
+        with self.assertRaisesRegex(ApprovalContractError, "confirmation mismatch"):
+            run_local_review_tui(request, evidence, binding, terminal)
+        self.assertIn(f"Expected exactly: {phrase_for(request)}", "".join(terminal.output))
+
+    def test_confirmation_eof_fails_closed(self):
+        request, evidence, binding, _identity = fixture()
+        with self.assertRaisesRegex(ApprovalContractError, "terminal review cancelled"):
+            run_local_review_tui(
+                request,
+                evidence,
+                binding,
+                ScriptedTerminal(["a"]),
             )
 
     def test_rejection_and_changes_require_reasons(self):
@@ -97,7 +153,7 @@ class ApprovalTuiTests(unittest.TestCase):
         request, evidence, binding, _identity = fixture()
         stale = deepcopy(binding)
         stale["package_receipt_sha256"] = sha("f")
-        terminal = ScriptedTerminal(["a", "APPROVE etic0001"])
+        terminal = ScriptedTerminal(["a", phrase_for(request)])
         with self.assertRaisesRegex(ApprovalContractError, "stale candidate"):
             run_local_review_tui(
                 request, evidence, stale, terminal
@@ -106,7 +162,7 @@ class ApprovalTuiTests(unittest.TestCase):
 
     def test_expired_request_shows_warning_and_refuses(self):
         request, evidence, binding, _identity = fixture()
-        terminal = ScriptedTerminal(["a", "APPROVE etic0001"])
+        terminal = ScriptedTerminal(["a", phrase_for(request)])
         with self.assertRaisesRegex(ApprovalContractError, "expired"):
             with patch("knowledge_forge.approval_tui._now", return_value="2026-10-13T16:31:00Z"):
                 run_local_review_tui(request, evidence, binding, terminal)
@@ -114,7 +170,7 @@ class ApprovalTuiTests(unittest.TestCase):
 
     def test_request_expiring_while_tui_is_open_refuses_without_receipt(self):
         request, evidence, binding, identity = fixture()
-        terminal = ScriptedTerminal(["a", "APPROVE etic0001"])
+        terminal = ScriptedTerminal(["a", phrase_for(request)])
         ledger = ReviewDecisionLedger()
         with patch(
             "knowledge_forge.approval_tui._now",
@@ -159,7 +215,7 @@ class ApprovalTuiTests(unittest.TestCase):
                 request,
                 evidence,
                 binding,
-                ScriptedTerminal(["a", "APPROVE etic0001"]),
+                ScriptedTerminal(["a", phrase_for(request)]),
                 ledger=ledger,
             )
 
@@ -259,6 +315,85 @@ class ApprovalTuiTests(unittest.TestCase):
             self.assertIn(f'"{surface}"', first.stdout)
         self.assertNotIn("knowledge-forge-operator", first.stdout)
 
+    def test_from_dir_loads_the_canonical_triple(self):
+        request, evidence, binding, _identity = fixture()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for name, value in (
+                ("approval-request.json", request),
+                ("approval-evidence.json", evidence),
+                ("current-candidate.json", binding),
+            ):
+                (root / name).write_text(json.dumps(value), encoding="utf-8")
+            loaded = _load_review_inputs(None, None, None, str(root))
+        self.assertEqual(loaded, (request, evidence, binding))
+
+    @skip_unless_symlinks
+    def test_from_dir_refuses_missing_symlinked_or_oversized_inputs(self):
+        request, evidence, binding, _identity = fixture()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "approval-request.json").write_text(json.dumps(request), encoding="utf-8")
+            for pending in ("approval-evidence.json", "current-candidate.json"):
+                with self.assertRaisesRegex(ApprovalContractError, "regular non-symlink file"):
+                    _load_review_inputs(None, None, None, str(root))
+                value = binding if "candidate" in pending else evidence
+                (root / pending).write_text(json.dumps(value), encoding="utf-8")
+            # all three present and loadable now
+            _load_review_inputs(None, None, None, str(root))
+            # symlinked member refused
+            target = root / "plain.json"
+            target.write_text("{}", encoding="utf-8")
+            (root / "current-candidate.json").unlink()
+            (root / "current-candidate.json").symlink_to(target)
+            with self.assertRaisesRegex(ApprovalContractError, "regular non-symlink file"):
+                _load_review_inputs(None, None, None, str(root))
+            # oversized member refused
+            (root / "current-candidate.json").unlink()
+            (root / "current-candidate.json").write_text("x" * (256 * 1024 + 1), encoding="utf-8")
+            with self.assertRaisesRegex(ApprovalContractError, "exceeds"):
+                _load_review_inputs(None, None, None, str(root))
+
+    def test_from_dir_flag_conflicts_fail_closed(self):
+        request, evidence, binding, _identity = fixture()
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for name, value in (
+                ("approval-request.json", request),
+                ("approval-evidence.json", evidence),
+                ("current-candidate.json", binding),
+            ):
+                (root / name).write_text(json.dumps(value), encoding="utf-8")
+            with self.assertRaisesRegex(ApprovalContractError, "cannot be combined"):
+                _load_review_inputs("x.json", None, None, str(root))
+            with self.assertRaisesRegex(ApprovalContractError, "required unless"):
+                _load_review_inputs(None, None, None, None)
+            receipt_out = str(root / "receipt.json")
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err):
+                code = main(["review", "--from-dir", str(root), "--request", "x", "--receipt-out", receipt_out])
+            self.assertEqual(code, 2)
+            self.assertIn("cannot be combined", err.getvalue())
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err):
+                code = main(["review", "--receipt-out", receipt_out])
+            self.assertEqual(code, 2)
+            self.assertIn("required unless", err.getvalue())
+            self.assertFalse(Path(receipt_out).exists())
+
+    def test_evidence_view_guides_operator_verification(self):
+        request, evidence, binding, _identity = fixture()
+        terminal = ScriptedTerminal(["v", "q"])
+        result = run_local_review_tui(request, evidence, binding, terminal)
+        rendered = "".join(terminal.output)
+        self.assertIn("Exact bounded evidence", rendered)
+        self.assertIn("Labels are opaque identifiers shown on purpose", rendered)
+        self.assertIn("independently recompute and compare each sha256", rendered)
+        self.assertIn("APPROVE plus the first 8 hex characters of", rendered)
+        for marker in ("/home/synthetic/private/source.py", "ghp_syntheticsecret"):
+            self.assertNotIn(marker, rendered)
+        self.assertIsNone(result["receipt"])
+
     def test_review_has_no_operator_or_registry_mutation_path(self):
         request, evidence, binding, _identity = fixture()
         with tempfile.TemporaryDirectory() as tmp:
@@ -269,7 +404,7 @@ class ApprovalTuiTests(unittest.TestCase):
                 request,
                 evidence,
                 binding,
-                ScriptedTerminal(["a", "APPROVE etic0001"]),
+                ScriptedTerminal(["a", phrase_for(request)]),
             )
             self.assertEqual(registry.read_bytes(), original)
             self.assertFalse(receipt["operator_cli_invoked"])
