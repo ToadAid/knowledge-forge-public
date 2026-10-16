@@ -2,6 +2,19 @@
 
 ## Unreleased — initial open-source source snapshot
 
+- Added the approval-host contract (APPROVAL UX P1): chat can request skill
+  promotion (`approval.build_approval_request`, unchanged review-only
+  receipts), while a trusted host process converts one human Approve/Reject
+  into a real PROMOTED registry transition — `build_host_decision` signs an
+  HMAC-bound decision against the exact request bytes,
+  `authorize_from_host_decision` verifies signature, expiry, request/candidate
+  binding and a durable single-use ledger before constructing the existing
+  `OperatorAuthorization`, and `bin/knowledge-forge-approve` performs the
+  promotion through the unchanged operator engine with fail-closed refusals.
+  The full chain (request → review → authenticated approval → promotion →
+  registry verification) is covered end-to-end in `tests/test_approval_host.py`.
+  No host key, no promotion; the exact missing dependency is reported rather
+  than simulated.
 - Added Personal Forge P1: an ordinary-user-local personal knowledge library
   (`knowledge-forge personal add/list/lookup/remove`) that accepts only fully
   VALIDATED packages with exact receipt/identity binding, revalidates every

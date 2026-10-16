@@ -1,0 +1,5 @@
+#!/bin/sh
+# APPROVAL UX P1: trusted-host single-action approver. Run from the trusted
+# approval host process (or an administrator shell), never from the agent.
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+exec /usr/bin/env PYTHONPATH="$REPO_ROOT/src" python3 -m knowledge_forge.approval_host_cli "$@"
