@@ -1,10 +1,11 @@
 # File-to-skill agent guide
 
 This is an **agent-facing runbook**, not an automatic native host plugin.
-**Default: Forge → Accept → Ask.** For ordinary personal use, author and
-validate the knowledge first, show source coverage and omissions, ask whether
-to add it, and then use the local Personal Forge library for grounded answers.
-No governed promotion is required.
+**Default: Forge → Ask → route.** After authoring and validating, the agent
+asks one plain question and routes on the user's plain answer: the
+**personal library**, a **governed promotion** (approval card), or **both**.
+For ordinary personal use, the local Personal Forge library alone is enough;
+no governed promotion is required.
 
 **Implemented:** model-assisted authoring, package validation, personal
 add/list/lookup/remove and source-linked bounded retrieval.
@@ -20,7 +21,8 @@ the user explicitly asks for governed PROMOTED registry knowledge.
 Examples that should be understood when this guide is provided to an agent:
 
 - `Forge these notes into personal knowledge skills.` → author, validate,
-  show coverage and evidence, then ask before adding anything.
+  show coverage and evidence, then ask (library, promotion, or both) before
+  anything lands anywhere.
 - `What do my notes say about patience?` → run `personal lookup`, cite
   only its returned source bindings, and report honest no-match results.
 
@@ -89,10 +91,40 @@ file or a necessary choice between materially different interpretations.
    do not downgrade controls or claim success.
 8. **Show understandable results:** skill title(s), exact package path(s),
    source hash(es), included vs omitted counts and IDs, real source bindings,
-   validator result, lifecycle state and unresolved issues.
-   **For ordinary use, ask whether to add the VALIDATED packages to the
-   PERSONAL library.** Prepare a governed review request only if the user
-   explicitly requested governed promotion.
+   validator result, lifecycle state and unresolved issues. Then
+   **perform [the ask](#the-ask-library-promotion-or-both) before anything
+   lands: personal library, governed promotion, or both.**
+
+## The ask (library, promotion, or both)
+
+**Do not take any route silently.** After showing the validated results, ask
+one plain question and let the user's answer choose the shelf:
+
+```text
+Would you like to add these skills to your PERSONAL library, request
+governed PROMOTED registration, or both?
+```
+
+The two options are different doors with different weight, and the agent
+must say so in plain words:
+
+- **Personal library** — the everyday shelf. A plain chat **yes** is enough:
+  the agent runs `personal add --accept` (conversational acceptance is
+  exactly what the personal shelf asks for) and answers questions from it
+  immediately. It never touches `PROMOTED` state.
+- **Governed promotion** — knowledge under authority. The user's chat **yes**
+  is a real answer *to the agent*, but it acts only as the
+  **request**: on yes, the agent stages the exact approval request and pops
+  the approval card. The user's two clicks in the card window
+  ([Approve & Promote] → [Confirm && Promote]) are the actual signature.
+  Chat text — even an enthusiastic, explicit `yes, promote it` — is never
+  an authorization input.
+- **Both** — both doors, each through its own lawful step, in either order
+  (library add has no dependency on the card; promotion does not imply the
+  library).
+
+If the user says nothing, nothing is added and nothing is promoted; report
+`Personal library: NOT ADDED YET. Promotion: NOT PROMOTED.` and stop.
 
 ## Personal library (not promotion)
 
@@ -188,15 +220,20 @@ Validation: PASS for both packages.
 Claim support: model-judged; please review important claims.
 Source evidence: <actual IDs/URLs from package, where present>.
 Personal library: NOT ADDED YET. Promotion: NOT PROMOTED.
-Would you like to add these skills to your PERSONAL library?
+Would you like to add these skills to your PERSONAL library, request
+governed PROMOTED registration, or both?
 ```
 
 Do not output the example as if it were a real result. Report actual counts,
-paths, and status. Only after the user says yes may the agent run `personal
-add --accept`. On questions, run `personal lookup` and cite the returned
-bindings; do not pretend a raw-file answer was a Forge result. An agent must not claim `REQUEST_SENT` without verified
-delivery, `APPROVED` without authenticated authorization, or `PROMOTED`
-without verified current registry/lifecycle evidence.
+paths, and status. Route on the answer exactly per
+[the ask](#the-ask-library-promotion-or-both): only after the user says yes may
+the agent run `personal add --accept`; on a promotion yes, stage the request
+and pop the approval card — the chat yes itself stays a request, never an
+authorization input. On questions, run `personal lookup` and cite the returned
+bindings; do not pretend a raw-file answer was a Forge result. An agent must
+not claim `REQUEST_SENT` without verified delivery, `APPROVED` without
+authenticated authorization, or `PROMOTED` without verified current
+registry/lifecycle evidence.
 
 ## Host integration work still required
 
