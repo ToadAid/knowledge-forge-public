@@ -47,7 +47,15 @@ def pinned_files(root: Path, commit: str) -> dict[str, bytes]:
     """Read an exact Git object snapshot, never copy live working-tree code."""
     if not re.fullmatch(r'[0-9a-f]{40}', commit):
         raise DeploymentError('--commit must be the full reviewed 40-character Git commit')
-    git = ['/usr/bin/git', '--no-replace-objects', '-C', str(root)]
+    root = root.resolve(strict=True)
+    # sudo intentionally reads a human-owned reviewed checkout. Scope the trust
+    # exception to these read-only Git invocations; never change global config
+    # or permit all repositories with safe.directory=*. Commit/content checks
+    # below still bind installation to the exact reviewed snapshot.
+    if '*' in str(root):
+        raise DeploymentError('Checkout paths containing wildcard characters are not supported')
+    git = ['/usr/bin/git', '-c', 'safe.directory=' + str(root),
+           '--no-replace-objects', '-C', str(root)]
     actual = subprocess.check_output(git + ['rev-parse', '--verify', commit + '^{commit}'], env=ENV).decode().strip()
     if actual != commit:
         raise DeploymentError('Reviewed commit does not resolve exactly')

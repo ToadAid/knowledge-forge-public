@@ -2,6 +2,11 @@
 
 ## Unreleased — initial open-source source snapshot
 
+- Fix administrator deployment from a human-owned checkout under sudo: scope
+  Git's safe-directory exception to the exact checkout for the two read-only
+  snapshot commands, preserving global settings and commit/content checks.
+  Regression reproduces Git's different-owner refusal without root or chown.
+
 - Add explicit administrator-only `install.sh --deploy-protected` for initial
   Linux/systemd deployment: create or verify locked role accounts, install
   code from an exact reviewed Git commit, initialize operator-owned state,

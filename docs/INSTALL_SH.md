@@ -100,6 +100,14 @@ password prompt stays in that independent console. Do not give passwords to
 the agent. Omitting `--enable-services` installs dormant units without enabling
 or starting the system sockets. Ordinary `./install.sh` remains unprivileged.
 
+The administrator normally reads a checkout owned by the human. The installer
+passes `safe.directory=<that exact resolved checkout>` only to its read-only
+Git commands, so sudo does not require changing root's global Git settings.
+It never runs `git config --global` or trusts `safe.directory=*`. Exact commit
+and installer-byte verification still apply. If an older installer reports
+`dubious ownership` before making changes, update to a reviewed fixed commit
+and use that commit's full SHA; do not disable the ownership check globally.
+
 The deployment creates missing role accounts or accepts the existing accounts
 from account-only mode after checking distinct non-root UIDs, locked passwords,
 `nologin`, dedicated primary groups, no supplementary groups, and `/nonexistent`

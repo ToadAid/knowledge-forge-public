@@ -257,6 +257,23 @@ class ProtectedInstallerTests(unittest.TestCase):
             '-c', 'commit.gpgsign=false', 'commit', '-m', 'synthetic deployment')
         pin = git('rev-parse', 'HEAD').decode().strip()
         self.assertEqual(installer.pinned_files(root, pin), files)
+        # Reproduce sudo's different-owner refusal without root/chown or changing
+        # any real account. Git's own test switch makes this repo "foreign".
+        foreign_env = dict(installer.ENV, GIT_TEST_ASSUME_DIFFERENT_OWNER='1')
+        before = (root / '.git/config').read_bytes()
+        refused = subprocess.run(['/usr/bin/git', '-C', str(root), 'rev-parse', '--verify', pin],
+                                 env=foreign_env, capture_output=True, text=True)
+        self.assertNotEqual(refused.returncode, 0)
+        self.assertIn('dubious ownership', refused.stderr)
+        with patch.object(installer, 'ENV', foreign_env), \
+             patch.object(installer.subprocess, 'check_output', wraps=subprocess.check_output) as calls:
+            self.assertEqual(installer.pinned_files(root, pin), files)
+            for call in calls.call_args_list:
+                command = call.args[0]
+                self.assertIn('safe.directory=' + str(root.resolve()), command)
+                self.assertNotIn('safe.directory=*', command)
+                self.assertNotIn('--global', command)
+        self.assertEqual((root / '.git/config').read_bytes(), before)
         (root / 'scripts/install_protected.py').write_text('# changed\n')
         with self.assertRaisesRegex(installer.DeploymentError, 'differs'):
             installer.pinned_files(root, pin)
