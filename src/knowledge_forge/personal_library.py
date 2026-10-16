@@ -194,6 +194,23 @@ def _acquire_write_lock(descriptor: int) -> None:
             time.sleep(0.05)
 
 
+def _release_write_lock(descriptor: int) -> None:
+    """Release the advisory writer lock taken by _acquire_write_lock.
+
+    On native Windows a byte-range lock survives a plain close of another
+    handle; it must be unlocked through the handle that holds it. Callers
+    that never acquired (lock-refusal path) may surface a not-locked error,
+    which the context manager swallows so a refusal or a completed save is
+    never masked by the cleanup.
+    """
+
+    if sys.platform == "win32":
+        os.lseek(descriptor, 0, os.SEEK_SET)
+        msvcrt.locking(descriptor, msvcrt.LK_UNLCK, 1)
+    else:
+        fcntl.flock(descriptor, fcntl.LOCK_UN)
+
+
 @contextmanager
 def _library_write_lock(path: Path):
     """Single-writer coordination for the library read-modify-write
@@ -230,13 +247,11 @@ def _library_write_lock(path: Path):
         yield
     finally:
         try:
-            if sys.platform == "win32":
-                os.lseek(descriptor, 0, os.SEEK_SET)
-                msvcrt.locking(descriptor, msvcrt.LK_UNLCK, 1)
-            else:
-                fcntl.flock(descriptor, fcntl.LOCK_UN)
-        finally:
-            os.close(descriptor)
+            _release_write_lock(descriptor)
+        except OSError:
+            # Cleanup must not mask a refusal or an already-saved result.
+            pass
+        os.close(descriptor)
 
 
 def _read_bounded_bytes(path: Path, limit: int, label: str) -> bytes:

@@ -1023,6 +1023,10 @@ class PersonalLibraryReliabilityTests(unittest.TestCase):
                             added_at=STAMP,
                         )
                 finally:
+                    # Windows byte-range locks survive a plain close of the
+                    # handle; release through the same production path the
+                    # lock holder itself would use.
+                    personal_library._release_write_lock(held)
                     os.close(held)
             # Releasing the competing writer lets the operation succeed.
             add_personal_entry(
