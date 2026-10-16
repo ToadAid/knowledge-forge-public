@@ -75,6 +75,12 @@ Linux administrator mode creates locked non-login accounts only, with no
 services enabled. A successful account-creation message does not mean approval
 popups are ready; follow the independent deployment and verification steps.
 
+If the administrator wants accounts and service installation together, the
+same wrapper has an explicit `--deploy-protected` mode, pinned to a reviewed
+commit and selected human reviewer. It can enable the system sockets on request.
+The human desktop broker and isolated agent execution still need the documented
+session/integration steps. The agent must not run privileged deployment itself.
+
 ## 2. Forge and validate a document
 
 Choose a file you are authorized to process. Give your agent its **real**

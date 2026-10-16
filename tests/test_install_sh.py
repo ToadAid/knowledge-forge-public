@@ -104,6 +104,18 @@ source "$0" "$@"
         self.assertEqual(self.run_script('--create-protected-accounts', '--yes').returncode, 2)
         self.assertEqual(self.calls(), '')
 
+    @unittest.skipUnless(os.path.isfile('/usr/bin/python3'), 'System Python launcher')
+    def test_deployment_dispatches_to_isolated_system_python(self):
+        scripts = self.root / 'scripts'
+        scripts.mkdir()
+        (scripts / 'install_protected.py').write_text('import json,sys; print(json.dumps(sys.argv[1:]))\n')
+        result = self.run_script('--deploy-protected', '--reviewer', 'human', '--commit', 'a' * 40, '--plan')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        import json
+        self.assertEqual(json.loads(result.stdout), ['--source-root', str(self.root), '--reviewer',
+                                                     'human', '--commit', 'a' * 40, '--plan'])
+        self.assertEqual(self.calls(), '')
+
     def interactive(self, response, **env):
         master, slave = pty.openpty()
         process = subprocess.Popen(['bash', '-c', self.harness, str(self.root / 'install.sh'),

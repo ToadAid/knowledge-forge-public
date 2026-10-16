@@ -8,6 +8,8 @@ Usage:
   ./install.sh [--check-only] [--prefix PATH] [--state-root PATH] [--manifest PATH]
   ./install.sh --create-protected-accounts --plan
   sudo ./install.sh --create-protected-accounts
+  ./install.sh --deploy-protected --reviewer USER --commit SHA --plan
+  sudo ./install.sh --deploy-protected --reviewer USER --commit SHA --enable-services
 
 Default: install ordinary Personal Forge commands and run the read-only helper.
 Run default installation as your normal user. No settings or services change.
@@ -17,12 +19,26 @@ console after reviewing this script. Creates locked, non-login kf-agent and
 kf-operator accounts and an empty kf-reviewers group. No passwords are collected.
 This mode does not install tools, enable services, add a reviewer, migrate the
 agent, approve packages or establish a verified protected deployment.
+
+Deployment mode: independent Linux/systemd administrator only. Creates or
+verifies the service accounts, installs pinned code/state/configuration and
+system/user units, and adds the explicitly selected human to kf-reviewers.
+--enable-services enables the two system sockets. The human starts the desktop
+broker after a fresh login. No agent settings or MCP registration are changed.
+Service installation is not certification of protected approval.
 TXT
 }
 
 if [[ "${1:-}" == -h || "${1:-}" == --help ]]; then
   usage
   exit 0
+fi
+
+if [[ "${1:-}" == --deploy-protected ]]; then
+  export PATH=/usr/sbin:/usr/bin:/sbin:/bin
+  ROOT="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+  shift
+  exec /usr/bin/python3 -I -B "$ROOT/scripts/install_protected.py" --source-root "$ROOT" "$@"
 fi
 
 if [[ "${1:-}" != --create-protected-accounts ]]; then

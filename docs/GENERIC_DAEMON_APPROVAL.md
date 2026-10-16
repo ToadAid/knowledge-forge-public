@@ -100,6 +100,14 @@ this transport does not manufacture those facts.
 
 ## Administrator deployment after review and merge
 
+An independently reviewed initial deployment can use
+[`install.sh --deploy-protected`](INSTALL_SH.md#deploy-accounts-and-the-protected-service-together-linuxsystemd)
+with explicit reviewer, exact reviewed commit, and optional `--enable-services`.
+It accepts already-created restricted role accounts and performs the protected
+code/state/unit installation below. The human must start the desktop broker
+after group membership refresh; actual agent/transport isolation and the live
+synthetic verification remain separate. Agents must not execute this mode.
+
 First establish and adversarially test every OS boundary in
 [LINUX_PROTECTED_PROMOTION.md](LINUX_PROTECTED_PROMOTION.md). Keep the pinned
 operator **and reviewer code** root-owned and non-writable to both agents and
@@ -127,9 +135,9 @@ An administrator then reviews and installs these additional reference files:
   `kf-agent`. Start/enable this user service only as an explicit human action.
 
 The ordinary installer is unchanged and still installs only the consumer and
-authoring commands. No automatic account creation, sudo invocation, service
-enablement, migration of a personal registry, or trust-anchor replacement is
-performed. The old same-account approval-host registry is not the protected
+authoring commands, without accounts or services. The explicit administrator
+deployment mode is separate; it never invokes sudo itself, migrates a personal
+registry, or replaces a trust anchor. The old same-account approval-host registry is not the protected
 daemon registry; existing entries require a separately reviewed migration.
 
 ## Persistence, bounds and failures

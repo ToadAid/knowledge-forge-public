@@ -93,6 +93,14 @@ non-login users and an empty reviewer group in a separate explicit mode.
 Agents must not execute it. It does not perform the remaining deployment steps
 or establish any of the guarantees below.
 
+For a full **administrator-run initial deployment**, see
+[`install.sh --deploy-protected`](INSTALL_SH.md#deploy-accounts-and-the-protected-service-together-linuxsystemd).
+It creates or verifies the accounts, installs pinned root-owned code and units,
+initializes operator-owned state, adds the explicitly selected human reviewer,
+and optionally enables the two generic system sockets. Agents must not execute
+it. The human session, actual agent isolation and adversarial verification
+below remain required; this command is not an upgrade or certification tool.
+
 1. `kf-agent`, `kf-operator`, and every human reviewer have distinct non-root
    UIDs; only humans belong to `kf-reviewers`.
 2. `/opt/toadaid-kf-operator` is a pinned copy owned by root, mode 0755, with no

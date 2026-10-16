@@ -305,6 +305,13 @@ broker displays approval popups. A dedicated operator UID owns snapshots,
 registry and receipts. This requires explicit administrator deployment and an
 allowed request transport; ordinary installation does not activate it.
 
+For an explicit, independent administrator installation, the
+[`install.sh --deploy-protected` mode](docs/INSTALL_SH.md#deploy-accounts-and-the-protected-service-together-linuxsystemd)
+can create or verify the accounts and install pinned service code, state,
+configuration and units together. System socket activation is opt-in. The
+human desktop session, actual agent isolation and live verification remain
+required; service installation alone is not a verified approval deployment.
+
 The repository now includes a Linux/systemd reference for the intended simple
 human experience:
 
