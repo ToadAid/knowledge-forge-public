@@ -24,7 +24,8 @@ Until an approved host transport exists, the honest result is
 
 **[Read the simple user manual](USER_MANUAL.md)** ·
 [Agent-facing one-sentence workflow](docs/FILE_TO_SKILL_AGENT_GUIDE.md) ·
-[Command-free approval integration](docs/INLINE_APPROVAL.md)
+[Command-free approval integration](docs/INLINE_APPROVAL.md) ·
+[OpenClaw, Hermes, and generic native hosts](docs/NATIVE_HOST_APPROVAL_ADAPTERS.md)
 
 ## New here? Install, forge, and ask
 
@@ -100,6 +101,7 @@ memory, or execution authority.
 - the P2B0 provider-neutral approval request contract and review-only terminal
   interface;
 - a command-free inline approval adapter for an independently trusted host;
+- strict one-shot native-host profiles for OpenClaw, Hermes, and generic hosts;
 - deterministic schemas, synthetic fixtures, and the complete regression suite.
 
 ## Continuous integration

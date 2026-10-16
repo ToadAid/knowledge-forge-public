@@ -45,6 +45,10 @@ the flow remains pending and fails closed.
    lifecycle and receipt artifacts under protected state.
 6. Only a returned `promoted: true` receipt is reported as success.
 
+For concrete one-shot vocabulary and deployment requirements for OpenClaw,
+Hermes, and other native hosts, see
+[Native host approval adapters](NATIVE_HOST_APPROVAL_ADAPTERS.md).
+
 The legacy review-only terminal remains non-authorizing for diagnostics. The
 Linux protected operator remains available as a hardened backend. Neither is
 an additional ordinary-user ceremony.
