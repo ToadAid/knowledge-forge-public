@@ -1,0 +1,20 @@
+{
+  "name": "toadaid-local",
+  "interface": {
+    "displayName": "ToadAid Local Plugins"
+  },
+  "plugins": [
+    {
+      "name": "toadaid-knowledge-forge",
+      "source": {
+        "source": "local",
+        "path": "./plugins/knowledge-forge"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

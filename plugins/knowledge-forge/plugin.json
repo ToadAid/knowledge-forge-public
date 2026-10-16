@@ -1,0 +1,40 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "toadaid-knowledge-forge",
+  "version": "0.1.0",
+  "description": "Local-first Forge → Accept → Ask knowledge workflow with bounded personal-library MCP lookup.",
+  "author": {
+    "name": "ToadAid"
+  },
+  "homepage": "https://github.com/ToadAid/knowledge-forge-public",
+  "repository": "https://github.com/ToadAid/knowledge-forge-public",
+  "license": "Apache-2.0",
+  "keywords": [
+    "knowledge",
+    "sources",
+    "documents",
+    "learning"
+  ],
+  "extensions": {
+    "com.openai": {
+      "requires_local_executor": true,
+      "onboardingSkill": "./skills/setup/SKILL.md",
+      "interface": {
+        "displayName": "ToadAid Knowledge Forge",
+        "shortDescription": "Learn documents and ask with sources",
+        "longDescription": "Forge source-grounded knowledge, review and accept it locally, then ask grounded questions through bounded library tools. Governed promotion is not included.",
+        "developerName": "ToadAid",
+        "category": "Productivity",
+        "capabilities": [
+          "Read",
+          "Write"
+        ],
+        "websiteURL": "https://github.com/ToadAid/knowledge-forge-public",
+        "defaultPrompt": [
+          "Learn this document and show me what you included before adding it to my personal library.",
+          "What does my personal knowledge library say about this? Include source references."
+        ]
+      }
+    }
+  }
+}
