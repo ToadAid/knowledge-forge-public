@@ -2,6 +2,12 @@
 
 ## Unreleased — initial open-source source snapshot
 
+- Added a Linux/systemd protected-promotion reference: kernel Unix peer
+  credentials, separate operator state, bounded candidate transport, exact
+  package/registry binding, serialized registry mutation, five-minute one-use SQLite challenges, and a
+  one-command human `promote` + typed `APPROVE` client. It remains absent from
+  the ordinary agent installer and requires independent administrator
+  provisioning before activation.
 - Review TUI ergonomics P1: confirmation phrase derives from the request
   SHA-256 (with bounded mismatch recovery), `--from-dir` bundle loading,
   evidence-view operator guidance, and fail-closed EOF handling. Review-only;

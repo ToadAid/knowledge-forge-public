@@ -1,0 +1,7 @@
+{
+  "schema_version": "0.1",
+  "operator_user": "kf-operator",
+  "agent_user": "kf-agent",
+  "state_root": "/var/lib/toadaid-kf-operator",
+  "code_root": "/opt/toadaid-kf-operator"
+}

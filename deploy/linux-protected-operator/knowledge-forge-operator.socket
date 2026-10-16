@@ -1,0 +1,14 @@
+[Unit]
+Description=ToadAid Knowledge Forge protected promotion socket
+
+[Socket]
+ListenStream=/run/toadaid-knowledge-forge/operator.sock
+Accept=yes
+SocketUser=kf-operator
+SocketGroup=kf-reviewers
+SocketMode=0660
+DirectoryMode=0750
+RemoveOnStop=yes
+
+[Install]
+WantedBy=sockets.target

@@ -60,6 +60,20 @@ transport has actually accepted the request. A local review-only TUI can
 record a review choice, but its receipt is **not authenticated promotion
 authorization**.
 
+For an independently administered Linux host, the repository includes a
+protected promotion reference that reduces the post-install human action to
+one command and one typed confirmation. It is intentionally separate from the
+agent installer: after an administrator has provisioned and verified distinct
+agent, reviewer and operator identities, the human runs:
+
+```text
+knowledge-forge-promote /path/to/validated-bundle
+```
+
+and types the exact displayed `APPROVE <challenge>` phrase. This convenience
+does not make chat text an authorization and must not be activated while the
+agent shares the human reviewer's UID or privileged tools.
+
 ## What you should check before approving a skill
 
 Look at the agent's **coverage report**. For example, if the source has 132
