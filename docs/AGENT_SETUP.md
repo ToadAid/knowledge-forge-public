@@ -56,6 +56,10 @@ This is the **agent's conversational onboarding question**, not an interactive
 installer prompt or a per-package approval. The helper returns it as data for
 the agent to present. It never treats input text as consent or authorization.
 
+"Do not perform governed promotion" forbids promoting packages; by itself it
+does not decline an explicitly requested setup explanation or onboarding
+question. Respect an explicit Personal Forge-only or no-service choice as below.
+
 - **Yes / protected promotion already requested:** prepare the administrator
   handoff below. Do not ask the same choice again. A setup yes authorizes
   preparation, not promotion or an agent impersonating the administrator.

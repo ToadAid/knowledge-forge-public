@@ -33,15 +33,29 @@ made until a real host test demonstrates it.
 
 ```text
 Use https://github.com/ToadAid/knowledge-forge-public.
-Follow docs/NEWCOMER_GUIDE.md and docs/FILE_TO_SKILL_AGENT_GUIDE.md.
+Follow docs/AGENT_SETUP.md, docs/NEWCOMER_GUIDE.md and
+docs/FILE_TO_SKILL_AGENT_GUIDE.md.
 Install the ordinary commands in my private workspace; don't change my
-existing agent settings. Forge <path-to-my-document> into VALIDATED
+existing agent settings. Run the read-only setup helper described in
+docs/AGENT_SETUP.md. Explain Personal Forge versus optional protected
+approval popups and, on supported platforms, ask whether I want separate
+kf-agent and kf-operator accounts with a distinct human reviewer, unless
+I have already chosen. If I choose protected setup, prepare the independent
+administrator handoff; do not create accounts or enable services yourself.
+Setup consent does not approve any knowledge package.
+
+Forge <path-to-my-document> into VALIDATED
 source-grounded knowledge. Show the included and omitted content, source
 references and validation findings. Ask me before adding the package to my
 PERSONAL library. If I agree, use knowledge-forge personal add.
 When I ask about it, use knowledge-forge personal lookup and cite only
 the source bindings actually returned. Do not perform governed promotion.
 ```
+
+Replace `<path-to-my-document>` with your document's real local path. The
+protected setup question is optional onboarding; this prompt authorizes no
+governed promotion. Personal Forge works without service accounts. The
+protected daemon reference currently requires Linux/systemd.
 
 [Start here: newcomer guide](docs/NEWCOMER_GUIDE.md) ·
 [User manual](USER_MANUAL.md) ·
