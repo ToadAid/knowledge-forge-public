@@ -27,7 +27,7 @@ class CodexMcpServerTests(unittest.TestCase):
         destination = StringIO()
         server = CodexApprovalMcpServer(
             workspace_root=self.flow.root,
-            operator_socket=self.flow.root / "operator.sock",
+            operator_socket=Path('/run/toadaid-knowledge-forge/codex-operator.sock'),
             input_stream=source,
             output_stream=destination,
         )
@@ -163,7 +163,7 @@ class CodexMcpServerTests(unittest.TestCase):
             destination = StringIO()
             server = CodexApprovalMcpServer(
                 workspace_root=self.flow.root,
-                operator_socket=self.flow.root / "operator.sock",
+                operator_socket=Path('/run/toadaid-knowledge-forge/codex-operator.sock'),
                 input_stream=source,
                 output_stream=destination,
             )
