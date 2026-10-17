@@ -232,13 +232,12 @@ class SQLiteLedgerPilotTests(unittest.TestCase):
             SQLiteLedgerPilot("pilot.sqlite3")
 
     def test_protected_paths_refused(self):
-        for name in ("/var/lib/toadaid-kf-operator/pilot.sqlite3",
-                     "/opt/toadaid-kf-operator/pilot.sqlite3"):
-            # Use synthetic metadata so this negative test never probes the
-            # host's real protected state (which may correctly be inaccessible).
-            with self.subTest(path=name), patch.object(Path, "is_symlink", return_value=False), \
-                    patch.object(Path, "is_dir", return_value=True), self.assertRaises(SQLitePilotError):
-                SQLiteLedgerPilot(name)
+        with patch.object(Path, 'is_symlink', side_effect=PermissionError('protected path')) as metadata:
+            for name in ("/var/lib/toadaid-kf-operator/pilot.sqlite3",
+                         "/opt/toadaid-kf-operator/pilot.sqlite3"):
+                with self.subTest(path=name), self.assertRaises(SQLitePilotError):
+                    SQLiteLedgerPilot(name)
+            metadata.assert_not_called()
 
     def test_two_processes_exactly_one_consume(self):
         self.prepared()

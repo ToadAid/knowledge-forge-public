@@ -77,14 +77,15 @@ def _safe_path(value: str | Path) -> Path:
         raise SQLitePilotError("pilot requires explicit absolute .sqlite3 path")
     if any(p == ".." for p in path.parts):
         raise SQLitePilotError("parent traversal refused")
+    # Reject protected locations before any metadata probe. Their contents can
+    # be inaccessible once a real operator state directory has been deployed.
+    if str(path).startswith(("/var/lib/", "/opt/", "/etc/", "/root/", "/run/")):
+        raise SQLitePilotError("system/protected paths excluded from untrusted pilot")
     for ancestor in (path, *path.parents):
         if ancestor.is_symlink():
             raise SQLitePilotError("symlink ancestor in pilot DB path")
     if not path.parent.is_dir():
         raise SQLitePilotError("pilot DB parent must already exist")
-    # Deliberately refuse actual protected TNG and global state locations.
-    if str(path).startswith(("/var/lib/", "/opt/", "/etc/", "/root/", "/run/")):
-        raise SQLitePilotError("system/protected paths excluded from untrusted pilot")
     if path.exists() and not path.is_file():
         raise SQLitePilotError("existing DB must be a regular file")
     return path

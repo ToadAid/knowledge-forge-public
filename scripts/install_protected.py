@@ -30,7 +30,7 @@ USER = Path('/etc/systemd/user')
 TMPFILES = Path('/etc/tmpfiles.d/knowledge-forge-runtime.conf')
 RUNTIME = Path('/run/toadaid-knowledge-forge')
 UNITS = ('knowledge-forge-operator@.service', 'knowledge-forge-operator.socket',
-         'knowledge-forge-agent-requests.socket')
+         'knowledge-forge-agent-requests@.service', 'knowledge-forge-agent-requests.socket')
 REVIEWER_UNIT = 'knowledge-forge-reviewer.service'
 SOCKETS = ('knowledge-forge-operator.socket', 'knowledge-forge-agent-requests.socket')
 SYSTEM_PATH = '/usr/sbin:/usr/bin:/sbin:/bin'
@@ -47,7 +47,15 @@ def pinned_files(root: Path, commit: str) -> dict[str, bytes]:
     """Read an exact Git object snapshot, never copy live working-tree code."""
     if not re.fullmatch(r'[0-9a-f]{40}', commit):
         raise DeploymentError('--commit must be the full reviewed 40-character Git commit')
-    git = ['/usr/bin/git', '--no-replace-objects', '-C', str(root)]
+    root = root.resolve(strict=True)
+    # sudo intentionally reads a human-owned reviewed checkout. Scope the trust
+    # exception to these read-only Git invocations; never change global config
+    # or permit all repositories with safe.directory=*. Commit/content checks
+    # below still bind installation to the exact reviewed snapshot.
+    if '*' in str(root):
+        raise DeploymentError('Checkout paths containing wildcard characters are not supported')
+    git = ['/usr/bin/git', '-c', 'safe.directory=' + str(root),
+           '--no-replace-objects', '-C', str(root)]
     actual = subprocess.check_output(git + ['rev-parse', '--verify', commit + '^{commit}'], env=ENV).decode().strip()
     if actual != commit:
         raise DeploymentError('Reviewed commit does not resolve exactly')
@@ -121,12 +129,18 @@ class LinuxHost:
         os.chown(path, uid, gid, follow_symlinks=False)
 
     def unit_load_state(self, name):
-        result = subprocess.run(['/usr/bin/systemctl', 'show', '--property=LoadState', '--value', name],
+        # systemctl show refuses an uninstantiated @.service template. A fixed
+        # probe instance resolves the same template without starting a service.
+        query = name.replace('@.', '@installer-check.')
+        result = subprocess.run(['/usr/bin/systemctl', 'show', '--property=LoadState', '--value', query],
                                 env=ENV, capture_output=True, text=True)
         value = result.stdout.strip()
-        if value == 'not-found':
+        if value == 'not-found' and result.returncode in (0, 4):
             return value
-        result.check_returncode()
+        if result.returncode != 0:
+            raise DeploymentError(f'Cannot inspect systemd unit {name}: {result.stderr.strip() or "systemctl show failed"}')
+        if value not in {'loaded', 'masked', 'error', 'bad-setting', 'merged', 'stub'}:
+            raise DeploymentError(f'Unexpected systemd LoadState for {name}: {value!r}')
         return value
 
 
@@ -244,7 +258,7 @@ def deployment_plan(commit, reviewer, enable):
             'existing_deployment_policy': 'Refuse; preserve state and review upgrades/recovery manually'}
 
 
-def deploy(host, files, commit, reviewer, *, enable=False):
+def deploy(host, files, commit, reviewer, *, enable=False, on_mutation=None):
     """Caller must perform root/TTY confirmation before entering mutation phase."""
     human = preflight(host, reviewer, mutation=True)
     # Check systemd availability before any account or filesystem changes.
@@ -252,6 +266,8 @@ def deploy(host, files, commit, reviewer, *, enable=False):
     for unit in UNITS:
         if host.unit_load_state(unit) != 'not-found':
             raise DeploymentError(f'Systemd already knows {unit}; inspect existing installation manually')
+    if on_mutation is not None:
+        on_mutation()
     for name in ('kf-agent', 'kf-operator'):
         if host.account(name) is None:
             host.run(['/usr/sbin/groupadd', '--system', name])
@@ -357,8 +373,11 @@ def main(argv=None):
         if input('Type DEPLOY PROTECTED FORGE to install: ') != 'DEPLOY PROTECTED FORGE':
             print('Cancelled; nothing changed.')
             return 1
-        mutated = True
-        print(json.dumps(deploy(host, files, args.commit, args.reviewer, enable=args.enable_services), indent=2))
+        def mark_mutation():
+            nonlocal mutated
+            mutated = True
+        print(json.dumps(deploy(host, files, args.commit, args.reviewer,
+                               enable=args.enable_services, on_mutation=mark_mutation), indent=2))
         print('INSTALLED, NOT CERTIFIED. No package submitted, approved or promoted.')
         return 0
     except (ValueError, KeyError, IndexError, tarfile.TarError, OSError,

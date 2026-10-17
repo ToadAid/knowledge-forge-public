@@ -119,7 +119,10 @@ agents nor the operator belong to `kf-reviewers`.
 An administrator then reviews and installs these additional reference files:
 
 - `knowledge-forge-agent-requests.socket` into the system unit directory; it
-  activates the existing `knowledge-forge-operator@.service` as `kf-operator`.
+  activates the matching `knowledge-forge-agent-requests@.service` template as
+  `kf-operator`. This template uses the same hardened operator configuration as
+  `knowledge-forge-operator@.service`. With `Accept=yes`, do not use `Service=`
+  to point at a differently named template; systemd requires matching names.
   The new socket is `kf-operator:kf-agent` mode `0660` and exposes submit/status
   only to the configured agent UID. Calling a human operation as that UID is
   independently refused even if the agent can reach another socket.

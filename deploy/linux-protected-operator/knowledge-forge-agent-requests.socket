@@ -4,7 +4,6 @@ Description=ToadAid Knowledge Forge generic agent request socket
 [Socket]
 ListenStream=/run/toadaid-knowledge-forge/agent-requests.sock
 Accept=yes
-Service=knowledge-forge-operator@.service
 SocketUser=kf-operator
 SocketGroup=kf-agent
 SocketMode=0660
